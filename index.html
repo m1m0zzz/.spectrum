@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>.spectrum</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="main.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>.spectrum</h1>
+    <h2>使い方</h2>
+    <ol>
+      <li>ドット絵をアップ (png, jpg...)</li>
+      <li>音源をアップ (wav, mp3...)</li>
+      <li>音声を再生</li>
+    </ol>
+
+    <p>🖼️ 画像をアップロード</p>
+    <input type="file" id="image-input" onchange="uploadImage()" accept="image/*"><br>
+    <p>画像 info</p>
+    <p id="img-info">幅: 0px, 高さ: 0px</p>
+    <div class="img-preview-container">
+      <canvas id="preview" width="0px" height="0px"></canvas>
+    </div>
+
+    <p>🎵 音声をアップロード</p>
+    <input type="file" id="audio-input" onchange="uploadSound()" accept="audio/*"><br>
+    <audio controls autoplay loop src=""></audio>
+
+    <h2>visualizer</h2>
+    <label>width: </label><input id="player-width-input" type="number" value="360" onchange="document.querySelector('#player').width = this.value" />
+    <label>height: </label><input id="player-height-input" type="number" value="360" onchange="document.querySelector('#player').height = this.value" />
+    <br>
+    <label>spectrum type: </label>
+    <select name="spectrum-type" id="spectrum-type"  onchange="spectrumTypeHandler(this.value)">
+      <option value="log">Log</option>
+      <option value="liner">Liner</option>
+    </select>
+    <br>
+
+    <canvas id="player" width="360" height="360" style="background: azure;"></canvas>
+  </div>
+</body>
+</html>

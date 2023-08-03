@@ -1,0 +1,14 @@
+html, body {
+  width: 100%;
+  padding: 0px;
+  margin: 0px;
+}
+
+.container {
+  margin: 10px;
+}
+
+.img-preview-container {
+  overflow: auto;
+  width: 100%;
+}
