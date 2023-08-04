@@ -1,10 +1,7 @@
-
-// https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/fftSize
-// 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, and 32768
-
 const img = new Image();
+let fftSize;
 let imageData;
-let FFTSize;
+let memoAlpha;
 let logToPixelIndexMap;
 let playerCanvas;
 let playerCtx;
@@ -14,6 +11,36 @@ let spectrumType;
 let spectrumSensitivity;
 let spectrumGridSize;
 
+const getRGBAbyImageData = (imageData, x, y, width) => {
+  return [
+    imageData.data[(x + y * width) * 4],
+    imageData.data[(x + y * width) * 4 + 1],
+    imageData.data[(x + y * width) * 4 + 2],
+    imageData.data[(x + y * width) * 4 + 3] / 255
+  ]
+}
+
+const generateLogToPixelIndexMap = (fftSize, imageWidth) => {
+  let map = structuredClone([...Array(imageWidth)].map(() => { return { begin: null, end: null }}));
+  let count = 0;
+  map[0].begin = 0;
+
+  for (let i = 0; i < fftSize / 2; i++) {
+    // cf. (w / imageWidth) * (count + 1) < Math.log(i) / Math.log(fftSize / 2) * w
+    if (count + 1 < Math.log(i) / Math.log(fftSize / 2) * imageWidth) {
+      map[count].end = i - 1;
+      count++;
+      map[count].begin = i;
+      if (count >= imageWidth) {
+        break;
+      }
+    }
+  }
+  if (!map[map.length - 1].end) {
+    map[map.length - 1].end = fftSize / 2 - 1
+  }
+  return structuredClone(map);
+}
 
 const uploadSound = () => {
   const audioElement = document.querySelector("audio");
@@ -26,7 +53,7 @@ const uploadSound = () => {
     if (!audioContext) { // init audio context
       audioContext = new AudioContext();
       nodeAnalyser = audioContext.createAnalyser();
-      nodeAnalyser.fftSize = FFTSize;
+      nodeAnalyser.fftSize = fftSize;
 
       // 0～1の範囲でデータの動きの速さ 0だともっとも速く、1に近づくほど遅くなる
       nodeAnalyser.smoothingTimeConstant = 0.85;
@@ -58,53 +85,33 @@ const uploadImage = () => {
       previewCtx.drawImage(img, 0, 0);
 
       imageData = previewCtx.getImageData(0, 0, img.width, img.height);
+      memoAlpha = Array(img.width * img.height).fill(0);
 
-      logToPixelIndexMap = [...Array(img.width)].map(_ => Object.assign({}, {begin: null, end: null}));
-      let count = 0;
-      logToPixelIndexMap[0].begin = 0;
-
-      for (let i = 0; i < FFTSize / 2; i++) {
-        // cf. (w / img.width) * (count + 1) < Math.log(i) / Math.log(FFTSize / 2) * w
-        if (count + 1 < Math.log(i) / Math.log(FFTSize / 2) * img.width) {
-          logToPixelIndexMap[count].end = i - 1;
-          count++;
-          logToPixelIndexMap[count].begin = i;
-          if (count >= img.width) {
-            console.log("break", i);
-            break;
-          }
-        }
-      }
-      if (!logToPixelIndexMap[logToPixelIndexMap.length - 1].end) {
-        logToPixelIndexMap[logToPixelIndexMap.length - 1].end = FFTSize / 2 - 1
-      }
+      logToPixelIndexMap = generateLogToPixelIndexMap(fftSize, img.width);
+      console.log(logToPixelIndexMap);
     };
   }, false);
 
   if (file) { reader.readAsDataURL(file); }
 }
 
-const FFTSizeHandler = (value) => {
-  if (nodeAnalyser) { nodeAnalyser.fftSize = value; }
-
-}
-
-const getRGBAbyImageData = (imageData, x, y, width) => {
-  return [
-    imageData.data[(x + y * width) * 4],
-    imageData.data[(x + y * width) * 4 + 1],
-    imageData.data[(x + y * width) * 4 + 2],
-    imageData.data[(x + y * width) * 4 + 3] / 255
-  ]
+const fftSizeHandler = (value) => {
+  if (nodeAnalyser) {
+    nodeAnalyser.fftSize = value;
+  }
+  if (img.src) {
+    logToPixelIndexMap = generateLogToPixelIndexMap(value, img.width);
+  }
 }
 
 window.onload = () => {
   playerCanvas = document.querySelector("#player");
   playerCtx = playerCanvas.getContext("2d");
   spectrumType = document.querySelector("#spectrum-type").value;
-  FFTSize = Number(document.querySelector("#spectrum-fft-size").value);
+  fftSize = Number(document.querySelector("#spectrum-fft-size").value);
   spectrumSensitivity = Number(document.querySelector("#spectrum-sensitivity").value);
   spectrumGridSize = Number(document.querySelector("#spectrum-grid-size").value);
+  spectrumSmoothTime = Number(document.querySelector("#spectrum-smooth-time").value);
 
   const draw = () => {
     requestAnimationFrame(draw);
@@ -114,13 +121,20 @@ window.onload = () => {
     playerCtx.clearRect(0, 0, w, h);
 
     if (!nodeAnalyser) return;
-    const freqByteData = new Uint8Array(FFTSize / 2);
+    const freqByteData = new Uint8Array(fftSize / 2);
     nodeAnalyser.getByteFrequencyData(freqByteData);
 
     if (spectrumType === "pixel") {
       if (img.src) {
         const cellWidth = w / img.width;
         const cellHeight = h / img.height;
+
+        // note
+        // spectrumSmoothTime ... 1sec -> 30fr -> 1/30
+        // spectrumSmoothTime ... 1000msec -> 30fr -> 1/60
+        // spectrumSmoothTime ... 2sec -> 60fr -> 1/60
+        const fps = 30;
+        const alphaDecrement = (spectrumSmoothTime <= 0) ? 1 : 1000 / (spectrumSmoothTime * fps);
 
         for (let x = 0; x < img.width; x++) {
           const begin = logToPixelIndexMap[x].begin;
@@ -130,17 +144,20 @@ window.onload = () => {
           const gridSize = spectrumGridSize/ 2
 
           for (let y = 0; y < img.height; y++) {
+            const rgba = getRGBAbyImageData(imageData, x, y, img.width);
             if (1 - (y / img.height) <= ave * spectrumSensitivity) {
-              const rgba = getRGBAbyImageData(imageData, x, y, img.width);
-              playerCtx.beginPath();
-              playerCtx.rect(
-                gridSize + cellWidth * x, gridSize + cellHeight * y,
-                cellWidth - gridSize * 2, cellHeight - gridSize * 2
-              );
-              playerCtx.fillStyle = `rgba(${rgba[0]}, ${rgba[1]}, ${rgba[2]}, ${rgba[3]})`;
-              playerCtx.fill();
-
+              memoAlpha[y * img.height + x] = rgba[3];
+            } else {
+              memoAlpha[y * img.height + x] = Math.max(memoAlpha[y * img.height + x] - alphaDecrement, 0);
             }
+            playerCtx.beginPath();
+            playerCtx.rect(
+              gridSize + cellWidth * x, gridSize + cellHeight * y,
+              cellWidth - gridSize * 2, cellHeight - gridSize * 2
+            );
+
+            playerCtx.fillStyle = `rgba(${rgba[0]}, ${rgba[1]}, ${rgba[2]}, ${memoAlpha[y * img.height + x]})`;
+            playerCtx.fill();
           }
         }
       } else {

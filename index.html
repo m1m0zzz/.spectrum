@@ -30,23 +30,26 @@
 
     <p>🎵 音声をアップロード</p>
     <input type="file" id="audio-input" onchange="uploadSound()" accept="audio/*"><br>
-    <audio controls autoplay loop src=""></audio>
+    <audio controls autoplay src=""></audio>
 
-    <h2>visualizer</h2>
+    <p>Setting</p>
     <label>width: </label><input id="player-width-input" type="number" value="320" onchange="document.querySelector('#player').width = this.value" />
     <label>height: </label><input id="player-height-input" type="number" value="320" onchange="document.querySelector('#player').height = this.value" />
-    <label style="color: gray;">※ ドット絵のドット数倍の値にするときれいに表示できます</label><br>
+    <label style="color: gray;">※ ドット絵のドット数倍の値にするときれいに表示できます</label>
+    <br>
+    <label>background: </label><input type="color" value="#000000" onchange="document.querySelector('#player').style.background = this.value">
+    <br>
     <label>FFT size: </label>
-    <select name="spectrum-fft-size" id="spectrum-fft-size" onchange="FFTSizeHandler(Number(this.value))">
+    <select name="spectrum-fft-size" id="spectrum-fft-size" onchange="fftSizeHandler(Number(this.value))">
       <option value="32">32</option>
       <option value="64">64</option>
       <option value="128">128</option>
       <option value="256">256</option>
       <option value="512">512</option>
       <option value="1024">1024</option>
-      <option value="2048" selected>2048</option>
+      <option value="2048">2048</option>
       <option value="4096">4096</option>
-      <option value="8192">8192</option>
+      <option value="8192" selected>8192</option>
       <option value="16384">16384</option>
       <option value="32768">32768</option>
     </select>
@@ -57,6 +60,7 @@
       <option value="pixel" selected>Pixel</option>
     </select>
     <br>
+    <label>- pixel setting -</label><br>
     <label>sensitivity: </label>
     <input
       id="spectrum-sensitivity" type="number"
@@ -72,14 +76,14 @@
     />
     <label>px</label>
     <br>
-    <!-- <label>smooth: </label>
+    <label>smooth: </label>
     <input
-      id="spectrum-smooth" type="number"
+      id="spectrum-smooth-time" type="number"
       min="0" value="0"
-      onchange="Number(this.value)"
+      onchange="spectrumSmoothTime = Number(this.value)"
     />
     <label>ms</label>
-    <br><br> -->
+    <br><br>
 
     <canvas id="player" width="320" height="320" style="background: black;"></canvas>
   </div>
