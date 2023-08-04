@@ -13,14 +13,17 @@
     <h2>使い方</h2>
     <ol>
       <li>ドット絵をアップ (png, jpg...)</li>
-      <li>音源をアップ (wav, mp3...)</li>
-      <li>音声を再生</li>
+      <li>音声をアップ (wav, mp3...)</li>
+      <li>再生！</li>
     </ol>
 
     <p>🖼️ 画像をアップロード</p>
     <input type="file" id="image-input" onchange="uploadImage()" accept="image/*"><br>
-    <p>画像 info</p>
-    <p id="img-info">幅: 0px, 高さ: 0px</p>
+    <p>
+      画像（
+      <label id="img-info">幅: 0px, 高さ: 0px</label>
+      ）
+    </p>
     <div class="img-preview-container">
       <canvas id="preview" width="0px" height="0px"></canvas>
     </div>
@@ -30,17 +33,55 @@
     <audio controls autoplay loop src=""></audio>
 
     <h2>visualizer</h2>
-    <label>width: </label><input id="player-width-input" type="number" value="360" onchange="document.querySelector('#player').width = this.value" />
-    <label>height: </label><input id="player-height-input" type="number" value="360" onchange="document.querySelector('#player').height = this.value" />
-    <br>
+    <label>width: </label><input id="player-width-input" type="number" value="320" onchange="document.querySelector('#player').width = this.value" />
+    <label>height: </label><input id="player-height-input" type="number" value="320" onchange="document.querySelector('#player').height = this.value" />
+    <label style="color: gray;">※ ドット絵のドット数倍の値にするときれいに表示できます</label><br>
+    <label>FFT size: </label>
+    <select name="spectrum-fft-size" id="spectrum-fft-size" onchange="FFTSizeHandler(Number(this.value))">
+      <option value="32">32</option>
+      <option value="64">64</option>
+      <option value="128">128</option>
+      <option value="256">256</option>
+      <option value="512">512</option>
+      <option value="1024">1024</option>
+      <option value="2048" selected>2048</option>
+      <option value="4096">4096</option>
+      <option value="8192">8192</option>
+      <option value="16384">16384</option>
+      <option value="32768">32768</option>
+    </select>
     <label>spectrum type: </label>
-    <select name="spectrum-type" id="spectrum-type"  onchange="spectrumTypeHandler(this.value)">
-      <option value="log">Log</option>
+    <select name="spectrum-type" id="spectrum-type"  onchange="spectrumType = this.value">
       <option value="liner">Liner</option>
+      <option value="log">Log</option>
+      <option value="pixel" selected>Pixel</option>
     </select>
     <br>
+    <label>sensitivity: </label>
+    <input
+      id="spectrum-sensitivity" type="number"
+      min="0.1" max="10" step="0.1" value="1.0"
+      onchange="spectrumSensitivity = Math.max(0.1, Math.min(Number(this.value), 10))"
+    />
+    <br>
+    <label>grid size: </label>
+    <input
+      id="spectrum-grid-size" type="number"
+      min="0" value="0"
+      onchange="spectrumGridSize = Number(this.value)"
+    />
+    <label>px</label>
+    <br>
+    <!-- <label>smooth: </label>
+    <input
+      id="spectrum-smooth" type="number"
+      min="0" value="0"
+      onchange="Number(this.value)"
+    />
+    <label>ms</label>
+    <br><br> -->
 
-    <canvas id="player" width="360" height="360" style="background: azure;"></canvas>
+    <canvas id="player" width="320" height="320" style="background: black;"></canvas>
   </div>
 </body>
 </html>
