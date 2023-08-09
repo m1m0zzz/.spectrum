@@ -11,6 +11,8 @@ let spectrumType;
 let spectrumSensitivity;
 let spectrumGridSize;
 
+// - function ----------------------------------------------------------------
+
 const getRGBAbyImageData = (imageData, x, y, width) => {
   return [
     imageData.data[(x + y * width) * 4],
@@ -41,6 +43,8 @@ const generateLogToPixelIndexMap = (fftSize, imageWidth) => {
   }
   return structuredClone(map);
 }
+
+// - event handler ----------------------------------------------------------------
 
 const uploadSound = () => {
   const audioElement = document.querySelector("audio");
@@ -74,21 +78,33 @@ const uploadImage = () => {
   reader.addEventListener("load", () => {
     previewCanvas = document.querySelector("#preview");
     previewCtx = previewCanvas.getContext("2d");
-    const imgInfo = document.querySelector("#img-info");
+    const imgError = document.querySelector("#img-error");
+    const imgInfoWidth = document.querySelector("#img-info-width");
+    const imgInfoHeight = document.querySelector("#img-info-height");
+    const previewContainer = document.querySelector(".img-preview-container")
 
     img.src = reader.result; // base64
 
     img.onload = () => {
+      if (img.width * img.height > 256 * 256) {
+        imgError.style.display = "block";
+        img.src = "";
+        return;
+      }
+
+      imgError.style.display = "none";
+      previewContainer.style.display = "block";
       previewCanvas.width = img.width;
       previewCanvas.height = img.height;
-      imgInfo.textContent = `幅: ${img.width}px, 高さ: ${img.height}px`
+      imgInfoWidth.textContent = String(img.width);
+      imgInfoHeight.textContent = String(img.height);
       previewCtx.drawImage(img, 0, 0);
 
       imageData = previewCtx.getImageData(0, 0, img.width, img.height);
       memoAlpha = Array(img.width * img.height).fill(0);
 
       logToPixelIndexMap = generateLogToPixelIndexMap(fftSize, img.width);
-      console.log(logToPixelIndexMap);
+      // console.log(logToPixelIndexMap);
     };
   }, false);
 
@@ -103,6 +119,22 @@ const fftSizeHandler = (value) => {
     logToPixelIndexMap = generateLogToPixelIndexMap(value, img.width);
   }
 }
+
+const defaultLang = "ja"
+const translateLang = (lang) => {
+  if (!["ja", "en"].includes(lang)) return;
+
+  document.querySelectorAll(`[data-lang-${lang}]`).forEach((elm) => {
+    if (!elm.hasAttribute(`data-lang-${defaultLang}`)) { // 最初の変更時のみ
+      elm.setAttribute(`data-lang-${defaultLang}`, elm.textContent)
+    }
+    if (elm.hasAttribute(`data-lang-${lang}`)) {
+      elm.textContent = elm.getAttribute(`data-lang-${lang}`);
+    }
+  })
+}
+
+// - main ----------------------------------------------------------------
 
 window.onload = () => {
   playerCanvas = document.querySelector("#player");

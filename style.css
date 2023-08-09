@@ -1,14 +1,122 @@
-html, body {
-  width: 100%;
-  padding: 0px;
-  margin: 0px;
+@font-face {
+  font-family: "x12y12pxMaruMinya";
+  src: url("assets/x12y12pxMaruMinya_2023-07-14/x12y12pxMaruMinya.ttf") format('truetype');
+}
+
+body {
+  font-family: "x12y12pxMaruMinya", sans-serif;
+  letter-spacing: 0.1em;
+}
+
+/* p {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+} */
+
+:focus {
+  outline: none;
+}
+
+input {
+  background: #0000;
+}
+
+input[type=number] {
+  padding-left: 0.5rem;
+  max-width: 100px;
+  text-align: center;
+
+  border-top: none;
+  border-right: none;
+  border-left: none;
+  border-bottom: solid 2px #dac5a4;
+
+  &:focus {
+    outline: none;
+    border-bottom: solid 2px #579BB1;
+  }
+}
+
+input[type=file] {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+select {
+  background: #0000;
+  min-height: 2rem;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F8F4EA;
+  padding: 4px 8px 4px 8px;
+
+  & .utility {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 10px;
+    background: #F8F4EA;
+
+    & > * {
+      margin-left: 10px;
+    }
+  }
+}
+
+main {
+  background: #ECE8DD;
+  line-height: 150%;
 }
 
 .container {
-  margin: 10px;
+  max-width: 720px;
+  padding: 10px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .img-preview-container {
+  display: none;
   overflow: auto;
   width: 100%;
+}
+
+#img-error {
+  display: none;
+  color: #F56565;
+}
+
+section {
+  margin-top: 1rem;
+}
+
+
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  color: white;
+  background: #89b9bd;
+
+  & div {
+    width: 100%;
+
+    & p {
+      text-align: center;
+    }
+
+    & div {
+      display: flex;
+      width: 80%;
+      max-width: 500px;
+      margin: 0 auto;
+      align-items: center;
+      justify-content: space-around;
+    }
+  }
 }

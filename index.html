@@ -1,91 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>.spectrum</title>
+  <link rel="stylesheet" href="https://unpkg.com/modern-css-reset/dist/reset.min.css" />
   <link rel="stylesheet" href="style.css">
-  <script src="main.js"></script>
 </head>
+
 <body>
-  <div class="container">
-    <h1>.spectrum</h1>
-    <h2>使い方</h2>
-    <ol>
-      <li>ドット絵をアップ (png, jpg...)</li>
-      <li>音声をアップ (wav, mp3...)</li>
-      <li>再生！</li>
-    </ol>
+  <nav>
+    <a href="https://m1m0zzz.github.io/.spectrum/">
+      <img src="assets/logo_192_trim.png" alt="logo">
+    </a>
 
-    <p>🖼️ 画像をアップロード</p>
-    <input type="file" id="image-input" onchange="uploadImage()" accept="image/*"><br>
-    <p>
-      画像（
-      <label id="img-info">幅: 0px, 高さ: 0px</label>
-      ）
-    </p>
-    <div class="img-preview-container">
-      <canvas id="preview" width="0px" height="0px"></canvas>
+    <!-- TODO: github icon, toggle color mode, language -->
+
+    <div class="utility">
+      <select name="language" id="language" onchange="translateLang(this.value)">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+      </select>
+      <a href="https://github.com/m1m0zzz/.spectrum" target="_blank" rel="noopener noreferrer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path
+            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+        </svg>
+      </a>
     </div>
+  </nav>
 
-    <p>🎵 音声をアップロード</p>
-    <input type="file" id="audio-input" onchange="uploadSound()" accept="audio/*"><br>
-    <audio controls autoplay src=""></audio>
+  <main>
+    <div class="container">
+      <h2 data-lang-en="How to use">使い方</h2>
+      <ol>
+        <li data-lang-en="Upload pixel art (png, jpg...)">ドット絵をアップ (png, jpg...)</li>
+        <li data-lang-en="Upload music (wav, mp3...)">音声をアップ (wav, mp3...)</li>
+        <li data-lang-en="Play music!">音声を再生！</li>
+      </ol>
 
-    <p>Setting</p>
-    <label>width: </label><input id="player-width-input" type="number" value="320" onchange="document.querySelector('#player').width = this.value" />
-    <label>height: </label><input id="player-height-input" type="number" value="320" onchange="document.querySelector('#player').height = this.value" />
-    <label style="color: gray;">※ ドット絵のドット数倍の値にするときれいに表示できます</label>
-    <br>
-    <label>background: </label><input type="color" value="#000000" onchange="document.querySelector('#player').style.background = this.value">
-    <br>
-    <label>FFT size: </label>
-    <select name="spectrum-fft-size" id="spectrum-fft-size" onchange="fftSizeHandler(Number(this.value))">
-      <option value="32">32</option>
-      <option value="64">64</option>
-      <option value="128">128</option>
-      <option value="256">256</option>
-      <option value="512">512</option>
-      <option value="1024">1024</option>
-      <option value="2048">2048</option>
-      <option value="4096">4096</option>
-      <option value="8192" selected>8192</option>
-      <option value="16384">16384</option>
-      <option value="32768">32768</option>
-    </select>
-    <label>spectrum type: </label>
-    <select name="spectrum-type" id="spectrum-type"  onchange="spectrumType = this.value">
-      <option value="liner">Liner</option>
-      <option value="log">Log</option>
-      <option value="pixel" selected>Pixel</option>
-    </select>
-    <br>
-    <label>- pixel setting -</label><br>
-    <label>sensitivity: </label>
-    <input
-      id="spectrum-sensitivity" type="number"
-      min="0.1" max="10" step="0.1" value="1.0"
-      onchange="spectrumSensitivity = Math.max(0.1, Math.min(Number(this.value), 10))"
-    />
-    <br>
-    <label>grid size: </label>
-    <input
-      id="spectrum-grid-size" type="number"
-      min="0" value="0"
-      onchange="spectrumGridSize = Number(this.value)"
-    />
-    <label>px</label>
-    <br>
-    <label>smooth: </label>
-    <input
-      id="spectrum-smooth-time" type="number"
-      min="0" value="0"
-      onchange="spectrumSmoothTime = Number(this.value)"
-    />
-    <label>ms</label>
-    <br><br>
+      <section>
+        <p>🖼️ <span data-lang-en="Upload image file">画像をアップロード</span></p>
+        <input type="file" id="image-input" onchange="uploadImage()" accept="image/*"><br>
+        <p id="img-error" data-lang-en="Image size is too large. (Images of 256px x 256px or less can be specified.)">画像サイズが大きすぎます。（256px × 256px以下の画像が指定可能です。）</p>
+        <p>
+          <span data-lang-en="Image">画像</span>（
+          <span data-lang-en="width: ">幅: </span>
+          <span id="img-info-width">0</span>px, <span data-lang-en="height: ">高さ: </span>
+          <span id="img-info-height">0</span>px
+          ）
+        </p>
+        <div class="img-preview-container">
+          <canvas id="preview" width="0px" height="0px"></canvas>
+        </div>
+      </section>
 
-    <canvas id="player" width="320" height="320" style="background: black;"></canvas>
-  </div>
+      <section>
+        <p>🎵 <span data-lang-en="Upload audio file.">音声をアップロード</span></p>
+        <input type="file" id="audio-input" onchange="uploadSound()" accept="audio/*"><br>
+        <audio controls autoplay src=""></audio>
+      </section>
+
+      <section>
+        <p>⚙️ <span data-lang-en="Setting">設定</span></p>
+        <!-- https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas -->
+        <label data-lang-en="width: ">幅: </label>
+        <input id="player-width-input" name="player-width-input" type="number" value="320" min="1" max="16384"
+          onchange="document.querySelector('#player').width = this.value =  Math.max(1, Math.min(this.value, 16384))" />
+        <label>px</label>
+        <label data-lang-en="height: ">高さ: </label>
+        <input id="player-height-input" name="player-height-input" type="number" value="320" min="1" max="16384"
+          onchange="document.querySelector('#player').height = this.value = Math.max(1, Math.min(this.value, 16384))" />
+        <label>px</label>
+        <p style="color: gray;"
+          data-lang-en="NOTE: The value should be n times the number of pixels in the image to display it nicely">
+          ※ ドット絵のピクセル数×n倍の値にすると、きれいに表示できます
+        </p>
+        <label data-lang-en="background: ">背景色: </label>
+        <input type="color" value="#000000" onchange="document.querySelector('#player').style.background = this.value">
+        <br>
+        <label data-lang-en="FFT size: ">FFTサイズ: </label>
+        <select name="spectrum-fft-size" id="spectrum-fft-size" onchange="fftSizeHandler(Number(this.value))">
+          <option value="32">32</option>
+          <option value="64">64</option>
+          <option value="128">128</option>
+          <option value="256">256</option>
+          <option value="512">512</option>
+          <option value="1024">1024</option>
+          <option value="2048">2048</option>
+          <option value="4096">4096</option>
+          <option value="8192" selected>8192</option>
+          <option value="16384">16384</option>
+          <option value="32768">32768</option>
+        </select>
+        <label data-lang-en="spectrum type: ">解析タイプ: </label>
+        <select name="spectrum-type" id="spectrum-type" onchange="spectrumType = this.value;
+        document.querySelector('#pixel-mode-setting').style.display = this.value === 'pixel' ? 'block' : 'none';">
+          <option value="liner">Liner</option>
+          <option value="log">Log</option>
+          <option value="pixel" selected>Pixel</option>
+        </select>
+        <br>
+        <div id="pixel-mode-setting">
+          <label>- pixel mode setting -</label><br>
+          <label data-lang-en="sensitivity: ">感度: </label>
+          <input id="spectrum-sensitivity" type="number" min="0.1" max="10" step="0.1" value="1.0"
+            onchange="spectrumSensitivity = Math.max(0.1, Math.min(Number(this.value), 10))" />
+          <br>
+          <label data-lang-en="grid size: ">グリッドサイズ: </label>
+          <input id="spectrum-grid-size" type="number" min="0" value="0"
+            onchange="spectrumGridSize = Number(this.value)" />
+          <label>px</label>
+          <br>
+          <label data-lang-en="smooth: ">スムーズ: </label>
+          <input id="spectrum-smooth-time" type="number" min="0" value="0"
+            onchange="spectrumSmoothTime = Number(this.value)" />
+          <label>ms</label>
+        </div>
+
+        <!-- <button data-lang-en="full screen mode" onclick="changeFullScreen()">全画面モードに切り替える</button> -->
+      </section>
+
+      <section>
+        <canvas id="player" width="320" height="320" style="background: black;"></canvas>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div>
+      <p>&copy; 2023 mimoz</p>
+      <div>
+        <a href="https://m1m0zzz.github.io/" target="_blank" rel="noopener noreferrer">Home Page</a>
+        <a href="https://twitter.com/m1m0zzz" target="_blank" rel="noopener noreferrer">Twitter</a>
+        <a href="https://soundcloud.com/mimozzz" target="_blank" rel="noopener noreferrer">SoundCloud</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
 </body>
+
 </html>
