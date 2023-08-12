@@ -96,7 +96,10 @@ main {
 
 #img-error {
   display: none;
-  color: #F56565;
+}
+
+.pixelation-active {
+  color: #579BB1;
 }
 
 section {

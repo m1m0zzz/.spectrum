@@ -13,8 +13,8 @@ let fftSize;
 let spectrumType;
 let spectrumSensitivity;
 let spectrumGridSize;
-// let isDoPixelation;
-// let pixelationSize;
+let isDoPixelation;
+let pixelationSize;
 
 // - function ----------------------------------------------------------------
 
@@ -102,7 +102,7 @@ const uploadImage = () => {
         return;
       }
 
-      // pixelation.style.display = "block";
+      pixelation.style.display = "block";
 
       setImageErrorMassage(false);
       previewContainer.style.display = "block";
@@ -132,6 +132,28 @@ const fftSizeHandler = (value) => {
   }
 }
 
+const togglePixelation = (obj, boolean) => {
+  if (!obj.classList.contains("action-link")) {
+    return;
+  }
+
+  const pixelationDo = document.querySelector("#pixelation-do");
+  const pixelationDoNot = document.querySelector("#pixelation-do-not");
+  pixelationDo.classList.toggle("action-link");
+  pixelationDoNot.classList.toggle("action-link");
+  pixelationDo.classList.toggle("pixelation-active");
+  pixelationDoNot.classList.toggle("pixelation-active");
+  isDoPixelation = boolean;
+  if (isDoPixelation) {
+    pixelationDo.textContent = ">" + pixelationDo.textContent
+    pixelationDoNot.textContent = pixelationDoNot.textContent.replace(">", "");
+    document.querySelector("#pixelation-setting").style.display = "block";
+  } else {
+    pixelationDoNot.textContent = ">" + pixelationDoNot.textContent
+    pixelationDo.textContent = pixelationDo.textContent.replace(">", "");
+    document.querySelector("#pixelation-setting").style.display = "none";
+  }
+}
 
 const toggleVersionInfo = () => {
   const versionInfo = document.querySelector("#version-info");

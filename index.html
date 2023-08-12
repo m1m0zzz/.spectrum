@@ -62,6 +62,22 @@
           <span id="img-info-height">0</span>px
           ）
         </p>
+        <div id="pixelation" style="display: none; margin-top: 0.5rem;">
+          <p>
+            <span data-lang-en="Do you want to pixelate?">ドット化しますか？</span>
+            <span id="pixelation-do" class="action-link" data-lang-en=" yes"
+              onclick="togglePixelation(this, true)">する</span>
+            <span>/</span>
+            <span id="pixelation-do-not" class="pixelation-active" data-lang-en=" no"
+              onclick="togglePixelation(this, false)">&gt;しない</span>
+          </p>
+          <p id="pixelation-setting" style="display: none;">
+            <span id="pixelation-before-size">（ N px × M px ）</span>
+            <span>× 1 / </span>
+            <input type="number" min="2" value="2" onchange="pixelationSize = this.value = Math.max(2, this.value)">
+            <span id="pixelation-after-size">→（ N px × M px ）</span>
+          </p>
+        </div>
         <div class="img-preview-container">
           <canvas id="preview" width="0px" height="0px"></canvas>
         </div>
