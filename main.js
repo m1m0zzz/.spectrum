@@ -13,8 +13,8 @@ let fftSize;
 let spectrumType;
 let spectrumSensitivity;
 let spectrumGridSize;
-let isDoPixelation;
-let pixelationSize;
+// let isDoPixelation;
+// let pixelationSize;
 
 // - function ----------------------------------------------------------------
 
@@ -102,7 +102,7 @@ const uploadImage = () => {
         return;
       }
 
-      pixelation.style.display = "block";
+      // pixelation.style.display = "block";
 
       setImageErrorMassage(false);
       previewContainer.style.display = "block";
@@ -132,7 +132,6 @@ const fftSizeHandler = (value) => {
   }
 }
 
-const defaultLang = "ja"
 
 const toggleVersionInfo = () => {
   const versionInfo = document.querySelector("#version-info");
