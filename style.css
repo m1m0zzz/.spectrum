@@ -8,14 +8,22 @@ body {
   letter-spacing: 0.1em;
 }
 
-/* p {
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
-} */
-
 :focus {
   outline: none;
 }
+
+/* utility class */
+
+.error {
+  color: #F56565;
+}
+
+.action-link {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* other */
 
 input {
   background: #0000;
@@ -30,6 +38,7 @@ input[type=number] {
   border-right: none;
   border-left: none;
   border-bottom: solid 2px #dac5a4;
+  transition: border 250ms linear;
 
   &:focus {
     outline: none;

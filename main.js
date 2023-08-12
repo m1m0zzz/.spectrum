@@ -1,15 +1,20 @@
+const DEFAULT_LANG = "ja";
+const LANGUAGES = ["ja", "en"];
+
 const img = new Image();
-let fftSize;
 let imageData;
 let memoAlpha;
 let logToPixelIndexMap;
-let playerCanvas;
-let playerCtx;
 let audioContext;
 let nodeAnalyser;
+
+// parameters
+let fftSize;
 let spectrumType;
 let spectrumSensitivity;
 let spectrumGridSize;
+let isDoPixelation;
+let pixelationSize;
 
 // - function ----------------------------------------------------------------
 
@@ -19,7 +24,7 @@ const getRGBAbyImageData = (imageData, x, y, width) => {
     imageData.data[(x + y * width) * 4 + 1],
     imageData.data[(x + y * width) * 4 + 2],
     imageData.data[(x + y * width) * 4 + 3] / 255
-  ]
+  ];
 }
 
 const generateLogToPixelIndexMap = (fftSize, imageWidth) => {
@@ -39,7 +44,7 @@ const generateLogToPixelIndexMap = (fftSize, imageWidth) => {
     }
   }
   if (!map[map.length - 1].end) {
-    map[map.length - 1].end = fftSize / 2 - 1
+    map[map.length - 1].end = fftSize / 2 - 1;
   }
   return structuredClone(map);
 }
@@ -71,28 +76,35 @@ const uploadSound = () => {
   if (file) { reader.readAsDataURL(file); }
 }
 
+const setImageErrorMassage = (boolean) => {
+  const imgError = document.querySelector("#img-error");
+  imgError.style.display = boolean ? "block" : "none";
+}
+
 const uploadImage = () => {
   const file = document.querySelector("input[type=file]#image-input").files[0];
   const reader = new FileReader();
 
   reader.addEventListener("load", () => {
-    previewCanvas = document.querySelector("#preview");
-    previewCtx = previewCanvas.getContext("2d");
-    const imgError = document.querySelector("#img-error");
+    const previewCanvas = document.querySelector("#preview");
+    const previewCtx = previewCanvas.getContext("2d");
     const imgInfoWidth = document.querySelector("#img-info-width");
     const imgInfoHeight = document.querySelector("#img-info-height");
-    const previewContainer = document.querySelector(".img-preview-container")
+    const previewContainer = document.querySelector(".img-preview-container");
+    const pixelation = document.querySelector("#pixelation");
 
     img.src = reader.result; // base64
 
     img.onload = () => {
       if (img.width * img.height > 256 * 256) {
-        imgError.style.display = "block";
+        setImageErrorMassage(true);
         img.src = "";
         return;
       }
 
-      imgError.style.display = "none";
+      pixelation.style.display = "block";
+
+      setImageErrorMassage(false);
       previewContainer.style.display = "block";
       previewCanvas.width = img.width;
       previewCanvas.height = img.height;
@@ -121,12 +133,18 @@ const fftSizeHandler = (value) => {
 }
 
 const defaultLang = "ja"
+
+const toggleVersionInfo = () => {
+  const versionInfo = document.querySelector("#version-info");
+  versionInfo.style.display = versionInfo.style.display === "block" ? "none" : "block";
+}
+
 const translateLang = (lang) => {
-  if (!["ja", "en"].includes(lang)) return;
+  if (!LANGUAGES.includes(lang)) return;
 
   document.querySelectorAll(`[data-lang-${lang}]`).forEach((elm) => {
-    if (!elm.hasAttribute(`data-lang-${defaultLang}`)) { // 最初の変更時のみ
-      elm.setAttribute(`data-lang-${defaultLang}`, elm.textContent)
+    if (!elm.hasAttribute(`data-lang-${DEFAULT_LANG}`)) { // 最初の変更時のみ
+      elm.setAttribute(`data-lang-${DEFAULT_LANG}`, elm.textContent)
     }
     if (elm.hasAttribute(`data-lang-${lang}`)) {
       elm.textContent = elm.getAttribute(`data-lang-${lang}`);
@@ -134,11 +152,24 @@ const translateLang = (lang) => {
   })
 }
 
+const changeFullScreen = () => {
+  if (!document.fullscreenEnabled) return;
+
+  console.log("to full screen");
+  const playerCanvas = document.querySelector("#player");
+  playerCanvas.requestFullscreen();
+}
+
 // - main ----------------------------------------------------------------
 
 window.onload = () => {
-  playerCanvas = document.querySelector("#player");
-  playerCtx = playerCanvas.getContext("2d");
+  const playerCanvas = document.querySelector("#player");
+  const playerCtx = playerCanvas.getContext("2d");
+  if (document.fullscreenEnabled) {
+    document.querySelector("#full-screen-error").style.display = "none";
+  } else {
+    document.querySelector("#full-screen-button").setAttribute("disabled", true);
+  }
   spectrumType = document.querySelector("#spectrum-type").value;
   fftSize = Number(document.querySelector("#spectrum-fft-size").value);
   spectrumSensitivity = Number(document.querySelector("#spectrum-sensitivity").value);
@@ -203,7 +234,7 @@ window.onload = () => {
       for (let i = 0; i < freqByteData.length; i++) {
         const freqSum = freqByteData[i] / 256;
 
-        if (spectrumType === "log") { // || spectrumType === "pixel"
+        if (spectrumType === "log") {
           playerCtx.rect(
             Math.log(i) / Math.log(freqByteData.length) * w, (1 - freqSum) * h,
             1, freqSum * h

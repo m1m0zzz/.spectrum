@@ -15,7 +15,7 @@
       <img src="assets/logo_192_trim.png" alt="logo">
     </a>
 
-    <!-- TODO: github icon, toggle color mode, language -->
+    <!-- TODO: toggle color mode -->
 
     <div class="utility">
       <select name="language" id="language" onchange="translateLang(this.value)">
@@ -39,11 +39,22 @@
         <li data-lang-en="Upload music (wav, mp3...)">音声をアップ (wav, mp3...)</li>
         <li data-lang-en="Play music!">音声を再生！</li>
       </ol>
+      <a class="action-link" data-lang-en="Supported Versions"
+        onclick="toggleVersionInfo()">サポートされているバージョン</a>
+      <div id="version-info" style="display: none;">
+        <ul style="margin-top: 0.25rem;">
+          <li>Chrome 98+</li>
+          <li>Edge 98+</li>
+          <li>Firefox 94+</li>
+          <li>Opera 84+</li>
+          <li>Safari 15.4+</li>
+        </ul>
+      </div>
 
       <section>
         <p>🖼️ <span data-lang-en="Upload image file">画像をアップロード</span></p>
         <input type="file" id="image-input" onchange="uploadImage()" accept="image/*"><br>
-        <p id="img-error" data-lang-en="Image size is too large. (Images of 256px x 256px or less can be specified.)">画像サイズが大きすぎます。（256px × 256px以下の画像が指定可能です。）</p>
+        <p id="img-error" class="error" data-lang-en="Image size is too large. (Images of 256px x 256px or less can be specified.)">画像サイズが大きすぎます。（256px × 256px以下の画像が指定可能です。）</p>
         <p>
           <span data-lang-en="Image">画像</span>（
           <span data-lang-en="width: ">幅: </span>
@@ -118,8 +129,11 @@
             onchange="spectrumSmoothTime = Number(this.value)" />
           <label>ms</label>
         </div>
+      </section>
 
-        <!-- <button data-lang-en="full screen mode" onclick="changeFullScreen()">全画面モードに切り替える</button> -->
+      <section>
+        <button id="full-screen-button" data-lang-en="full screen mode" onclick="changeFullScreen()">全画面モードに切り替える(Beta)</button>
+        <p id="full-screen-error" class="error">全画面モードが使用できません</p>
       </section>
 
       <section>
