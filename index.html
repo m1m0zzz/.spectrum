@@ -54,7 +54,11 @@
       <section>
         <p>🖼️ <span data-lang-en="Upload image file">画像をアップロード</span></p>
         <input type="file" id="image-input" onchange="uploadImage()" accept="image/*"><br>
-        <p id="img-error" class="error" data-lang-en="Image size is too large. (Images of 256px x 256px or less can be specified.)">画像サイズが大きすぎます。（256px × 256px以下の画像が指定可能です。）</p>
+        <p id="img-error" class="error"
+           data-lang-en="Image is too large. Please pixelate. (Images of 256px x 256px or less can be specified.)"
+          >
+          画像が大き過ぎます。ドット化してください。（256px × 256px以下の画像が指定可能です。）
+        </p>
         <p>
           <span data-lang-en="Image">画像</span>（
           <span data-lang-en="width: ">幅: </span>
@@ -62,19 +66,19 @@
           <span id="img-info-height">0</span>px
           ）
         </p>
-        <div id="pixelation" style="display: none; margin-top: 0.5rem;">
+        <div id="pixelation" style="margin-top: 0.5rem;">
           <p>
             <span data-lang-en="Do you want to pixelate?">ドット化しますか？</span>
             <span id="pixelation-do" class="action-link" data-lang-en=" yes"
-              onclick="togglePixelation(this, true)">する</span>
+              onclick="togglePixelation(true)">する</span>
             <span>/</span>
             <span id="pixelation-do-not" class="pixelation-active" data-lang-en=" no"
-              onclick="togglePixelation(this, false)">&gt;しない</span>
+              onclick="togglePixelation(false)">&gt;しない</span>
           </p>
           <p id="pixelation-setting" style="display: none;">
             <span id="pixelation-before-size">（ N px × M px ）</span>
             <span>× 1 / </span>
-            <input type="number" min="2" value="2" onchange="pixelationSize = this.value = Math.max(2, this.value)">
+            <input id="pixelation-size" type="number" min="2" value="2" onchange="this.value = pixelationSizeHandler(this.value)">
             <span id="pixelation-after-size">→（ N px × M px ）</span>
           </p>
         </div>
@@ -148,7 +152,7 @@
       </section>
 
       <section>
-        <button id="full-screen-button" data-lang-en="full screen mode" onclick="changeFullScreen()">全画面モードに切り替える(Beta)</button>
+        <button id="full-screen-button" data-lang-en="full screen mode" onclick="changeFullScreen()">全画面モードに切り替える</button>
         <p id="full-screen-error" class="error">全画面モードが使用できません</p>
       </section>
 
