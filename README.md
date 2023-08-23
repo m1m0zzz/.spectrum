@@ -1,6 +1,7 @@
-# .spectrum
+# .Spectrum
 dot spectrum is a pixel-art-like spectrum analyzer. w/ Web Audio API.
 
+![preview](./preview.gif)
 
 ## 🛠️ Installation
 
@@ -24,4 +25,5 @@ yarn static -p 8080
 ## ❤️ Acknowledgments
 
 マルモニカ - 患者長ひっく (https://twitter.com/hicchicc) 様
+
 https://00ff.booth.pm/items/4927023
