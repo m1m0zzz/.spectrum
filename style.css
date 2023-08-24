@@ -18,6 +18,10 @@ body {
   color: #F56565;
 }
 
+.note {
+  color: #718096;
+}
+
 .action-link {
   text-decoration: underline;
   cursor: pointer;
