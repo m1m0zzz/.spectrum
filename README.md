@@ -3,7 +3,7 @@ dot spectrum is a pixel-art-like spectrum analyzer. w/ Web Audio API.
 
 ![preview](./preview.gif)
 
-## 🛠️ Installation
+## 🛠️ Getting Start
 
 1. yarn install
 
