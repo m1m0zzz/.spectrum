@@ -25,6 +25,14 @@ body {
 
 /* other */
 
+a, :visited {
+  color: #30736C;
+}
+
+a:hover {
+  color: #F29991;
+}
+
 input {
   background: #0000;
 }
@@ -83,7 +91,7 @@ main {
 
 .container {
   max-width: 720px;
-  padding: 10px;
+  padding: 1rem;
   margin-right: auto;
   margin-left: auto;
 }
