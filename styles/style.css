@@ -1,6 +1,7 @@
 @font-face {
   font-family: "x12y12pxMaruMinya";
-  src: url("assets/x12y12pxMaruMinya_2023-07-14/x12y12pxMaruMinya.ttf") format('truetype');
+  src: url("./../assets/x12y12pxMaruMinya_2023-07-14/x12y12pxMaruMinya.ttf") format('truetype');
+  font-display: swap;
 }
 
 body {
