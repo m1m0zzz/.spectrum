@@ -25,14 +25,6 @@ body {
 
 /* other */
 
-a, :visited {
-  color: #30736C;
-}
-
-a:hover {
-  color: #F29991;
-}
-
 input {
   background: #0000;
 }
@@ -122,6 +114,14 @@ footer {
   height: 80px;
   color: white;
   background: #89b9bd;
+
+  & a, :visited {
+    color: #30736C;
+  }
+
+  & a:hover {
+    color: #F29991;
+  }
 
   & div {
     width: 100%;
