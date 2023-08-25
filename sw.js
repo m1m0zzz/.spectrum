@@ -1,5 +1,5 @@
 // Cache name
-const CACHE_NAME = "app-caches-v1";
+const CACHE_NAME = "app-caches-v2";
 // Cache targets
 const urlsToCache = [
   "./",
