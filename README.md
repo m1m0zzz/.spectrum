@@ -5,17 +5,11 @@ dot spectrum is a pixel-art-like spectrum analyzer. w/ Web Audio API.
 
 ## 🛠️ Getting Start
 
-1. yarn install
+~~`yarn static -p 8080`~~
 
-```
-yarn
-```
 
-2. build localhost server
 
-```
-yarn static -p 8080
-```
+
 
 ## 📚 Tech Stack
 - Canvas API

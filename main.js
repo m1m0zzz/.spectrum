@@ -159,7 +159,7 @@ const uploadImage = () => {
 
 const updateAssociatedWithImageData = (imgWidth, imgHeight) => {
   memoAlpha = Array(imgWidth * imgHeight).fill(0);
-  logToPixelIndexMap = generateLogToPixelIndexMap(fftSize, imgHeight);
+  logToPixelIndexMap = generateLogToPixelIndexMap(fftSize, imgWidth);
 }
 
 const fftSizeHandler = (value) => {
@@ -205,8 +205,8 @@ const pixelationSizeHandler = (value) => {
     const pixelationBeforeSize = document.querySelector("#pixelation-before-size");
     const pixelationAfterSize = document.querySelector("#pixelation-after-size");
 
-    pixelationBeforeSize.textContent = `（ ${img.width} px × ${img.width} px ）`;
-    pixelationAfterSize.textContent = `（ ${Math.floor(img.width / pixelationSize)} px × ${Math.floor(img.width / pixelationSize)} px ）`;
+    pixelationBeforeSize.textContent = `（ ${img.width} px × ${img.height} px ）`;
+    pixelationAfterSize.textContent = `（ ${Math.floor(img.width / pixelationSize)} px × ${Math.floor(img.height / pixelationSize)} px ）`;
 
     if (isDoPixelation) {
       const previewCanvas = document.querySelector("#preview");
@@ -288,7 +288,7 @@ window.onload = () => {
 
         for (let x = 0; x < imageData.width; x++) {
           const begin = logToPixelIndexMap[x].begin;
-          const end = logToPixelIndexMap[x].end; // TODO; [bug] 特定の画像のときに .end が設定されていない
+          const end = logToPixelIndexMap[x].end;
           const sum = freqByteData.slice(begin, end + 1).reduce((sum, num) => sum + num, 0);
           const ave = sum / (end - begin + 1) / 256;
           const gridSize = spectrumGridSize/ 2
