@@ -65,7 +65,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #F8F4EA;
+  background: #f8f4ea;
   padding: 4px 8px 4px 8px;
 
   & .utility {
@@ -84,10 +84,14 @@ nav {
 main {
   background: #ECE8DD;
   line-height: 150%;
+
+  & p {
+    max-width: 720px;
+  }
 }
 
 .container {
-  max-width: 720px;
+  width: fit-content;
   padding: 1rem;
   margin-right: auto;
   margin-left: auto;
@@ -144,4 +148,25 @@ footer {
       justify-content: space-around;
     }
   }
+}
+
+#js-mouse {
+  pointer-events: none;
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(119, 70, 24, 0.2);
+  transform: translate(0,0);
+  transition: transform 0.05s ease-out;
+  z-index: 9999;
+  opacity: 0;
+}
+
+#js-mouse.js-hover {
+  width: 30px;
+  height: 30px;
+  background-color: rgba(137, 185, 189, 0.5);
+  transition: background-color 0.3s linear,
+    width 0.3s ease-out,
+    height 0.3s ease-out;
 }

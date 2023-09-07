@@ -84,6 +84,12 @@ const executePixelationSampling = (context, img, pixelSize) => {
   return newImageData;
 }
 
+// rem単位をpx単位に変換する
+const convertRemToPx = (rem) => {
+  var fontSize = getComputedStyle(document.documentElement).fontSize;
+  return rem * parseFloat(fontSize);
+}
+
 // - event handler ----------------------------------------------------------------
 
 const uploadSound = () => {
@@ -146,7 +152,7 @@ const uploadImage = () => {
       previewCtx.drawImage(img, 0, 0);
 
       if (isDoPixelation) {
-        pixelationSizeHandler(pixelationSize); // TODO: [refactor] pixelationSizeHandlerを使用せず ピクセル化する
+        onChangePixelationSize(pixelationSize); // TODO: [refactor] onChangePixelationSizeを使用せず ピクセル化する
       } else {
         imageData = previewCtx.getImageData(0, 0, img.width, img.height);
         updateAssociatedWithImageData(imageData.width, imageData.height);
@@ -162,13 +168,18 @@ const updateAssociatedWithImageData = (imgWidth, imgHeight) => {
   logToPixelIndexMap = generateLogToPixelIndexMap(fftSize, imgWidth);
 }
 
-const fftSizeHandler = (value) => {
+const onChangeFftSize = (value) => {
   if (nodeAnalyser) {
     nodeAnalyser.fftSize = value;
   }
   if (img.src !== "") {
     logToPixelIndexMap = generateLogToPixelIndexMap(value, imageData.width);
   }
+}
+
+const onChangeSpectrumType = (value) => {
+  spectrumType = value;
+  document.querySelector("#pixel-mode-setting").style.display = (value === "pixel" ? "block" : "none");
 }
 
 const togglePixelation = (boolean) => {
@@ -190,7 +201,7 @@ const togglePixelation = (boolean) => {
     pixelationDoNot.textContent = pixelationDoNot.textContent.replace(">", "");
     document.querySelector("#pixelation-setting").style.display = "block";
 
-    pixelationSizeHandler(pixelationSize); // TODO: [refactor] pixelationSizeHandlerを使用せず ピクセル化する
+    onChangePixelationSize(pixelationSize); // TODO: [refactor] onChangePixelationSizeを使用せず ピクセル化する
   } else {
     pixelationDoNot.textContent = ">" + pixelationDoNot.textContent
     pixelationDo.textContent = pixelationDo.textContent.replace(">", "");
@@ -198,7 +209,7 @@ const togglePixelation = (boolean) => {
   }
 }
 
-const pixelationSizeHandler = (value) => {
+const onChangePixelationSize = (value) => {
   pixelationSize = Math.max(2, value);
 
   if (img.src !== "") {
@@ -246,6 +257,13 @@ const changeFullScreen = () => {
   playerCanvas.requestFullscreen();
 }
 
+const onResizeWindow = () => {
+  document.querySelector("#player-width-input").max = document.body.clientWidth;
+  document.querySelector("#player-height-input").max = window.innerHeight;
+}
+
+window.onresize = onResizeWindow;
+
 // - main ----------------------------------------------------------------
 
 window.onload = () => {
@@ -256,6 +274,7 @@ window.onload = () => {
   } else {
     document.querySelector("#full-screen-button").setAttribute("disabled", true);
   }
+  onResizeWindow();
   pixelationSize = document.querySelector("#pixelation-size").value;
   spectrumType = document.querySelector("#spectrum-type").value;
   fftSize = Number(document.querySelector("#spectrum-fft-size").value);

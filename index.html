@@ -31,6 +31,7 @@
 </head>
 
 <body>
+  <div id="js-mouse"></div>
   <nav>
     <a href="https://m1m0zzz.github.io/.spectrum/">
       <img src="assets/logo_192_trim.png" width="143px" height="40px" alt="logo">
@@ -100,7 +101,7 @@
           <p id="pixelation-setting" style="display: none;">
             <span id="pixelation-before-size">（ N px × M px ）</span>
             <span>× 1 / </span>
-            <input id="pixelation-size" type="number" min="2" value="2" onchange="this.value = pixelationSizeHandler(this.value)">
+            <input id="pixelation-size" type="number" min="2" value="2" onchange="this.value = onChangePixelationSize(this.value)">
             <span id="pixelation-after-size">→（ N px × M px ）</span>
           </p>
         </div>
@@ -118,26 +119,26 @@
       <section>
         <p>⚙️ <span data-lang-en="Setting">設定</span></p>
         <!-- https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas -->
-        <label data-lang-en="width: ">幅:
+        <label><span data-lang-en="width: ">幅: </span>
           <input id="player-width-input" name="player-width-input" type="number" value="320" min="1" max="16384"
-            onchange="document.querySelector('#player').width = this.value =  Math.max(1, Math.min(this.value, 16384))" />
+            onchange="document.querySelector('#player').width = this.value =  Math.max(1, Math.min(this.value, this.max))" />
         </label>
         <span>px</span>
-        <label data-lang-en="height: ">高さ:
+        <label><span data-lang-en="height: ">高さ: </span>
           <input id="player-height-input" name="player-height-input" type="number" value="320" min="1" max="16384"
-            onchange="document.querySelector('#player').height = this.value = Math.max(1, Math.min(this.value, 16384))" />
+            onchange="document.querySelector('#player').height = this.value = Math.max(1, Math.min(this.value, this.max))" />
         </label>
         <span>px</span>
         <p class="note"
            data-lang-en="NOTE: The value should be n times the number of pixels in the image to display it nicely">
           ※ ドット絵のピクセル数×n倍の値にすると、きれいに表示できます
         </p>
-        <label data-lang-en="background: ">背景色:
+        <label><span data-lang-en="background: ">背景色: </span>
           <input type="color" value="#000000" onchange="document.querySelector('#player').style.background = this.value">
         </label>
         <br>
-        <label data-lang-en="FFT size: ">FFTサイズ:
-          <select name="spectrum-fft-size" id="spectrum-fft-size" onchange="fftSizeHandler(Number(this.value))">
+        <label><span data-lang-en="FFT size: ">FFTサイズ: </span>
+          <select name="spectrum-fft-size" id="spectrum-fft-size" onchange="onChangeFftSize(Number(this.value))">
             <option value="32">32</option>
             <option value="64">64</option>
             <option value="128">128</option>
@@ -151,9 +152,8 @@
             <option value="32768">32768</option>
           </select>
         </label>
-        <label data-lang-en="spectrum type: ">解析タイプ:
-          <select id="spectrum-type" onchange="spectrumType = this.value;
-          document.querySelector('#pixel-mode-setting').style.display = this.value === 'pixel' ? 'block' : 'none';">
+        <label><span data-lang-en="spectrum type: ">FFTタイプ: </span>
+          <select id="spectrum-type" onchange="onChangeSpectrumType(this.value)">
             <option value="liner">Liner</option>
             <option value="log">Log</option>
             <option value="pixel" selected>Pixel</option>
@@ -161,18 +161,18 @@
         </label>
         <div id="pixel-mode-setting">
           <p>- pixel mode setting -</p>
-          <label data-lang-en="sensitivity: ">感度:
+          <label><span data-lang-en="sensitivity: ">感度: </span>
             <input id="spectrum-sensitivity" type="number" min="0.1" max="10" step="0.1" value="1.0"
               onchange="spectrumSensitivity = Math.max(0.1, Math.min(Number(this.value), 10))" />
           </label>
           <br>
-          <label data-lang-en="grid size: ">グリッドサイズ:
+          <label><span data-lang-en="grid size: ">グリッドサイズ: </span>
             <input id="spectrum-grid-size" type="number" min="0" value="0"
               onchange="spectrumGridSize = Number(this.value)" />
           </label>
           <span>px</span>
           <br>
-          <label data-lang-en="smooth: ">スムーズ:
+          <label><span data-lang-en="smooth: ">スムーズ: </span>
             <input id="spectrum-smooth-time" type="number" min="0" value="0"
               onchange="spectrumSmoothTime = Number(this.value)" />
           </label>
@@ -193,15 +193,16 @@
 
   <footer>
     <div>
-      <p>&copy; 2023 mimoz</p>
       <div>
         <a href="https://m1m0zzz.github.io/" target="_blank" rel="noopener noreferrer">Home Page</a>
         <a href="https://twitter.com/m1m0zzz" target="_blank" rel="noopener noreferrer">Twitter</a>
         <a href="https://soundcloud.com/mimozzz" target="_blank" rel="noopener noreferrer">SoundCloud</a>
       </div>
+      <p>&copy; 2023 mimoz</p>
     </div>
   </footer>
 
+  <script src="./mouse.js"></script>
   <script src="main.js"></script>
 
   <!-- PWA -->
