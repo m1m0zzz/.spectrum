@@ -113,7 +113,7 @@
       <section>
         <p>🎵 <span data-lang-en="Upload audio file.">音声をアップロード</span></p>
         <input type="file" id="audio-input" aria-label="Upload audio" onchange="uploadSound()" accept="audio/*"><br>
-        <audio controls autoplay src=""></audio>
+        <audio controls src=""></audio>
       </section>
 
       <section>
@@ -134,7 +134,7 @@
           ※ ドット絵のピクセル数×n倍の値にすると、きれいに表示できます
         </p>
         <label><span data-lang-en="background: ">背景色: </span>
-          <input type="color" value="#000000" onchange="document.querySelector('#player').style.background = this.value">
+          <input id="background" type="color" value="#000000" onchange="background = this.value">
         </label>
         <br>
         <label><span data-lang-en="FFT size: ">FFTサイズ: </span>
@@ -183,10 +183,18 @@
       <section>
         <button id="full-screen-button" data-lang-en="full screen mode" onclick="changeFullScreen()">全画面モードに切り替える</button>
         <p id="full-screen-error" class="error">全画面モードが使用できません</p>
+
+        <button id="capture-video-button" data-lang-en="Make a video. (WebM)" onclick="makeVideo()">動画を作成する(WebM)</button>
+        <br>
+        <p id="capture-video-message" style="display: none;">動画を作成中です...</p>
+        <p id="capture-video-error" class="error" style="display: none;" data-lang-en="Upload your image and audio.">画像と音声をアップロードしてください</p>
+        <a id="download-video" download style="display: none;" data-lang-en="Download video">動画をダウンロードする</a>
       </section>
 
       <section>
-        <canvas id="player" width="320" height="320" style="background: black;"></canvas>
+        <div class="canvas-container">
+          <canvas id="player" width="320" height="320" style="background: black;"></canvas>
+        </div>
       </section>
     </div>
   </main>

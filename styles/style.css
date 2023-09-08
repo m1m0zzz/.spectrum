@@ -92,6 +92,7 @@ main {
 
 .container {
   width: fit-content;
+  max-width: 100%;
   padding: 1rem;
   margin-right: auto;
   margin-left: auto;
@@ -101,6 +102,13 @@ main {
   display: none;
   overflow: auto;
   width: 100%;
+}
+
+.canvas-container {
+  overflow: auto;
+  width: min-content;
+  max-width: 100%;
+  max-height: 100vh;
 }
 
 #img-error {

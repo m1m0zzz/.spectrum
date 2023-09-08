@@ -7,8 +7,10 @@ let memoAlpha;
 let logToPixelIndexMap;
 let audioContext;
 let nodeAnalyser;
+let recorderDestination;
 
 // parameters
+let background;
 let fftSize;
 let spectrumType;
 let spectrumSensitivity;
@@ -84,6 +86,20 @@ const executePixelationSampling = (context, img, pixelSize) => {
   return newImageData;
 }
 
+const padding = (size, numString) => {
+  return ("0".repeat(size) + numString).slice(-size)
+}
+
+const formatDate = (date) => {
+  const Y = date.getFullYear();
+  const M = padding(2, date.getMonth() + 1);
+  const D = padding(2, date.getDate());
+  const h = padding(2, date.getHours());
+  const m = padding(2, date.getMinutes());
+  const s = padding(2, date.getSeconds());
+  return (Y + "_" + M + "_" + D + "_" + h + "_" + m + "_" + s);
+}
+
 // rem単位をpx単位に変換する
 const convertRemToPx = (rem) => {
   var fontSize = getComputedStyle(document.documentElement).fontSize;
@@ -104,13 +120,15 @@ const uploadSound = () => {
       audioContext = new AudioContext();
       nodeAnalyser = audioContext.createAnalyser();
       nodeAnalyser.fftSize = fftSize;
-
       // 0～1の範囲でデータの動きの速さ 0だともっとも速く、1に近づくほど遅くなる
       nodeAnalyser.smoothingTimeConstant = 0.85;
-      nodeAnalyser.connect(audioContext.destination);
 
-      let nodeSource = audioContext.createMediaElementSource(audioElement);
+      const nodeSource = audioContext.createMediaElementSource(audioElement);
+      recorderDestination = audioContext.createMediaStreamDestination();
+
       nodeSource.connect(nodeAnalyser);
+      nodeAnalyser.connect(recorderDestination);
+      nodeAnalyser.connect(audioContext.destination);
     }
   }, false);
 
@@ -257,24 +275,60 @@ const changeFullScreen = () => {
   playerCanvas.requestFullscreen();
 }
 
-const onResizeWindow = () => {
-  document.querySelector("#player-width-input").max = document.body.clientWidth;
-  document.querySelector("#player-height-input").max = window.innerHeight;
-}
+// Media Recorderを使用して動画を作成する
+const makeVideo = () => {
+  const audio = document.querySelector("audio");
+  const error = document.querySelector("#capture-video-error");
+  if (!audioContext || img.src === "" || /\.html/.test(audio.src)) {
+    error.style.display = "block";
+    return;
+  } else {
+    error.style.display = "none";
+  }
 
-window.onresize = onResizeWindow;
+  const canvas = document.querySelector("#player");
+  const canvasStream = canvas.captureStream();
+  const audioStream = recorderDestination.stream;
+  const mediaStream = new MediaStream(); // canvasStream + audioStream
+  [canvasStream, audioStream].forEach((stream) => {
+    console.log(stream.getTracks());
+    stream.getTracks().forEach((track) => mediaStream.addTrack(track));
+  });
+  const mediaRecorder = new MediaRecorder(mediaStream);
+
+  const anchor = document.querySelector("#download-video");
+  const message = document.querySelector("#capture-video-message");
+
+  // TODO; encoding mp4 w/ffmpeg.wasm
+
+  mediaRecorder.ondataavailable = (e) => {
+    const videoBlob = new Blob([e.data], { type: e.data.type });
+    blobUrl = window.URL.createObjectURL(videoBlob);
+    anchor.download = formatDate(new Date()) + ".webm"; // file name
+    anchor.href = blobUrl;
+    anchor.style.display = "block";
+    message.style.display = "none";
+  }
+
+  // play!
+  message.style.display = "block";
+  anchor.style.display = "none";
+  const audioElement = document.querySelector("audio");
+  audioElement.currentTime = 0;
+  mediaRecorder.start();
+  audioElement.play();
+
+  setTimeout(() => {
+    console.log("stop video");
+    mediaRecorder.stop();
+  }, audio.duration * 1000);
+}
 
 // - main ----------------------------------------------------------------
 
 window.onload = () => {
-  const playerCanvas = document.querySelector("#player");
-  const playerCtx = playerCanvas.getContext("2d");
-  if (document.fullscreenEnabled) {
-    document.querySelector("#full-screen-error").style.display = "none";
-  } else {
-    document.querySelector("#full-screen-button").setAttribute("disabled", true);
-  }
-  onResizeWindow();
+  // set parameters
+  background = document.querySelector("#background").value;
   pixelationSize = document.querySelector("#pixelation-size").value;
   spectrumType = document.querySelector("#spectrum-type").value;
   fftSize = Number(document.querySelector("#spectrum-fft-size").value);
@@ -282,12 +336,25 @@ window.onload = () => {
   spectrumGridSize = Number(document.querySelector("#spectrum-grid-size").value);
   spectrumSmoothTime = Number(document.querySelector("#spectrum-smooth-time").value);
 
+  if (document.fullscreenEnabled) {
+    document.querySelector("#full-screen-error").style.display = "none";
+  } else {
+    document.querySelector("#full-screen-button").setAttribute("disabled", true);
+  }
+
+  const playerCanvas = document.querySelector("#player");
+  const playerCtx = playerCanvas.getContext("2d");
+
   const draw = () => {
     requestAnimationFrame(draw);
 
     const w = playerCanvas.width;
     const h = playerCanvas.height;
     playerCtx.clearRect(0, 0, w, h);
+    playerCtx.beginPath();
+    playerCtx.rect(0, 0, w, h);
+    playerCtx.fillStyle = background;
+    playerCtx.fill();
 
     if (!nodeAnalyser) return;
     const freqByteData = new Uint8Array(fftSize / 2);
@@ -334,7 +401,7 @@ window.onload = () => {
         playerCtx.fillText("No Image", 20, 20);
         playerCtx.fillStyle = "black";
       }
-    } else {
+    } else { // liner or log
       playerCtx.beginPath();
 
       for (let i = 0; i < freqByteData.length; i++) {
