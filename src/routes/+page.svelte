@@ -13,8 +13,6 @@
   <meta property="og:url" content="https://m1m0zzz.github.io/.spectrum/" />
   <meta property="og:image" content="https://m1m0zzz.github.io/.spectrum/assets/thumbnail.jpg" />
   <meta property="og:site_name" content=".Spectrum" />
-  <link rel="stylesheet" href="/styles/modern-css-reset/reset.min.css">
-  <link rel="stylesheet" href="/styles/style.css">
 
   <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32x32.png">
