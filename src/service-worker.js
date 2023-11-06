@@ -35,11 +35,14 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
 	// ignore POST requests etc
-	if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (event.request.method !== "GET" ||
+      url.origin.startsWith('chrome-extension') ||
+      url.origin.includes('extension') ||
+      !(url.origin.indexOf('http') === 0)) return;
 
-	async function respond() {
-		const url = new URL(event.request.url);
-		const cache = await caches.open(CACHE);
+  async function respond() {
+    const cache = await caches.open(CACHE);
 
 		// `build`/`files` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
@@ -50,8 +53,6 @@ self.addEventListener("fetch", (event) => {
 		// fall back to the cache if we"re offline
 		try {
 			const response = await fetch(event.request);
-
-      // NOTE: https://stackoverflow.com/questions/49157622/service-worker-typeerror-when-opening-chrome-extension
 
 			if (response.status === 200) {
 				cache.put(event.request, response.clone());
