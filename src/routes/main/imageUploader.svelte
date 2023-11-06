@@ -57,9 +57,6 @@
     const result = await toBase64(files[0]);
     img = await loadImage(result);
 
-    if (!previewRef) return;
-    const previewCtx = previewRef.getContext("2d") as CanvasRenderingContext2D;
-
     if (img.width * img.height > 256 * 256) {
       imgError = true;
       isDoPixelation = true;

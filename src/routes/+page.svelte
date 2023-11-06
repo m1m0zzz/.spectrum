@@ -1,5 +1,4 @@
 <!-- TODO
-  - styles
   - service worker
 -->
 

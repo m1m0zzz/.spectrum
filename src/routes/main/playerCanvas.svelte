@@ -24,10 +24,17 @@
   // visibility
   export let playerRef: HTMLCanvasElement | null;
   let playerCtx: CanvasRenderingContext2D;
+  let lastTime = performance.now();
 
   const draw = () => {
     if (!playerRef) return;
     requestAnimationFrame(draw);
+
+    // counting fps
+    const diffMsec = performance.now() - lastTime;
+    lastTime = performance.now();
+    const realFps = 1000 / diffMsec;
+    // console.log(realFps);
 
     const w = playerRef.width;
     const h = playerRef.height;
@@ -107,7 +114,7 @@
   }
 
   onMount(() => {
-    playerCtx = playerRef?.getContext("2d") as CanvasRenderingContext2D;
+    playerCtx = playerRef?.getContext("2d", { alpha: false }) as CanvasRenderingContext2D;
     draw();
 
     dispatch("mount", {
