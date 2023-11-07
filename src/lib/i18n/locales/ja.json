@@ -12,6 +12,8 @@
   "do_not_pixelation": "しない",
   "upload_audio": "音声をアップロード",
   "parameters_setting": "⚙️ 設定",
+  "parameters_window_size": "画面サイズ: ",
+  "parameters_custom": "カスタム",
   "parameters_width": "幅: ",
   "parameters_height": "高さ: ",
   "parameters_note": "※ ドット絵のピクセル数×n倍の値にすると、きれいに表示できます",

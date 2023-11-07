@@ -7,6 +7,7 @@
   import AudioUploader from './audioUploader.svelte';
 	import PlayerCanvas from './playerCanvas.svelte';
 	import PlayerMenu from './playerMenu.svelte';
+  import SizeInput from "./sizeInput.svelte";
 
   let imageLoaded = false;
   let imageData: ImageData;
@@ -82,20 +83,14 @@
       <p>{$_("parameters_setting")}</p>
       <!-- https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas -->
       <div style:display="flex" style:flex-wrap="wrap">
-        <label style:padding-right="20px">{$_("parameters_width")}
-          <input
-            type="number" min="1" max="16384"
-            bind:value={playerWidth}
-            on:change={e => playerWidth = clamp(Number(e.currentTarget.value), 1, 16384)} />
-            <span>px</span>
-        </label>
-        <label style:padding-right="20px">{$_("parameters_height")}
-          <input
-            type="number" min="1" max="16384"
-            bind:value={playerHeight}
-            on:change={e => playerHeight = clamp(Number(e.currentTarget.value), 1, 16384)} />
-            <span>px</span>
-        </label>
+        <SizeInput
+          playerWidth={playerWidth}
+          playerHeight={playerHeight}
+          on:message={(event) => {
+            if (event.detail.playerWidth) playerWidth = event.detail.playerWidth;
+            if (event.detail.playerHeight) playerHeight = event.detail.playerHeight;
+          }}
+        />
       </div>
       <p class="note">{$_("parameters_note")}</p>
       <label>{$_("parameters_background")}

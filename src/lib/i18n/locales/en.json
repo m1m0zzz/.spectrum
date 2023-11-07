@@ -12,6 +12,8 @@
   "do_not_pixelation": " no",
   "upload_audio": "Upload audio file.",
   "parameters_setting": "⚙️ Setting",
+  "parameters_window_size": "window size: ",
+  "parameters_custom": "custom",
   "parameters_width": "width: ",
   "parameters_height": "height: ",
   "parameters_note": "NOTE: The value should be n times the number of pixels in the image to display it nicely",
