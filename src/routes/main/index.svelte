@@ -108,7 +108,6 @@
         <select
           name="spectrum-fft-size" bind:value={fftSize}
           on:change={(e) => {
-            // BUG; 32, 64 など、小さいfftSize の時、高域が常に100% になる
             const fftSize = Number(e.currentTarget.value)
             if (nodeAnalyser) nodeAnalyser.fftSize = fftSize;
             if (imageLoaded) {
@@ -116,17 +115,9 @@
             }
           }}
         >
-          <option value={32}>32</option>
-          <option value={64}>64</option>
-          <option value={128}>128</option>
-          <option value={256}>256</option>
-          <option value={512}>512</option>
-          <option value={1024}>1024</option>
-          <option value={2048}>2048</option>
-          <option value={4096}>4096</option>
-          <option value={8192} selected>8192</option>
-          <option value={16384}>16384</option>
-          <option value={32768}>32768</option>
+          {#each [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768] as size }
+            <option value={size} selected={size == fftSize} disabled={size < playerWidth}>{capitalize(String(size))}</option>
+          {/each}
         </select>
       </label>
       <label>{$_("parameters_spectrum_type")}
