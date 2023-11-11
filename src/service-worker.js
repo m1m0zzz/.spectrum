@@ -12,6 +12,8 @@ const ASSETS = [
 	...files  // everything in `static`
 ];
 
+const coepCredentialless = false; // TODO
+
 self.addEventListener("install", (event) => {
   async function addFilesToCache() {
 		const cache = await caches.open(CACHE);
@@ -54,11 +56,25 @@ self.addEventListener("fetch", (event) => {
 		try {
 			const response = await fetch(event.request);
 
+			if (response.status === 0) {
+				return response;
+			}
+
 			if (response.status === 200) {
 				cache.put(event.request, response.clone());
 			}
 
-			return response;
+			const newHeaders = new Headers(response.headers);
+			newHeaders.set("Cross-Origin-Embedder-Policy",
+				coepCredentialless ? "credentialless" : "require-corp"
+			);
+			newHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
+
+			return new Response(response.body, {
+					status: response.status,
+					statusText: response.statusText,
+					headers: newHeaders,
+			});
 		} catch {
 			return cache.match(event.request);
 		}

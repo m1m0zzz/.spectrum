@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
 	import { _ } from "svelte-i18n";
 	import { formatDate } from "$lib";
+	import { convertMp4, load } from "$lib/ffmpeg";
 
   export let audioRef: HTMLAudioElement | null;
   export let playerRef: HTMLCanvasElement | null;
@@ -10,13 +11,23 @@
   export let imageLoaded: boolean;
 
   let anchorRef: HTMLAnchorElement | null;
-  let status: "none" | "generated" | "complete" = "none";
+  let status: "none" | "generating" | "converting" | "completed" = "none";
   let error = false;
+  let ffmpegStatus: "loading" | "error" | "ok" = "loading"
 
   $: enableFullscreen = false;
 
-  onMount(() => {
+  onMount(async () => {
     enableFullscreen = document.fullscreenEnabled;
+    try {
+      await load();
+      ffmpegStatus = "ok";
+    }
+    catch (error) {
+      ffmpegStatus = "error";
+      console.log("error: ffmpeg load error");
+      console.error(error);
+    }
   });
 
   // Media Recorderを使用して動画を作成する
@@ -35,19 +46,21 @@
     });
     const mediaRecorder = new MediaRecorder(mediaStream);
 
-    // TODO; encoding mp4 w/ffmpeg.wasm
-
     mediaRecorder.ondataavailable = (e) => {
       const videoBlob = new Blob([e.data], { type: e.data.type });
-      const blobUrl = window.URL.createObjectURL(videoBlob);
-      anchorRef!.download = formatDate(new Date()) + ".webm"; // file name
-      anchorRef!.href = blobUrl;
-      status = "complete";
+      const filename = formatDate(new Date())
+      const webmFile = new File([videoBlob], filename + ".webm", { type: videoBlob.type });
+      status = "converting";
+      convertMp4(webmFile).then((url) => {
+        status = "completed";
+        anchorRef!.download = filename + ".mp4";
+        anchorRef!.href = url;
+      })
     }
 
     // play!
     error = false;
-    status = "generated";
+    status = "generating";
 
     audioRef.currentTime = 0;
     mediaRecorder.start();
@@ -70,10 +83,13 @@
 
   <button class="button" on:click={() => makeVideo()}>{$_("generate_video")}</button>
   <br>
-  <p style:display={status == "generated" ? "block" : "none"}>{$_("generate_video_message")}</p>
+  <p style:display={status == "generating" || status == "converting" ? "block" : "none"}>
+    {$_("generate_video_message")}
+  </p>
+  <p class="error" style:display={ffmpegStatus == "error" ? "block" : "none"}>{$_("ffmpeg_error")}</p>
   <p class="error" style:display={error ? "block" : "none"}>{$_("generate_video_error")}</p>
   <!-- svelte-ignore a11y-invalid-attribute -->
   <a href="#" download bind:this={anchorRef}
-    style:display={status == "complete" ? "block" : "none"}
+    style:display={status == "completed" ? "block" : "none"}
   >{$_("download_video")}</a>
 </section>

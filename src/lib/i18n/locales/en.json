@@ -25,8 +25,9 @@
   "parameters_smooth": "smooth: ",
   "change_full_screen": "full screen mode",
   "disabled_full_screen": "Full screen mode is not available",
-  "generate_video": "Generate video (WebM)",
-  "generate_video_message": "Generating video...",
+  "generate_video": "Generate video",
+  "generate_video_message": "Generating video... Please keep the screen open.",
   "generate_video_error": "Upload your image and audio.",
+  "ffmpeg_error": "error: ffmpeg is not available.",
   "download_video": "Download video"
 }

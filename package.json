@@ -32,6 +32,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@ffmpeg/core": "^0.10.0",
+		"@ffmpeg/ffmpeg": "^0.10.1",
 		"svelte-i18n": "^4.0.0"
 	}
 }
