@@ -1,8 +1,8 @@
 # .Spectrum
+
 dot spectrum is a pixel-art-like spectrum analyzer. w/ Web Audio API.
 
 ![preview](./preview.gif)
-
 
 ## Developing
 
@@ -28,13 +28,15 @@ You can preview the production build with `npm run preview`.
 > To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
 
 ## TODO
-- ドット化サイズを1/nと、ピクセルサイズの両方で指定可能にする
+
+- ドット化サイズを 1/n と、ピクセルサイズの両方で指定可能にする
 - キャンバスの大きさ テンプレート
 - Media Recorder
-  - mp4対応
+  - mp4 対応
 - audio プレイヤー デザイン
 
 ## 📚 Tech Stack
+
 - Canvas API
 - Web Audio API
 - PWA

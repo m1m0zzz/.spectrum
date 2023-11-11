@@ -3,28 +3,28 @@
 /// <reference lib="esnext" />
 /// <reference lib="webworker" />
 
-import { build, files, version } from "$service-worker";
+import { build, files, version } from '$service-worker';
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 const ASSETS = [
 	...build, // the app itself
-	...files  // everything in `static`
+	...files // everything in `static`
 ];
 
 const coepCredentialless = false; // TODO
 
-self.addEventListener("install", (event) => {
-  async function addFilesToCache() {
+self.addEventListener('install', (event) => {
+	async function addFilesToCache() {
 		const cache = await caches.open(CACHE);
 		await cache.addAll(ASSETS);
 	}
 
-  console.log("install service worker");
+	console.log('install service worker');
 	event.waitUntil(addFilesToCache());
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', (event) => {
 	// Remove previous cached data from disk
 	async function deleteOldCaches() {
 		for (const key of await caches.keys()) {
@@ -35,16 +35,19 @@ self.addEventListener("activate", (event) => {
 	event.waitUntil(deleteOldCaches());
 });
 
-self.addEventListener("fetch", (event) => {
+self.addEventListener('fetch', (event) => {
 	// ignore POST requests etc
-  const url = new URL(event.request.url);
-  if (event.request.method !== "GET" ||
-      url.origin.startsWith('chrome-extension') ||
-      url.origin.includes('extension') ||
-      !(url.origin.indexOf('http') === 0)) return;
+	const url = new URL(event.request.url);
+	if (
+		event.request.method !== 'GET' ||
+		url.origin.startsWith('chrome-extension') ||
+		url.origin.includes('extension') ||
+		!(url.origin.indexOf('http') === 0)
+	)
+		return;
 
-  async function respond() {
-    const cache = await caches.open(CACHE);
+	async function respond() {
+		const cache = await caches.open(CACHE);
 
 		// `build`/`files` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
@@ -65,15 +68,16 @@ self.addEventListener("fetch", (event) => {
 			}
 
 			const newHeaders = new Headers(response.headers);
-			newHeaders.set("Cross-Origin-Embedder-Policy",
-				coepCredentialless ? "credentialless" : "require-corp"
+			newHeaders.set(
+				'Cross-Origin-Embedder-Policy',
+				coepCredentialless ? 'credentialless' : 'require-corp'
 			);
-			newHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
+			newHeaders.set('Cross-Origin-Opener-Policy', 'same-origin');
 
 			return new Response(response.body, {
-					status: response.status,
-					statusText: response.statusText,
-					headers: newHeaders,
+				status: response.status,
+				statusText: response.statusText,
+				headers: newHeaders
 			});
 		} catch {
 			return cache.match(event.request);
