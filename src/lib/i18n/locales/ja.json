@@ -26,7 +26,7 @@
   "change_full_screen": "全画面モードに切り替える",
   "disabled_full_screen": "全画面モードが使用できません",
   "generate_video": "動画を作成する",
-  "generate_video_messages": "動画を作成中です... 画面を開いたままにしてください",
+  "generate_video_message": "動画を作成中です... 画面を開いたままにしてください",
   "generate_video_error": "画像と音声をアップロードしてください",
   "ffmpeg_error": "エラー: ffmpegが使用できません",
   "download_video": "動画をダウンロードする"
