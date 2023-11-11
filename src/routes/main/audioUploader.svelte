@@ -12,12 +12,14 @@
   export let recorderDestination: MediaStreamAudioDestinationNode;
 
   let files: FileList;
+  let audioLoaded = false;
 
   const uploadSound = async () => {
     if (!audioRef) return;
     const result = await toBase64(files[0]);
 
     audioRef.src = result;
+    audioLoaded = true;
 
     if (!audioContext) { // init audio context
       audioContext = new AudioContext();
@@ -51,11 +53,11 @@
 </script>
 
 <section>
-  <p>🎵 <span>{$_("upload_audio")}</span></p>
+  <h3>🎵 {$_("upload_audio")}</h3>
   <input
     type="file" accept="audio/*" aria-label="Upload audio"
     bind:files
     on:change={() => uploadSound()}
   ><br>
-  <audio controls src="" controlslist="nodownload" bind:this={audioRef}></audio>
+  <audio controls={audioLoaded} src="" controlslist="nodownload" bind:this={audioRef}></audio>
 </section>

@@ -70,7 +70,7 @@
 </script>
 
 <section>
-  <p>🖼️ <span>{$_("upload_image")}</span></p>
+  <h3>🖼️ {$_("upload_image")}</h3>
   <input
     type="file" accept="image/*" aria-label="Upload image"
     bind:files
@@ -81,10 +81,10 @@
     {$_("upload_image_error")}
   </p>
   {/if}
+  {#if imageLoaded}
   <p>
     {$_("image_info", { values: { width: img?.width || 0, height: img?.height || 0 }})}
   </p>
-  {#if imageLoaded}
   <div style="margin-top: 0.5rem;">
     <p>
       <span>{$_("is_pixelation")}</span>
@@ -104,8 +104,8 @@
     </p>
     {#if isDoPixelation}
     <p>
-      <span>（ {img?.width || 0} px × {img?.height || 0} px ）</span>
-      <span>× 1 / </span>
+      <span>X: </span>
+      <span>1 / </span>
       <input
         type="number" min="2"
         bind:value={pixelationSize}
@@ -117,9 +117,8 @@
           }
         }}
       >
-        <!-- on:change={() => console.log("onChangePixelationSize(this.value)")} -->
       <span>
-        （ {pixelationSize ? Math.floor((img?.width || 0) / pixelationSize) : 0} px × {pixelationSize ? Math.floor((img?.height || 0) / pixelationSize) : 0} px ）
+        ={">"} ( {pixelationSize ? Math.floor((img?.width || 0) / pixelationSize) : 0} px × {pixelationSize ? Math.floor((img?.height || 0) / pixelationSize) : 0} px )
       </span>
     </p>
     {/if}

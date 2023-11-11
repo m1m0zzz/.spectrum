@@ -6,7 +6,7 @@
   "supported_version": "Supported Versions",
   "upload_image": "Upload image file",
   "upload_image_error": "Image is too large. Please pixelate. (Images of 256px x 256px or less can be specified.)",
-  "image_info": "Image ( width: {width}px, height: {height}px )",
+  "image_info": "Image size ( width: {width}px, height: {height}px )",
   "is_pixelation": "Do you want to pixelate?",
   "do_pixelation": " yes",
   "do_not_pixelation": " no",

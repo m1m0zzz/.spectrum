@@ -18,7 +18,7 @@
     "custom": undefined
   }
 
-  let customInput = false;
+  let customInput = true;
 </script>
 
 <div>
@@ -38,7 +38,7 @@
     }
   }}>
     {#each Object.entries(DISPLAY_SIZES) as [key, size] (key)}
-      <option value={size || "custom"}>{key == "custom" ? $_("parameters_custom") : key}</option>
+      <option value={size || "custom"} selected={customInput && key == "custom"}>{key == "custom" ? $_("parameters_custom") : key}</option>
     {/each}
   </select>
   {#if customInput}

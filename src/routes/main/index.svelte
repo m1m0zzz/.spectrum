@@ -80,7 +80,7 @@
     />
 
     <section>
-      <p>{$_("parameters_setting")}</p>
+      <h3>{$_("parameters_setting")}</h3>
       <!-- https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas -->
       <div style:display="flex" style:flex-wrap="wrap">
         <SizeInput

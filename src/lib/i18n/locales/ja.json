@@ -6,7 +6,7 @@
   "supported_version": "サポートされているバージョン",
   "upload_image": "画像をアップロード",
   "upload_image_error": "画像が大き過ぎます。ドット化してください。（256px × 256px以下の画像が指定可能です。）",
-  "image_info": "画像（幅: {width}px, 高さ: {height}px）",
+  "image_info": "画像サイズ（幅: {width}px, 高さ: {height}px）",
   "is_pixelation": "ドット化しますか？",
   "do_pixelation": "する",
   "do_not_pixelation": "しない",

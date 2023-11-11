@@ -39,6 +39,10 @@ body {
 
 /* other */
 
+h3 {
+  font-weight: normal;
+}
+
 input {
   background: #0000;
 }
@@ -110,6 +114,7 @@ main {
 .img-preview-container {
   /* display: none; */
   overflow: auto;
+  margin-top: 1rem;
   width: 100%;
 }
 
@@ -129,7 +134,7 @@ main {
 }
 
 section {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 
