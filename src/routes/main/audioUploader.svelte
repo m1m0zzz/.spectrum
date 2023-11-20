@@ -61,6 +61,6 @@
 		aria-label="Upload audio"
 		bind:files
 		on:change={() => uploadSound()}
-	/>
+	/><br />
 	<audio controls={audioLoaded} src="" controlslist="nodownload" bind:this={audioRef} />
 </section>

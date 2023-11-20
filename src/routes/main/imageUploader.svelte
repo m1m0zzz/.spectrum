@@ -79,7 +79,7 @@
 		aria-label="Upload image"
 		bind:files
 		on:change={() => uploadImage()}
-	/>
+	/><br />
 	{#if imgError}
 		<p class="error">
 			{$_('upload_image_error')}
