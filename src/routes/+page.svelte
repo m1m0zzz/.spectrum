@@ -5,10 +5,6 @@
 	import Footer from './footer.svelte';
 </script>
 
-<!-- TODO
-  - service worker
--->
-
 <svelte:head>
 	<title>.Spectrum | ドット絵風スペクトルアナライザー</title>
 	<meta name="keywords" content="作曲,DTM,無料,plugin,audio visualizer" />

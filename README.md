@@ -30,10 +30,9 @@ You can preview the production build with `npm run preview`.
 ## TODO
 
 - ドット化サイズを 1/n と、ピクセルサイズの両方で指定可能にする
-- キャンバスの大きさ テンプレート
-- Media Recorder
-  - mp4 対応
-- audio プレイヤー デザイン
+- style
+  - audio
+  - file Input 
 
 ## 📚 Tech Stack
 

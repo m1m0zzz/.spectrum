@@ -19,6 +19,9 @@
 	};
 
 	let customInput = true;
+
+	// NOTE: canvas size
+	// https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas#キャンバスの最大寸法
 </script>
 
 <div>
