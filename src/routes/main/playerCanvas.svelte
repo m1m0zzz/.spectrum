@@ -33,6 +33,8 @@
 		// counting fps
 		const diffMsec = performance.now() - lastTime;
 		lastTime = performance.now();
+		// デバッグ用。下の console.log を戻すと fps を確認できる
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const realFps = 1000 / diffMsec;
 		// console.log(realFps);
 

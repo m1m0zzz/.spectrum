@@ -32,7 +32,7 @@ You can preview the production build with `npm run preview`.
 - ドット化サイズを 1/n と、ピクセルサイズの両方で指定可能にする
 - style
   - audio
-  - file Input 
+  - file Input
 
 ## 📚 Tech Stack
 
