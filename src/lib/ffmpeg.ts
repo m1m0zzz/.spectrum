@@ -63,13 +63,18 @@ export const load = () => {
 
 const VIDEO_KEY = 'video';
 
+// MediaRecorder の WebM は可変フレームレートで、フレームの間隔が揃わないと ffmpeg はタイムスタンプの単位（1ms）から
+// 1000fps と推定し、同じフレームを複製して 1000fps の MP4 を書き出す。出力のフレームレートを固定して防ぐ
+const OUTPUT_FPS = '30';
+
 // return: blob url
 export const convertMp4 = async (file: File, outputName = 'output.mp4') => {
 	const { ffmpeg, multiThread } = await load();
 	await ffmpeg.writeFile(VIDEO_KEY, await fetchFile(file));
+	const output = ['-r', OUTPUT_FPS, outputName];
 	const args = multiThread
-		? [...MT_ARGS.input, '-i', VIDEO_KEY, ...MT_ARGS.output, outputName]
-		: ['-i', VIDEO_KEY, outputName];
+		? [...MT_ARGS.input, '-i', VIDEO_KEY, ...MT_ARGS.output, ...output]
+		: ['-i', VIDEO_KEY, ...output];
 	console.time('exec');
 	await ffmpeg.exec(args);
 	console.timeEnd('exec');
