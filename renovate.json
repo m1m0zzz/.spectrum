@@ -1,4 +1,12 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": ["local>m1m0zzz/renovate-config"]
+	"extends": ["local>m1m0zzz/renovate-config"],
+	"packageRules": [
+		{
+			"description": "ffmpeg のコア（core / core-mt）は同じ版にそろえて 1 本の PR にし、automerge しない。コアはビルドに同梱して配っており、動画の変換が壊れても CI（check / lint / test / build）では分からないため、変換を試してから人が merge する",
+			"matchPackageNames": ["@ffmpeg/core", "@ffmpeg/core-mt"],
+			"groupName": "ffmpeg core",
+			"automerge": false
+		}
+	]
 }

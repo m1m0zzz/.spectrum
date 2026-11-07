@@ -8,5 +8,21 @@
 			>
 		</div>
 		<p>&copy; 2023 mimoz</p>
+		<p>
+			Video conversion uses
+			<a href="https://github.com/ffmpegwasm/ffmpeg.wasm" target="_blank" rel="noopener noreferrer"
+				>ffmpeg.wasm</a
+			>. Its FFmpeg core is licensed under
+			<a
+				href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+				target="_blank"
+				rel="noopener noreferrer">GPL-2.0-or-later</a
+			>; source:
+			<a
+				href="https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v{__FFMPEG_CORE_VERSION__}"
+				target="_blank"
+				rel="noopener noreferrer">ffmpeg.wasm v{__FFMPEG_CORE_VERSION__}</a
+			>.
+		</p>
 	</div>
 </footer>

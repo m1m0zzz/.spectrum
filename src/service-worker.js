@@ -7,10 +7,12 @@ import { build, files, version } from '$service-worker';
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
+// ffmpeg のコア（src/lib/ffmpeg.ts で同梱。1 つ約 32MB）は事前キャッシュしない。
+// 入れるとページを開いただけで全員がダウンロードすることになる。使ったときに下の fetch でキャッシュされる
 const ASSETS = [
 	...build, // the app itself
 	...files // everything in `static`
-];
+].filter((path) => !path.includes('ffmpeg-core'));
 
 const coepCredentialless = false; // TODO
 
