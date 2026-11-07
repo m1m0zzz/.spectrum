@@ -13,21 +13,29 @@
 	let anchorRef: HTMLAnchorElement | null;
 	let status: 'none' | 'generating' | 'converting' | 'completed' = 'none';
 	let error = false;
-	let ffmpegStatus: 'loading' | 'error' | 'ok' = 'loading';
+	let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = 'idle';
 
 	$: enableFullscreen = false;
 
-	onMount(async () => {
+	onMount(() => {
 		enableFullscreen = document.fullscreenEnabled;
-		try {
-			await load();
-			ffmpegStatus = 'ok';
-		} catch (error) {
-			ffmpegStatus = 'error';
-			console.log('error: ffmpeg load error');
-			console.error(error);
-		}
 	});
+
+	// ffmpeg のコア（約 32MB）はページを開いたときではなく、動画を作り始めたときに読み込む。
+	// 録画（曲の長さ）のあいだに読み込みが終わるので、変換を待つ時間はほとんど増えない
+	const prepareFFmpeg = () => {
+		if (ffmpegStatus == 'loading' || ffmpegStatus == 'ok') return;
+		ffmpegStatus = 'loading';
+		load()
+			.then(() => {
+				ffmpegStatus = 'ok';
+			})
+			.catch((error) => {
+				ffmpegStatus = 'error';
+				console.log('error: ffmpeg load error');
+				console.error(error);
+			});
+	};
 
 	// Media Recorderを使用して動画を作成する
 	const makeVideo = () => {
@@ -50,16 +58,23 @@
 			const filename = formatDate(new Date());
 			const webmFile = new File([videoBlob], filename + '.webm', { type: videoBlob.type });
 			status = 'converting';
-			convertMp4(webmFile).then((url) => {
-				status = 'completed';
-				anchorRef!.download = filename + '.mp4';
-				anchorRef!.href = url;
-			});
+			convertMp4(webmFile)
+				.then((url) => {
+					status = 'completed';
+					anchorRef!.download = filename + '.mp4';
+					anchorRef!.href = url;
+				})
+				.catch((error) => {
+					// コアの読み込みに失敗したときは、prepareFFmpeg がエラー表示を出している
+					status = 'none';
+					console.error(error);
+				});
 		};
 
 		// play!
 		error = false;
 		status = 'generating';
+		prepareFFmpeg();
 
 		audioRef.currentTime = 0;
 		mediaRecorder.start();

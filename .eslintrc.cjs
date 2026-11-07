@@ -18,6 +18,10 @@ module.exports = {
 		es2017: true,
 		node: true
 	},
+	globals: {
+		// vite.config.ts の define で埋め込む
+		__FFMPEG_CORE_VERSION__: 'readonly'
+	},
 	overrides: [
 		{
 			files: ['*.svelte'],
