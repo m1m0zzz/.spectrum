@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { locale } from 'svelte-i18n';
-	import { defaultLocale, languagesList } from '$lib/i18n';
+	import { defaultLocale, languagesList } from '#lib/i18n/index.ts';
 </script>
 
 <nav>

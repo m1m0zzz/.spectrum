@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
-	import { generateLogToPixelIndexMap } from '$lib';
-	import { executePixelationSampling, loadImage, toBase64 } from '$lib/image';
+	import { generateLogToPixelIndexMap } from '#lib';
+	import { executePixelationSampling, loadImage, toBase64 } from '#lib/image.ts';
 
 	const dispatch = createEventDispatcher();
 
@@ -49,7 +49,6 @@
 			logToPixelIndexMap: generateLogToPixelIndexMap(fftSize, imageData.width)
 		};
 		if (_imageLoaded) {
-			imageLoaded = _imageLoaded;
 			obj = Object.assign(obj, { imageLoaded: true });
 		}
 		dispatch('message', obj);
@@ -130,7 +129,7 @@
 						}}
 					/>
 					<span>
-						={'>'} ( {pixelationSize ? Math.floor((img?.width || 0) / pixelationSize) : 0} px × {pixelationSize
+						=&gt; ( {pixelationSize ? Math.floor((img?.width || 0) / pixelationSize) : 0} px × {pixelationSize
 							? Math.floor((img?.height || 0) / pixelationSize)
 							: 0} px )
 					</span>
@@ -140,6 +139,6 @@
 	{/if}
 
 	<div class="img-preview-container" style:display={imageLoaded ? 'block' : 'none'}>
-		<canvas id="preview" bind:this={previewRef} width="0" height="0" />
+		<canvas id="preview" bind:this={previewRef} width="0" height="0"></canvas>
 	</div>
 </section>

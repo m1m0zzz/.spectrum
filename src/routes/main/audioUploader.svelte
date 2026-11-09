@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
-	import { toBase64 } from '$lib/image';
+	import { toBase64 } from '#lib/image.ts';
 
 	const dispatch = createEventDispatcher();
 
@@ -62,5 +62,5 @@
 		bind:files
 		on:change={() => uploadSound()}
 	/><br />
-	<audio controls={audioLoaded} src="" controlslist="nodownload" bind:this={audioRef} />
+	<audio controls={audioLoaded} src="" controlslist="nodownload" bind:this={audioRef}></audio>
 </section>

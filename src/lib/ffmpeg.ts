@@ -78,7 +78,8 @@ export const convertMp4 = async (file: File, outputName = 'output.mp4') => {
 	console.time('exec');
 	await ffmpeg.exec(args);
 	console.timeEnd('exec');
-	const data = await ffmpeg.readFile(outputName);
+	// バイナリで読むので Uint8Array が返る。worker から転送された通常の ArrayBuffer で、SharedArrayBuffer ではない
+	const data = (await ffmpeg.readFile(outputName)) as Uint8Array<ArrayBuffer>;
 
 	return URL.createObjectURL(new Blob([data], { type: 'video/mp4' }));
 };

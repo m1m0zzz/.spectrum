@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
-	import { formatDate } from '$lib';
-	import { convertMp4, load } from '$lib/ffmpeg';
+	import { formatDate } from '#lib';
+	import { convertMp4, load } from '#lib/ffmpeg.ts';
 
 	export let audioRef: HTMLAudioElement | null;
 	export let playerRef: HTMLCanvasElement | null;
@@ -15,7 +15,7 @@
 	let error = false;
 	let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = 'idle';
 
-	$: enableFullscreen = false;
+	let enableFullscreen = false;
 
 	onMount(() => {
 		enableFullscreen = document.fullscreenEnabled;
