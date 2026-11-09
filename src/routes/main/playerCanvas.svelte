@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { LogToPixelIndexMap, SpectrumType } from '$lib';
-	import { getRGBAbyImageData } from '$lib/image';
+	import type { LogToPixelIndexMap, SpectrumType } from '#lib';
+	import { getRGBAbyImageData } from '#lib/image.ts';
 	import { createEventDispatcher, onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -145,6 +145,6 @@
 			width={playerWidth}
 			height={playerHeight}
 			style:background
-		/>
+		></canvas>
 	</div>
 </section>

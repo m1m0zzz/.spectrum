@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vitest/config';
 
@@ -8,8 +9,22 @@ const ffmpegCoreVersion: string = JSON.parse(
 	readFileSync(new URL('./node_modules/@ffmpeg/core/package.json', import.meta.url), 'utf-8')
 ).version;
 
-export default defineConfig({
-	plugins: [sveltekit()],
+export default defineConfig(({ command }) => ({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				pages: 'build',
+				assets: 'build',
+				fallback: undefined,
+				precompress: false,
+				strict: true
+			}),
+			// GitHub Pages ではリポジトリ名の下に置かれるため、ビルドでは deploy.yml の BASE_PATH を使う
+			paths: {
+				base: command === 'serve' ? '' : ((process.env.BASE_PATH ?? '') as '' | `/${string}`)
+			}
+		})
+	],
 	define: {
 		__FFMPEG_CORE_VERSION__: JSON.stringify(ffmpegCoreVersion)
 	},
@@ -38,4 +53,4 @@ export default defineConfig({
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	}
-});
+}));

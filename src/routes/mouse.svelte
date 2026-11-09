@@ -46,4 +46,4 @@
 	});
 </script>
 
-<div id="js-mouse" />
+<div id="js-mouse"></div>

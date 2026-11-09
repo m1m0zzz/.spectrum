@@ -9,7 +9,7 @@
 		type SpectrumType,
 		capitalize,
 		clamp
-	} from '$lib';
+	} from '#lib';
 
 	import ImageUploader from './imageUploader.svelte';
 	import AudioUploader from './audioUploader.svelte';
@@ -122,7 +122,7 @@
 							}
 						}}
 					>
-						{#each [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768] as size}
+						{#each [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768] as size (size)}
 							<option value={size} selected={size == fftSize} disabled={size < playerWidth}
 								>{capitalize(String(size))}</option
 							>
@@ -140,7 +140,7 @@
 							if (isSpectrumType(type)) spectrumType = type;
 						}}
 					>
-						{#each spectrumTypes as type}
+						{#each spectrumTypes as type (type)}
 							<option value={type}>{capitalize(type)}</option>
 						{/each}
 					</select>

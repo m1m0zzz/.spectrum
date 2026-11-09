@@ -226,5 +226,8 @@ footer {
 	width: 30px;
 	height: 30px;
 	background-color: rgba(137, 185, 189, 0.5);
-	transition: background-color 0.3s linear, width 0.3s ease-out, height 0.3s ease-out;
+	transition:
+		background-color 0.3s linear,
+		width 0.3s ease-out,
+		height 0.3s ease-out;
 }
