@@ -133,7 +133,9 @@ footer {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: 80px;
+	/* 高さを固定すると、ライセンスの行が折り返す幅で中身が上下にはみ出るため、中身に合わせて伸ばす */
+	min-height: 80px;
+	padding: 1rem;
 	color: white;
 	background: var(--color-brand);
 
@@ -184,9 +186,6 @@ footer {
 
 .container {
 	width: fit-content;
-	/* 中身の幅で中央寄せの位置が変わらないよう、タブの幅（+ 左右の padding）より狭くしない。
-	   狭い画面では画面幅まで */
-	min-width: min(calc(var(--tab-width) + 2rem), 100%);
 	max-width: 100%;
 	padding: 1rem;
 	margin-right: auto;
