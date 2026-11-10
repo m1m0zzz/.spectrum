@@ -156,7 +156,6 @@
 						}}
 					/>
 				</div>
-				<p class="note">{$_('parameters_note')}</p>
 				<p>
 					<label
 						>{$_('parameters_background')}

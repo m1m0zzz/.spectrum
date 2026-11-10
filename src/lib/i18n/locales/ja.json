@@ -15,7 +15,6 @@
 	"parameters_custom": "カスタム",
 	"parameters_width": "幅: ",
 	"parameters_height": "高さ: ",
-	"parameters_note": "※ ドット絵のピクセル数×n倍の値にすると、きれいに表示できます",
 	"parameters_background": "背景色: ",
 	"parameters_fft_size": "FFTサイズ: ",
 	"parameters_sensitivity": "感度: ",

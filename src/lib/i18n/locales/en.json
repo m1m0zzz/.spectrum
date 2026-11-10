@@ -15,7 +15,6 @@
 	"parameters_custom": "custom",
 	"parameters_width": "width: ",
 	"parameters_height": "height: ",
-	"parameters_note": "NOTE: The value should be n times the number of pixels in the image to display it nicely",
 	"parameters_background": "background: ",
 	"parameters_fft_size": "FFT size: ",
 	"parameters_sensitivity": "sensitivity: ",
