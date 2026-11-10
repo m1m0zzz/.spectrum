@@ -7,7 +7,7 @@
 				>SoundCloud</a
 			>
 		</div>
-		<p>&copy; 2023 mimoz</p>
+		<hr />
 		<p>
 			Video conversion uses
 			<a href="https://github.com/ffmpegwasm/ffmpeg.wasm" target="_blank" rel="noopener noreferrer"
@@ -24,5 +24,6 @@
 				rel="noopener noreferrer">ffmpeg.wasm v{__FFMPEG_CORE_VERSION__}</a
 			>.
 		</p>
+		<p>&copy; 2023 mimoz</p>
 	</div>
 </footer>
