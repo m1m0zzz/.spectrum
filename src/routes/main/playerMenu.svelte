@@ -115,7 +115,10 @@
 
 		// play!
 		mediaRecorder.start();
-		audio.style.display = 'none';
+		// 録画中に一時停止やシークをされると録画が止まる・ずれるため、表示したまま操作できなくする。
+		// inert に対応していないブラウザ（Firefox 111 以前）のため、マウス操作も止める
+		audio.inert = true;
+		audio.style.pointerEvents = 'none';
 		try {
 			await audio.play();
 		} catch (error) {
@@ -128,7 +131,8 @@
 				console.log('stop video');
 				audio.pause();
 				mediaRecorder.stop();
-				audio.style.display = 'block';
+				audio.inert = false;
+				audio.style.pointerEvents = '';
 				return;
 			}
 			requestAnimationFrame(watch);

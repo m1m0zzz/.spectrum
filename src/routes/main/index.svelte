@@ -13,7 +13,6 @@
 
 	let imageLoaded = false;
 	let imageData: ImageData;
-	let audioLoaded = false;
 	let audioDuration = 0;
 	let audioContext: AudioContext | null;
 	let nodeAnalyser: AnalyserNode | null;
@@ -247,16 +246,13 @@
 			/>
 		</div>
 
-		<!-- 再生プレイヤーは、どのタブを開いていても操作できるようタブの外に置く -->
+		<!-- 再生プレイヤーは、どのタブを開いていても操作できるようタブの外に置き、音声を読み込む前から常に表示する -->
 		<section>
 			<audio
-				controls={audioLoaded}
+				controls
 				controlslist="nodownload"
 				bind:this={audioRef}
-				on:loadedmetadata={() => {
-					audioLoaded = true;
-					audioDuration = audioRef?.duration ?? 0;
-				}}
+				on:loadedmetadata={() => (audioDuration = audioRef?.duration ?? 0)}
 			></audio>
 		</section>
 
