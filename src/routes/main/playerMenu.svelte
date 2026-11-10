@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import { formatDate } from '#lib';
 	import { convertVideo, load } from '#lib/ffmpeg.ts';
@@ -25,13 +24,7 @@
 	let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = 'idle';
 	let convertError = false;
 
-	let enableFullscreen = false;
-
 	$: busy = status == 'generating' || status == 'converting';
-
-	onMount(() => {
-		enableFullscreen = document.fullscreenEnabled;
-	});
 
 	// ffmpeg のコア（約 32MB）はページを開いたときではなく、動画を作り始めたときに読み込む。
 	// 録画（曲の長さ）のあいだに読み込みが終わるので、変換を待つ時間はほとんど増えない
@@ -145,17 +138,6 @@
 </script>
 
 <section>
-	<button
-		class="button"
-		disabled={!enableFullscreen}
-		on:click={() => playerRef?.requestFullscreen()}
-	>
-		{$_('change_full_screen')}
-	</button>
-	<p class="error" style:display={enableFullscreen ? 'none' : 'block'}>
-		{$_('disabled_full_screen')}
-	</p>
-
 	<button class="button" disabled={busy || rangeError} on:click={makeVideo}
 		>{$_('generate_video')}</button
 	>
