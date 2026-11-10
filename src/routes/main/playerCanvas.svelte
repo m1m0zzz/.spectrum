@@ -7,7 +7,7 @@
 		type BandMap,
 		type FrequencyScale,
 		type SpectrumType
-	} from '#lib';
+	} from '#lib/canvas.ts';
 	import { createEventDispatcher, onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();

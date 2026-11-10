@@ -34,7 +34,6 @@
 	},
 	"type": "module",
 	"imports": {
-		"#lib": "./src/lib/index.ts",
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {

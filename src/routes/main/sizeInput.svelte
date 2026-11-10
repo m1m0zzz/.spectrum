@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { clamp } from '#lib';
+	import { clamp } from '#lib/util.ts';
 	import { createEventDispatcher } from 'svelte';
 	import { _ } from 'svelte-i18n';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import { formatDate } from '#lib';
+	import { formatDate } from '#lib/util.ts';
 	import { convertVideo, load } from '#lib/ffmpeg.ts';
 	import { recordingVideoBitrate, type EncodeSettings } from '#lib/encode.ts';
 

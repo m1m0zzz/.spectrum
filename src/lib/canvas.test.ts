@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeBandLevels, createBandMap, createDistinctLogBandMap, minBinOf } from './index.ts';
+import { computeBandLevels, createBandMap, createDistinctLogBandMap, minBinOf } from './canvas.ts';
 
 const cases = [
 	// [binCount, columns]

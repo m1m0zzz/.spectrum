@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 
-	import { isSpectrumType, spectrumTypes, type SpectrumType, capitalize, clamp } from '#lib';
+	import { isSpectrumType, spectrumTypes, type SpectrumType } from '#lib/canvas.ts';
+	import { capitalize, clamp } from '#lib/util.ts';
 
 	import ImageUploader from './imageUploader.svelte';
 	import AudioUploader from './audioUploader.svelte';
