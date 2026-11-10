@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
+	import PixelSelect from './pixelSelect.svelte';
 	import {
 		audioBitrates,
 		frameRates,
@@ -20,6 +21,12 @@
 	export let busy: boolean;
 
 	const roundTime = (t: number) => Math.round(t * 10) / 10;
+
+	$: formatOptions = videoFormats.map((v) => ({ value: v, label: $_(`export_format_${v}`) }));
+	$: qualityOptions = qualities.map((v) => ({ value: v, label: $_(`export_quality_${v}`) }));
+	$: speedOptions = speeds.map((v) => ({ value: v, label: $_(`export_speed_${v}`) }));
+	const fpsOptions = frameRates.map((v) => ({ value: v as number, label: `${v} fps` }));
+	const bitrateOptions = audioBitrates.map((v) => ({ value: v as number, label: `${v} kbps` }));
 </script>
 
 <section>
@@ -66,53 +73,53 @@
 		<p class="error">{$_('export_range_error')}</p>
 	{/if}
 	<p>
-		<label>
-			{$_('export_format')}
-			<select bind:value={settings.format} disabled={busy}>
-				{#each videoFormats as format (format)}
-					<option value={format}>{$_(`export_format_${format}`)}</option>
-				{/each}
-			</select>
-		</label>
+		<span id="export-format-label">{$_('export_format')}</span>
+		<PixelSelect
+			id="export-format"
+			labelledby="export-format-label"
+			options={formatOptions}
+			bind:value={settings.format}
+			disabled={busy}
+		/>
 	</p>
 	<p>
-		<label>
-			{$_('export_quality')}
-			<select bind:value={settings.quality} disabled={busy}>
-				{#each qualities as quality (quality)}
-					<option value={quality}>{$_(`export_quality_${quality}`)}</option>
-				{/each}
-			</select>
-		</label>
+		<span id="export-quality-label">{$_('export_quality')}</span>
+		<PixelSelect
+			id="export-quality"
+			labelledby="export-quality-label"
+			options={qualityOptions}
+			bind:value={settings.quality}
+			disabled={busy}
+		/>
 	</p>
 	<p>
-		<label>
-			{$_('export_speed')}
-			<select bind:value={settings.speed} disabled={busy}>
-				{#each speeds as speed (speed)}
-					<option value={speed}>{$_(`export_speed_${speed}`)}</option>
-				{/each}
-			</select>
-		</label>
+		<span id="export-speed-label">{$_('export_speed')}</span>
+		<PixelSelect
+			id="export-speed"
+			labelledby="export-speed-label"
+			options={speedOptions}
+			bind:value={settings.speed}
+			disabled={busy}
+		/>
 	</p>
 	<p>
-		<label>
-			{$_('export_fps')}
-			<select bind:value={settings.fps} disabled={busy}>
-				{#each frameRates as fps (fps)}
-					<option value={fps}>{fps} fps</option>
-				{/each}
-			</select>
-		</label>
+		<span id="export-fps-label">{$_('export_fps')}</span>
+		<PixelSelect
+			id="export-fps"
+			labelledby="export-fps-label"
+			options={fpsOptions}
+			bind:value={settings.fps}
+			disabled={busy}
+		/>
 	</p>
 	<p>
-		<label>
-			{$_('export_audio_bitrate')}
-			<select bind:value={settings.audioBitrate} disabled={busy}>
-				{#each audioBitrates as bitrate (bitrate)}
-					<option value={bitrate}>{bitrate} kbps</option>
-				{/each}
-			</select>
-		</label>
+		<span id="export-audio-bitrate-label">{$_('export_audio_bitrate')}</span>
+		<PixelSelect
+			id="export-audio-bitrate"
+			labelledby="export-audio-bitrate-label"
+			options={bitrateOptions}
+			bind:value={settings.audioBitrate}
+			disabled={busy}
+		/>
 	</p>
 </section>

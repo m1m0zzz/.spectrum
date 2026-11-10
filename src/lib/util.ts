@@ -15,7 +15,3 @@ export const formatDate = (date: Date) => {
 	const s = padding(2, date.getSeconds());
 	return Y + '_' + M + '_' + D + '_' + h + '_' + m + '_' + s;
 };
-
-export const capitalize = (str: string) => {
-	return str[0].toUpperCase() + str.slice(1);
-};

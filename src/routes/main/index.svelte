@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 
-	import { capitalize, clamp } from '#lib/util.ts';
+	import { clamp } from '#lib/util.ts';
 
 	import ImageUploader from './imageUploader.svelte';
 	import AudioUploader from './audioUploader.svelte';
@@ -9,6 +9,7 @@
 	import PlayerMenu from './playerMenu.svelte';
 	import ExportSettings from './exportSettings.svelte';
 	import SizeInput from './sizeInput.svelte';
+	import PixelSelect from './pixelSelect.svelte';
 	import { defaultEncodeSettings, type EncodeSettings } from '#lib/encode.ts';
 
 	let imageLoaded = false;
@@ -32,6 +33,14 @@
 	let audioRef: HTMLAudioElement | null = null;
 
 	let showVersion = false;
+
+	// 画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする
+	const FFT_SIZES = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
+	$: fftOptions = FFT_SIZES.map((size) => ({
+		value: size,
+		label: String(size),
+		disabled: imageLoaded && size / 2 - 1 < imageData.width
+	}));
 
 	// 書き出しの設定と範囲（秒）。範囲は曲が変わったら全体に戻す
 	let encodeSettings: EncodeSettings = { ...defaultEncodeSettings };
@@ -164,27 +173,16 @@
 					</label>
 				</p>
 				<p>
-					<label
-						>{$_('parameters_fft_size')}
-						<select
-							name="spectrum-fft-size"
-							bind:value={fftSize}
-							on:change={(e) => {
-								const fftSize = Number(e.currentTarget.value);
-								if (nodeAnalyser) nodeAnalyser.fftSize = fftSize;
-							}}
-						>
-							{#each [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768] as size (size)}
-								<!-- 画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする -->
-								<option
-									value={size}
-									selected={size == fftSize}
-									disabled={imageLoaded && size / 2 - 1 < imageData.width}
-									>{capitalize(String(size))}</option
-								>
-							{/each}
-						</select>
-					</label>
+					<span id="fft-size-label">{$_('parameters_fft_size')}</span>
+					<PixelSelect
+						id="fft-size"
+						labelledby="fft-size-label"
+						options={fftOptions}
+						bind:value={fftSize}
+						on:change={(e) => {
+							if (nodeAnalyser) nodeAnalyser.fftSize = e.detail.value;
+						}}
+					/>
 				</p>
 				<p>
 					<label

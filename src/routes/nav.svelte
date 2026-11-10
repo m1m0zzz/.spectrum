@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { locale } from 'svelte-i18n';
 	import { defaultLocale, languagesList } from '#lib/i18n/index.ts';
+	import PixelSelect from './main/pixelSelect.svelte';
+
+	const options = languagesList.map(({ lang, name }) => ({ value: lang, label: name }));
+	// いまの言語。ブラウザの言語（en-US など）から決まるので、先頭の言語コードで選択肢と対応させる
+	$: current = languagesList.find(({ lang }) => $locale?.startsWith(lang))?.lang ?? defaultLocale;
 </script>
 
 <nav>
@@ -9,15 +14,13 @@
 	</a>
 
 	<div class="utility">
-		<select
-			aria-label="Please select your language."
-			value={defaultLocale}
-			on:change={(e) => locale.set(e.currentTarget.value)}
-		>
-			{#each languagesList as { lang, name } (lang)}
-				<option value={lang}>{name}</option>
-			{/each}
-		</select>
+		<PixelSelect
+			id="language"
+			ariaLabel="Please select your language."
+			{options}
+			value={current}
+			on:change={(e) => locale.set(e.detail.value)}
+		/>
 		<a
 			href="https://github.com/m1m0zzz/.spectrum"
 			aria-label="Open GitHub Repository."

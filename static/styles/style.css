@@ -155,6 +155,157 @@ input[type='number'] {
 	}
 }
 
+/* ドット絵風の選択欄（pixelSelect.svelte）。ボタン・リストとも 1 ドットの枠で四隅を欠く */
+.pixel-select {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.pixel-select-button,
+.pixel-select-list {
+	border: var(--dot) solid var(--color-footer-link);
+	clip-path: polygon(
+		var(--dot) 0,
+		calc(100% - var(--dot)) 0,
+		calc(100% - var(--dot)) var(--dot),
+		100% var(--dot),
+		100% calc(100% - var(--dot)),
+		calc(100% - var(--dot)) calc(100% - var(--dot)),
+		calc(100% - var(--dot)) 100%,
+		var(--dot) 100%,
+		var(--dot) calc(100% - var(--dot)),
+		0 calc(100% - var(--dot)),
+		0 var(--dot),
+		var(--dot) var(--dot)
+	);
+}
+
+.pixel-select-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.15rem 0.6rem;
+	font: inherit;
+	letter-spacing: inherit;
+	color: inherit;
+	text-align: left;
+	background-color: var(--color-bg-1);
+	/* 左上を明るく、右下を暗くして少し浮かせる */
+	box-shadow:
+		inset var(--dot) var(--dot) 0 0 white,
+		inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 0 var(--color-border);
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		background-color: white;
+	}
+
+	&:focus-visible,
+	&[aria-expanded='true'] {
+		border-color: var(--color-active);
+	}
+
+	&:disabled {
+		filter: grayscale(1);
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+/* 選択中の値と、幅を決めるための全選択肢を同じマスに重ねる。全選択肢は見えないようにする */
+.pixel-select-value {
+	display: grid;
+
+	& > * {
+		grid-area: 1 / 1;
+		white-space: nowrap;
+	}
+}
+
+.pixel-select-sizer {
+	visibility: hidden;
+}
+
+/* ▼ をドットで描く（5 ドット・3 ドット・1 ドットの 3 段） */
+.pixel-select-arrow {
+	flex-shrink: 0;
+	width: calc(var(--dot) * 5);
+	height: calc(var(--dot) * 3);
+	background-color: var(--color-footer-link);
+	clip-path: polygon(
+		0 0,
+		100% 0,
+		100% calc(var(--dot) * 1),
+		calc(var(--dot) * 4) calc(var(--dot) * 1),
+		calc(var(--dot) * 4) calc(var(--dot) * 2),
+		calc(var(--dot) * 3) calc(var(--dot) * 2),
+		calc(var(--dot) * 3) 100%,
+		calc(var(--dot) * 2) 100%,
+		calc(var(--dot) * 2) calc(var(--dot) * 2),
+		calc(var(--dot) * 1) calc(var(--dot) * 2),
+		calc(var(--dot) * 1) calc(var(--dot) * 1),
+		0 calc(var(--dot) * 1)
+	);
+
+	[aria-expanded='true'] > & {
+		transform: rotate(180deg);
+	}
+}
+
+/* 開いたリスト。popover のときは最前面（top layer）に、そうでないときは fixed で出す。
+   位置（top / left）と大きさは pixelSelect.svelte がボタンの位置から決める */
+.pixel-select-list {
+	position: fixed;
+	z-index: 1000;
+	display: none;
+	inset: auto;
+	width: max-content;
+	height: auto;
+	margin: 0;
+	padding: var(--dot);
+	overflow-y: auto;
+	list-style: none;
+	color: inherit;
+	background-color: var(--color-bg-1);
+
+	&.open {
+		display: block;
+	}
+}
+
+.pixel-select-option {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.2rem 0.75rem 0.2rem 0.5rem;
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+
+	/* 選択中の印（2 ドット四方）。ほかの行も同じ幅をあけて文字の位置をそろえる */
+	&::before {
+		content: '';
+		flex-shrink: 0;
+		width: calc(var(--dot) * 2);
+		height: calc(var(--dot) * 2);
+	}
+
+	&[aria-selected='true']::before {
+		background-color: currentColor;
+	}
+
+	&.active {
+		color: white;
+		background-color: var(--color-brand);
+	}
+
+	&[aria-disabled='true'] {
+		color: var(--color-note);
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
 .file-input .pixel-button {
 	flex-shrink: 0;
 }

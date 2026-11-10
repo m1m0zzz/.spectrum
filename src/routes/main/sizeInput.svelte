@@ -2,6 +2,7 @@
 	import { clamp } from '#lib/util.ts';
 	import { createEventDispatcher } from 'svelte';
 	import { _ } from 'svelte-i18n';
+	import PixelSelect from './pixelSelect.svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -18,37 +19,39 @@
 		custom: undefined
 	};
 
-	let customInput = true;
+	// 選択欄の値。プリセットは "幅,高さ"、カスタムは 'custom'
+	let sizeValue = 'custom';
+	$: customInput = sizeValue == 'custom';
+	$: sizeOptions = Object.entries(DISPLAY_SIZES).map(([key, size]) => ({
+		value: size ? size.join(',') : 'custom',
+		label: key == 'custom' ? $_('parameters_custom') : key
+	}));
+
+	const onSizeChange = (value: string) => {
+		if (value == 'custom') return;
+		const m = value.match(/(\d+),(\d+)/);
+		if (!m) throw new Error('canvas size is not match!');
+		playerWidth = Number(m[1]);
+		playerHeight = Number(m[2]);
+		dispatch('message', {
+			playerWidth: playerWidth,
+			playerHeight: playerHeight
+		});
+	};
 
 	// NOTE: canvas size
 	// https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas#キャンバスの最大寸法
 </script>
 
 <div>
-	<label for="size">{$_('parameters_window_size')}</label>
-	<select
-		name="size"
-		on:change={(e) => {
-			const value = e.currentTarget.value;
-			customInput = value == 'custom';
-			if (value != 'custom') {
-				const m = value.match(/(\d+),(\d+)/);
-				if (!m) throw new Error('canvas size is not match!');
-				playerWidth = Number(m[1]);
-				playerHeight = Number(m[2]);
-				dispatch('message', {
-					playerWidth: playerWidth,
-					playerHeight: playerHeight
-				});
-			}
-		}}
-	>
-		{#each Object.entries(DISPLAY_SIZES) as [key, size] (key)}
-			<option value={size || 'custom'} selected={customInput && key == 'custom'}
-				>{key == 'custom' ? $_('parameters_custom') : key}</option
-			>
-		{/each}
-	</select>
+	<span id="size-label">{$_('parameters_window_size')}</span>
+	<PixelSelect
+		id="size"
+		labelledby="size-label"
+		options={sizeOptions}
+		bind:value={sizeValue}
+		on:change={(e) => onSizeChange(e.detail.value)}
+	/>
 	{#if customInput}
 		<br />
 		<label style:padding-right="20px"
