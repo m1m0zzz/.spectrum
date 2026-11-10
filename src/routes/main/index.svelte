@@ -256,19 +256,6 @@
 			></audio>
 		</section>
 
-		<PlayerMenu
-			{playerRef}
-			{audioContext}
-			{audioRef}
-			{imageLoaded}
-			{recorderDestination}
-			settings={encodeSettings}
-			{rangeStart}
-			{rangeEnd}
-			{rangeError}
-			bind:busy={exporting}
-		/>
-
 		<PlayerCanvas
 			on:mount={(event) => (playerRef = event.detail.playerRef)}
 			{imageLoaded}
@@ -281,6 +268,19 @@
 			{spectrumGridSize}
 			{spectrumSensitivity}
 			{spectrumSmoothTime}
+		/>
+
+		<PlayerMenu
+			{playerRef}
+			{audioContext}
+			{audioRef}
+			{imageLoaded}
+			{recorderDestination}
+			settings={encodeSettings}
+			{rangeStart}
+			{rangeEnd}
+			{rangeError}
+			bind:busy={exporting}
 		/>
 	</div>
 </main>
