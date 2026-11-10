@@ -49,5 +49,7 @@
 	"convert_error": "エラー: 動画の変換に失敗しました",
 	"tab_file": "📁 ファイル",
 	"tab_settings": "⚙️ 設定",
-	"tab_video": "🎬 動画設定"
+	"tab_video": "🎬 動画設定",
+	"choose_file": "ファイルを選択",
+	"no_file_selected": "選択されていません"
 }

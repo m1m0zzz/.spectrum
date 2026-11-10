@@ -24,7 +24,7 @@
 				mouse.style.transform = `translate(${x - (x % width)}px, ${y - (y % height)}px)`;
 			};
 
-			const hoverTargets = document.querySelectorAll('a,button,input,select');
+			const hoverTargets = document.querySelectorAll('a,button,input,select,.pixel-button');
 
 			hoverTargets.forEach((target) => {
 				target.addEventListener(

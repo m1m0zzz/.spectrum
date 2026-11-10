@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { _ } from 'svelte-i18n';
+	import FileInput from './fileInput.svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -11,11 +12,12 @@
 	export let fftSize: number;
 	export let recorderDestination: MediaStreamAudioDestinationNode;
 
-	let files: FileList;
+	let files: FileList | undefined;
 	let objectUrl: string | null = null;
 
 	const uploadSound = async () => {
-		if (!audioRef) return;
+		// ダイアログを取り消すと選択が空になる。そのときは今の曲のままにする
+		if (!audioRef || !files?.[0]) return;
 		// data URL（base64）にすると長い曲でメモリと時間を食うため、object URL で読む
 		if (objectUrl) URL.revokeObjectURL(objectUrl);
 		objectUrl = URL.createObjectURL(files[0]);
@@ -50,10 +52,10 @@
 
 <section>
 	<h3>🎵 {$_('upload_audio')}</h3>
-	<input
-		type="file"
+	<FileInput
+		id="audio-file"
 		accept="audio/*"
-		aria-label="Upload audio"
+		ariaLabel="Upload audio"
 		bind:files
 		on:change={() => uploadSound()}
 	/>

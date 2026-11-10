@@ -49,5 +49,7 @@
 	"convert_error": "error: failed to convert the video.",
 	"tab_file": "📁 Files",
 	"tab_settings": "⚙️ Settings",
-	"tab_video": "🎬 Video"
+	"tab_video": "🎬 Video",
+	"choose_file": "Choose file",
+	"no_file_selected": "No file selected"
 }

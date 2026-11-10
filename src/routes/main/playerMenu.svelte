@@ -138,7 +138,7 @@
 </script>
 
 <section>
-	<button class="button" disabled={busy || rangeError} on:click={makeVideo}
+	<button class="pixel-button" disabled={busy || rangeError} on:click={makeVideo}
 		>{$_('generate_video')}</button
 	>
 	<br />

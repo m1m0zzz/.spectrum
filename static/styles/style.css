@@ -17,6 +17,8 @@
 	--color-footer-link: #30736c;
 	/* タブとパネルの幅。最も広いタブ（英語の「設定」）が収まる幅 */
 	--tab-width: 760px;
+	/* ドット絵風のボタンの 1 ドットの大きさ */
+	--dot: 3px;
 }
 
 :focus {
@@ -77,9 +79,97 @@ input[type='number'] {
 	}
 }
 
-input[type='file'] {
-	margin-top: 0.5rem;
-	margin-bottom: 0.5rem;
+/* 見た目からは隠し、読み上げやキーボード操作では使えるようにする */
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ファイルの選択（fileInput.svelte）。ブラウザの input は隠し、label をボタンにする */
+.file-input {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	max-width: 100%;
+	margin: 0.5rem 0;
+}
+
+/* ドット絵風のボタン（ファイルの選択、動画を作成する）。枠を 1 ドットの太さで描き、四隅を 1 ドットずつ欠く。
+   内側は左上を明るく、右下を暗くして立体に見せる */
+.pixel-button {
+	padding: 0.3rem 0.9rem;
+	font: inherit;
+	/* button はブラウザの既定で letter-spacing が normal になるため、本文に揃える */
+	letter-spacing: inherit;
+	color: white;
+	background-color: var(--color-brand);
+	border: var(--dot) solid var(--color-footer-link);
+	box-shadow:
+		inset var(--dot) var(--dot) 0 0 #b7d6d9,
+		inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 0 var(--color-active);
+	clip-path: polygon(
+		var(--dot) 0,
+		calc(100% - var(--dot)) 0,
+		calc(100% - var(--dot)) var(--dot),
+		100% var(--dot),
+		100% calc(100% - var(--dot)),
+		calc(100% - var(--dot)) calc(100% - var(--dot)),
+		calc(100% - var(--dot)) 100%,
+		var(--dot) 100%,
+		var(--dot) calc(100% - var(--dot)),
+		0 calc(100% - var(--dot)),
+		0 var(--dot),
+		var(--dot) var(--dot)
+	);
+	cursor: pointer;
+	user-select: none;
+
+	&:hover:not(:disabled) {
+		background-color: #9ccacd;
+	}
+
+	/* 押している間は陰影を逆にし、文字を 1 ドット下げて沈んだように見せる */
+	&:active:not(:disabled) {
+		padding-top: calc(0.3rem + var(--dot));
+		padding-bottom: calc(0.3rem - var(--dot));
+		box-shadow: inset var(--dot) var(--dot) 0 0 var(--color-active);
+	}
+
+	/* :focus の outline を全体で消しているため、キーボード操作のときは枠の色を変えて示す */
+	&:focus-visible {
+		border-color: var(--color-active);
+	}
+
+	/* 押せないときは色を抜いて薄くする */
+	&:disabled {
+		filter: grayscale(1);
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.file-input .pixel-button {
+	flex-shrink: 0;
+}
+
+/* ファイルの選択では、フォーカスを受けるのは隠した input なので、その隣のボタンの枠の色を変える */
+.file-input input:focus-visible + .pixel-button {
+	border-color: var(--color-active);
+}
+
+/* 長いファイル名は末尾を … で省く（title で全体を出す） */
+.file-name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 select {

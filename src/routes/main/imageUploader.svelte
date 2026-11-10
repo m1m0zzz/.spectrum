@@ -2,12 +2,13 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import { executePixelationSampling, loadImage, MAX_IMAGE_PIXELS } from '#lib/image.ts';
+	import FileInput from './fileInput.svelte';
 
 	const dispatch = createEventDispatcher();
 
 	let previewRef: HTMLCanvasElement | null;
 	let img: HTMLImageElement | null;
-	let files: FileList;
+	let files: FileList | undefined;
 
 	let imageData: ImageData;
 
@@ -51,6 +52,8 @@
 
 	const uploadImage = async () => {
 		// data URL（base64）にすると大きい画像でメモリと時間を食うため、object URL で読む
+		// ダイアログを取り消すと選択が空になる。そのときは今の画像のままにする
+		if (!files?.[0]) return;
 		if (objectUrl) URL.revokeObjectURL(objectUrl);
 		objectUrl = URL.createObjectURL(files[0]);
 		img = await loadImage(objectUrl);
@@ -72,13 +75,13 @@
 
 <section>
 	<h3>🖼️ {$_('upload_image')}</h3>
-	<input
-		type="file"
+	<FileInput
+		id="image-file"
 		accept="image/*"
-		aria-label="Upload image"
+		ariaLabel="Upload image"
 		bind:files
 		on:change={() => uploadImage()}
-	/><br />
+	/>
 	{#if imgError}
 		<p class="error">
 			{$_('upload_image_error')}
