@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	import { _ } from 'svelte-i18n';
 
 	const dispatch = createEventDispatcher();
 
+	// 再生プレイヤー（<audio>）はタブの外に置くため、親が持つ要素を受け取る
 	export let audioRef: HTMLAudioElement | null;
 	export let audioContext: AudioContext | null;
 	export let nodeAnalyser: AnalyserNode | null;
@@ -11,7 +12,6 @@
 	export let recorderDestination: MediaStreamAudioDestinationNode;
 
 	let files: FileList;
-	let audioLoaded = false;
 	let objectUrl: string | null = null;
 
 	const uploadSound = async () => {
@@ -21,7 +21,6 @@
 		objectUrl = URL.createObjectURL(files[0]);
 
 		audioRef.src = objectUrl;
-		audioLoaded = true;
 
 		if (!audioContext) {
 			// init audio context
@@ -47,12 +46,6 @@
 			});
 		}
 	};
-
-	onMount(() => {
-		dispatch('mount', {
-			audioRef: audioRef
-		});
-	});
 </script>
 
 <section>
@@ -63,12 +56,5 @@
 		aria-label="Upload audio"
 		bind:files
 		on:change={() => uploadSound()}
-	/><br />
-	<audio
-		controls={audioLoaded}
-		src=""
-		controlslist="nodownload"
-		bind:this={audioRef}
-		on:loadedmetadata={() => dispatch('duration', { duration: audioRef?.duration ?? 0 })}
-	></audio>
+	/>
 </section>

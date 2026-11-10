@@ -15,6 +15,8 @@
 	--color-border: #dac5a4;
 	--color-active: #579bb1;
 	--color-footer-link: #30736c;
+	/* タブとパネルの幅。最も広いタブ（英語の「設定」）が収まる幅 */
+	--tab-width: 760px;
 }
 
 :focus {
@@ -182,6 +184,9 @@ footer {
 
 .container {
 	width: fit-content;
+	/* 中身の幅で中央寄せの位置が変わらないよう、タブの幅（+ 左右の padding）より狭くしない。
+	   狭い画面では画面幅まで */
+	min-width: min(calc(var(--tab-width) + 2rem), 100%);
 	max-width: 100%;
 	padding: 1rem;
 	margin-right: auto;
@@ -230,4 +235,76 @@ footer {
 		background-color 0.3s linear,
 		width 0.3s ease-out,
 		height 0.3s ease-out;
+}
+
+/* タブ（ファイル / 設定 / 動画設定） */
+/* どのタブを開いても幅が変わらないよう固定する */
+.tabs,
+.tab-panel {
+	width: var(--tab-width);
+	max-width: 100%;
+}
+
+.tabs {
+	display: flex;
+	align-items: flex-end;
+	margin-top: 1.5rem;
+	border-bottom: 2px solid var(--color-border);
+}
+
+.tab {
+	padding: 0.4rem 1rem;
+	white-space: nowrap;
+	color: var(--color-note);
+	border: 2px solid var(--color-border);
+	border-bottom: none;
+	/* 背景はページと同じ色。選択中のタブで、タブの列の下線を隠すのに使う */
+	background-color: var(--color-bg-2);
+	cursor: pointer;
+
+	/* 隣のタブと枠線を重ね、隙間も二重線も作らない */
+	& + .tab {
+		margin-left: -2px;
+	}
+
+	&:hover {
+		color: inherit;
+	}
+
+	/* 選択中のタブは一段高くし、下の線を消してパネルとつなげる */
+	&[aria-selected='true'] {
+		/* 重ねた枠線が隣のタブに隠れないよう前に出す */
+		position: relative;
+		/* 下に 2px はみ出させ、タブの列の下線を背景で隠す */
+		margin-bottom: -2px;
+		padding-top: 0.6rem;
+		padding-bottom: calc(0.4rem + 2px);
+		color: var(--color-active);
+		cursor: default;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-active);
+		outline-offset: -4px;
+	}
+}
+
+/* 狭い画面ではタブを折り返さず、3 つで幅を分け合う */
+@media (max-width: 480px) {
+	.tab {
+		flex: 1;
+		padding-right: 0.25rem;
+		padding-left: 0.25rem;
+	}
+}
+
+.tab-panel {
+	padding: 0 1rem 1rem;
+	border: 2px solid var(--color-border);
+	border-top: none;
+
+	& > section:first-child {
+		margin-top: 0;
+		padding-top: 1rem;
+	}
 }

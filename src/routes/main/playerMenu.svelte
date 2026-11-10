@@ -3,23 +3,21 @@
 	import { _ } from 'svelte-i18n';
 	import { formatDate } from '#lib';
 	import { convertVideo, load } from '#lib/ffmpeg.ts';
-	import {
-		audioBitrates,
-		defaultEncodeSettings,
-		frameRates,
-		qualities,
-		recordingVideoBitrate,
-		speeds,
-		videoFormats,
-		type EncodeSettings
-	} from '#lib/encode.ts';
+	import { recordingVideoBitrate, type EncodeSettings } from '#lib/encode.ts';
 
 	export let audioRef: HTMLAudioElement | null;
 	export let playerRef: HTMLCanvasElement | null;
 	export let audioContext: AudioContext | null;
 	export let recorderDestination: MediaStreamAudioDestinationNode;
 	export let imageLoaded: boolean;
-	export let audioDuration: number;
+	// 書き出しの設定と範囲（秒）は「動画設定」タブ（exportSettings.svelte）で決める
+	export let settings: EncodeSettings;
+	export let rangeStart: number;
+	export let rangeEnd: number;
+	// 曲を読み込んだうえで範囲が正しくないとき true
+	export let rangeError: boolean;
+	// 書き出し中か。親に渡して、動画設定を変えられないようにする
+	export let busy = false;
 
 	let anchorRef: HTMLAnchorElement | null;
 	let status: 'none' | 'generating' | 'converting' | 'completed' = 'none';
@@ -28,18 +26,6 @@
 	let convertError = false;
 
 	let enableFullscreen = false;
-
-	// 書き出す範囲（秒）。曲が変わったら全体に戻す
-	let rangeStart = 0;
-	let rangeEnd = 0;
-	const resetRange = (duration: number) => {
-		rangeStart = 0;
-		rangeEnd = Number.isFinite(duration) ? duration : 0;
-	};
-	$: resetRange(audioDuration);
-	$: rangeValid = 0 <= rangeStart && rangeStart < rangeEnd && rangeEnd <= audioDuration;
-
-	let settings: EncodeSettings = { ...defaultEncodeSettings };
 
 	$: busy = status == 'generating' || status == 'converting';
 
@@ -69,8 +55,6 @@
 			audio.currentTime = time;
 		});
 
-	const roundTime = (t: number) => Math.round(t * 10) / 10;
-
 	// Media Recorderを使用して動画を作成する
 	const makeVideo = async () => {
 		if (busy) return;
@@ -78,7 +62,7 @@
 			error = true;
 			return;
 		}
-		if (!rangeValid) return;
+		if (rangeError) return;
 		const audio = audioRef;
 		const anchor = anchorRef;
 		// 設定は録画の開始時点のものを使う（変換中に UI を触られても変わらない）
@@ -169,106 +153,10 @@
 		{$_('change_full_screen')}
 	</button>
 	<p class="error" style:display={enableFullscreen ? 'none' : 'block'}>
-		{$_('change_full_screen')}
+		{$_('disabled_full_screen')}
 	</p>
 
-	<div class="export-settings">
-		<h3>{$_('export_settings')}</h3>
-		<p>
-			<span>{$_('export_range')}</span>
-			<label>
-				{$_('export_range_start')}
-				<input
-					type="number"
-					min="0"
-					max={audioDuration}
-					step="0.1"
-					bind:value={rangeStart}
-					disabled={busy}
-				/>
-			</label>
-			<button
-				class="no-button action-link"
-				disabled={busy || !audioRef}
-				on:click={() => audioRef && (rangeStart = roundTime(audioRef.currentTime))}
-				>{$_('export_set_current')}</button
-			>
-			<span>〜</span>
-			<label>
-				{$_('export_range_end')}
-				<input
-					type="number"
-					min="0"
-					max={audioDuration}
-					step="0.1"
-					bind:value={rangeEnd}
-					disabled={busy}
-				/>
-			</label>
-			<button
-				class="no-button action-link"
-				disabled={busy || !audioRef}
-				on:click={() => audioRef && (rangeEnd = roundTime(audioRef.currentTime))}
-				>{$_('export_set_current')}</button
-			>
-			<span>{$_('export_range_seconds', { values: { duration: audioDuration.toFixed(1) } })}</span>
-		</p>
-		{#if audioDuration > 0 && !rangeValid}
-			<p class="error">{$_('export_range_error')}</p>
-		{/if}
-		<p>
-			<label>
-				{$_('export_format')}
-				<select bind:value={settings.format} disabled={busy}>
-					{#each videoFormats as format (format)}
-						<option value={format}>{$_(`export_format_${format}`)}</option>
-					{/each}
-				</select>
-			</label>
-		</p>
-		<p>
-			<label>
-				{$_('export_quality')}
-				<select bind:value={settings.quality} disabled={busy}>
-					{#each qualities as quality (quality)}
-						<option value={quality}>{$_(`export_quality_${quality}`)}</option>
-					{/each}
-				</select>
-			</label>
-		</p>
-		<p>
-			<label>
-				{$_('export_speed')}
-				<select bind:value={settings.speed} disabled={busy}>
-					{#each speeds as speed (speed)}
-						<option value={speed}>{$_(`export_speed_${speed}`)}</option>
-					{/each}
-				</select>
-			</label>
-		</p>
-		<p>
-			<label>
-				{$_('export_fps')}
-				<select bind:value={settings.fps} disabled={busy}>
-					{#each frameRates as fps (fps)}
-						<option value={fps}>{fps} fps</option>
-					{/each}
-				</select>
-			</label>
-		</p>
-		<p>
-			<label>
-				{$_('export_audio_bitrate')}
-				<select bind:value={settings.audioBitrate} disabled={busy}>
-					{#each audioBitrates as bitrate (bitrate)}
-						<option value={bitrate}>{bitrate} kbps</option>
-					{/each}
-				</select>
-			</label>
-		</p>
-	</div>
-
-	<button class="button" disabled={busy || (audioDuration > 0 && !rangeValid)} on:click={makeVideo}
+	<button class="button" disabled={busy || rangeError} on:click={makeVideo}
 		>{$_('generate_video')}</button
 	>
 	<br />
