@@ -230,8 +230,12 @@ footer {
 	width: 30px;
 	height: 30px;
 	background-color: rgba(137, 185, 189, 0.5);
+	/* 色を変えながら同時に透明にする。opacity は mouse.svelte がプレイヤーの上で隠すのに使っているため filter で消す。
+	   背景色の透明度を 0 にすると、色が変わる前に消えて見える（透明度を掛けた色で補間されるため） */
+	filter: opacity(0);
 	transition:
 		background-color 0.3s linear,
+		filter 0.6s linear,
 		width 0.3s ease-out,
 		height 0.3s ease-out;
 }
