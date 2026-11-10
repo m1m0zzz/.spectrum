@@ -1,5 +1,5 @@
 import { self } from '$app/service-worker';
-import { version } from '$app/env';
+import { dev, version } from '$app/env';
 import { immutable, assets } from '$app/manifest';
 
 // Create a unique cache name for this deployment
@@ -38,6 +38,13 @@ const withIsolationHeaders = (response) => {
 	});
 };
 
+// 開発サーバーでは service worker は何もしない（キャッシュもヘッダーの付与もしない）。
+// - version がビルドごとにしか変わらないため、キャッシュすると編集が反映されないことがある
+// - COOP / COEP を付けて crossOriginIsolated にすると、マルチスレッド版の ffmpeg が選ばれるが、
+//   開発サーバーはその worker（ffmpeg-core.worker.js）を通常のスクリプトとして読める形で配らず
+//   （Cannot use import statement outside a module）、書き出しが終わらなくなる。
+//   開発中はヘッダーを付けず、シングルスレッド版を使わせる
+
 self.addEventListener('install', (event) => {
 	async function addFilesToCache() {
 		const cache = await caches.open(CACHE);
@@ -45,6 +52,11 @@ self.addEventListener('install', (event) => {
 	}
 
 	console.log('install service worker');
+	if (dev) {
+		// キャッシュを使っていた古い service worker を待たずに置き換える
+		event.waitUntil(self.skipWaiting());
+		return;
+	}
 	event.waitUntil(addFilesToCache());
 });
 
@@ -52,14 +64,19 @@ self.addEventListener('activate', (event) => {
 	// Remove previous cached data from disk
 	async function deleteOldCaches() {
 		for (const key of await caches.keys()) {
-			if (key !== CACHE) await caches.delete(key);
+			// 開発中は、以前のキャッシュも含めてすべて消す
+			if (dev || key !== CACHE) await caches.delete(key);
 		}
+		// 開いているページも、すぐにこの service worker の管理下に置く
+		if (dev) await self.clients.claim();
 	}
 
 	event.waitUntil(deleteOldCaches());
 });
 
 self.addEventListener('fetch', (event) => {
+	if (dev) return;
+
 	// ignore POST requests etc
 	const url = new URL(event.request.url);
 	if (
