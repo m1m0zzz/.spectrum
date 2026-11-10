@@ -2,20 +2,46 @@
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import { formatDate } from '#lib';
-	import { convertMp4, load } from '#lib/ffmpeg.ts';
+	import { convertVideo, load } from '#lib/ffmpeg.ts';
+	import {
+		audioBitrates,
+		defaultEncodeSettings,
+		frameRates,
+		qualities,
+		recordingVideoBitrate,
+		speeds,
+		videoFormats,
+		type EncodeSettings
+	} from '#lib/encode.ts';
 
 	export let audioRef: HTMLAudioElement | null;
 	export let playerRef: HTMLCanvasElement | null;
 	export let audioContext: AudioContext | null;
 	export let recorderDestination: MediaStreamAudioDestinationNode;
 	export let imageLoaded: boolean;
+	export let audioDuration: number;
 
 	let anchorRef: HTMLAnchorElement | null;
 	let status: 'none' | 'generating' | 'converting' | 'completed' = 'none';
 	let error = false;
 	let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = 'idle';
+	let convertError = false;
 
 	let enableFullscreen = false;
+
+	// 書き出す範囲（秒）。曲が変わったら全体に戻す
+	let rangeStart = 0;
+	let rangeEnd = 0;
+	const resetRange = (duration: number) => {
+		rangeStart = 0;
+		rangeEnd = Number.isFinite(duration) ? duration : 0;
+	};
+	$: resetRange(audioDuration);
+	$: rangeValid = 0 <= rangeStart && rangeStart < rangeEnd && rangeEnd <= audioDuration;
+
+	let settings: EncodeSettings = { ...defaultEncodeSettings };
+
+	$: busy = status == 'generating' || status == 'converting';
 
 	onMount(() => {
 		enableFullscreen = document.fullscreenEnabled;
@@ -37,55 +63,100 @@
 			});
 	};
 
+	const seek = (audio: HTMLAudioElement, time: number) =>
+		new Promise<void>((resolve) => {
+			audio.addEventListener('seeked', () => resolve(), { once: true });
+			audio.currentTime = time;
+		});
+
+	const roundTime = (t: number) => Math.round(t * 10) / 10;
+
 	// Media Recorderを使用して動画を作成する
-	const makeVideo = () => {
+	const makeVideo = async () => {
+		if (busy) return;
 		if (!audioContext || !audioRef || !imageLoaded || !playerRef || !anchorRef) {
 			error = true;
 			return;
 		}
+		if (!rangeValid) return;
+		const audio = audioRef;
+		const anchor = anchorRef;
+		// 設定は録画の開始時点のものを使う（変換中に UI を触られても変わらない）
+		const encode = { ...settings };
+		const duration = rangeEnd - rangeStart;
+		const end = rangeEnd;
+
+		error = false;
+		convertError = false;
+		status = 'generating';
+		prepareFFmpeg();
+
+		audio.pause();
+		await seek(audio, rangeStart);
 
 		const canvasStream = playerRef.captureStream();
 		const audioStream = recorderDestination.stream;
 		const mediaStream = new MediaStream(); // canvasStream + audioStream
 		[canvasStream, audioStream].forEach((stream) => {
-			console.log(stream.getTracks());
 			stream.getTracks().forEach((track) => mediaStream.addTrack(track));
 		});
-		const mediaRecorder = new MediaRecorder(mediaStream);
+		const mediaRecorder = new MediaRecorder(mediaStream, {
+			videoBitsPerSecond: recordingVideoBitrate(playerRef.width, playerRef.height, encode),
+			// 変換で再エンコードするので、録画の段階では音質を落とさない
+			audioBitsPerSecond: 320_000
+		});
 
-		mediaRecorder.ondataavailable = (e) => {
-			const videoBlob = new Blob([e.data], { type: e.data.type });
+		// 録画の開始から音が鳴り始めるまでの遅れ。変換時にこの分を先頭から削る
+		let recorderStartedAt = 0;
+		let playingAt = 0;
+		mediaRecorder.onstart = () => (recorderStartedAt = performance.now());
+		audio.addEventListener('playing', () => (playingAt = performance.now()), { once: true });
+
+		const chunks: Blob[] = [];
+		mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+		mediaRecorder.onstop = () => {
+			const lead =
+				recorderStartedAt && playingAt ? Math.max(0, (playingAt - recorderStartedAt) / 1000) : 0;
+			const videoBlob = new Blob(chunks, { type: chunks[0]?.type ?? 'video/webm' });
 			const filename = formatDate(new Date());
 			const webmFile = new File([videoBlob], filename + '.webm', { type: videoBlob.type });
 			status = 'converting';
-			convertMp4(webmFile)
+			convertVideo(webmFile, encode, { start: lead, duration })
 				.then((url) => {
 					status = 'completed';
-					anchorRef!.download = filename + '.mp4';
-					anchorRef!.href = url;
+					if (anchor.href.startsWith('blob:')) URL.revokeObjectURL(anchor.href);
+					anchor.download = `${filename}.${encode.format}`;
+					anchor.href = url;
 				})
 				.catch((error) => {
 					// コアの読み込みに失敗したときは、prepareFFmpeg がエラー表示を出している
 					status = 'none';
+					if (ffmpegStatus != 'error') convertError = true;
 					console.error(error);
 				});
 		};
 
 		// play!
-		error = false;
-		status = 'generating';
-		prepareFFmpeg();
-
-		audioRef.currentTime = 0;
 		mediaRecorder.start();
-		audioRef.play();
-		audioRef.style.display = 'none';
+		audio.style.display = 'none';
+		try {
+			await audio.play();
+		} catch (error) {
+			console.error(error);
+		}
 
-		audioRef.onended = () => {
-			console.log('stop video');
-			mediaRecorder.stop();
-			audioRef!.style.display = 'block';
+		// 終了位置を過ぎたら止める。多少過ぎても変換時に -t で切り落とす
+		const watch = () => {
+			if (audio.currentTime >= end || audio.ended || audio.paused) {
+				console.log('stop video');
+				audio.pause();
+				mediaRecorder.stop();
+				audio.style.display = 'block';
+				return;
+			}
+			requestAnimationFrame(watch);
 		};
+		requestAnimationFrame(watch);
 	};
 </script>
 
@@ -101,14 +172,113 @@
 		{$_('change_full_screen')}
 	</p>
 
-	<button class="button" on:click={() => makeVideo()}>{$_('generate_video')}</button>
+	<div class="export-settings">
+		<h3>{$_('export_settings')}</h3>
+		<p>
+			<span>{$_('export_range')}</span>
+			<label>
+				{$_('export_range_start')}
+				<input
+					type="number"
+					min="0"
+					max={audioDuration}
+					step="0.1"
+					bind:value={rangeStart}
+					disabled={busy}
+				/>
+			</label>
+			<button
+				class="no-button action-link"
+				disabled={busy || !audioRef}
+				on:click={() => audioRef && (rangeStart = roundTime(audioRef.currentTime))}
+				>{$_('export_set_current')}</button
+			>
+			<span>〜</span>
+			<label>
+				{$_('export_range_end')}
+				<input
+					type="number"
+					min="0"
+					max={audioDuration}
+					step="0.1"
+					bind:value={rangeEnd}
+					disabled={busy}
+				/>
+			</label>
+			<button
+				class="no-button action-link"
+				disabled={busy || !audioRef}
+				on:click={() => audioRef && (rangeEnd = roundTime(audioRef.currentTime))}
+				>{$_('export_set_current')}</button
+			>
+			<span>{$_('export_range_seconds', { values: { duration: audioDuration.toFixed(1) } })}</span>
+		</p>
+		{#if audioDuration > 0 && !rangeValid}
+			<p class="error">{$_('export_range_error')}</p>
+		{/if}
+		<p>
+			<label>
+				{$_('export_format')}
+				<select bind:value={settings.format} disabled={busy}>
+					{#each videoFormats as format (format)}
+						<option value={format}>{$_(`export_format_${format}`)}</option>
+					{/each}
+				</select>
+			</label>
+		</p>
+		<p>
+			<label>
+				{$_('export_quality')}
+				<select bind:value={settings.quality} disabled={busy}>
+					{#each qualities as quality (quality)}
+						<option value={quality}>{$_(`export_quality_${quality}`)}</option>
+					{/each}
+				</select>
+			</label>
+		</p>
+		<p>
+			<label>
+				{$_('export_speed')}
+				<select bind:value={settings.speed} disabled={busy}>
+					{#each speeds as speed (speed)}
+						<option value={speed}>{$_(`export_speed_${speed}`)}</option>
+					{/each}
+				</select>
+			</label>
+		</p>
+		<p>
+			<label>
+				{$_('export_fps')}
+				<select bind:value={settings.fps} disabled={busy}>
+					{#each frameRates as fps (fps)}
+						<option value={fps}>{fps} fps</option>
+					{/each}
+				</select>
+			</label>
+		</p>
+		<p>
+			<label>
+				{$_('export_audio_bitrate')}
+				<select bind:value={settings.audioBitrate} disabled={busy}>
+					{#each audioBitrates as bitrate (bitrate)}
+						<option value={bitrate}>{bitrate} kbps</option>
+					{/each}
+				</select>
+			</label>
+		</p>
+	</div>
+
+	<button class="button" disabled={busy || (audioDuration > 0 && !rangeValid)} on:click={makeVideo}
+		>{$_('generate_video')}</button
+	>
 	<br />
-	<p style:display={status == 'generating' || status == 'converting' ? 'block' : 'none'}>
+	<p style:display={busy ? 'block' : 'none'}>
 		{$_('generate_video_message')}
 	</p>
 	<p class="error" style:display={ffmpegStatus == 'error' ? 'block' : 'none'}>
 		{$_('ffmpeg_error')}
 	</p>
+	<p class="error" style:display={convertError ? 'block' : 'none'}>{$_('convert_error')}</p>
 	<p class="error" style:display={error ? 'block' : 'none'}>{$_('generate_video_error')}</p>
 	<!-- svelte-ignore a11y-invalid-attribute -->
 	<a

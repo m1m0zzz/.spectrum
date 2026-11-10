@@ -1,21 +1,25 @@
 <script lang="ts">
-	import type { LogToPixelIndexMap, SpectrumType } from '#lib';
-	import { getRGBAbyImageData } from '#lib/image.ts';
+	import {
+		computeBandLevels,
+		createBandMap,
+		createDistinctLogBandMap,
+		minBinOf,
+		type BandMap,
+		type FrequencyScale,
+		type SpectrumType
+	} from '#lib';
 	import { createEventDispatcher, onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
 	export let imageLoaded: boolean;
 	export let imageData: ImageData;
-	export let memoAlpha: number[];
-	export let logToPixelIndexMap: LogToPixelIndexMap;
 	export let nodeAnalyser: AnalyserNode | null;
 
 	// parameters
 	export let playerWidth: number;
 	export let playerHeight: number;
 	export let background: string;
-	export let fftSize: number;
 	export let spectrumType: SpectrumType;
 	export let spectrumSensitivity: number;
 	export let spectrumGridSize: number;
@@ -26,104 +30,145 @@
 	let playerCtx: CanvasRenderingContext2D;
 	let lastTime = performance.now();
 
+	// 毎フレーム作り直さないよう、解析結果のバッファと対応表は使い回す
+	let freqByteData = new Uint8Array(0);
+	let levels = new Float32Array(0);
+	let bandMap: BandMap | null = null;
+	let bandMapKey = '';
+
+	// pixel は画像の 1 列ごとに別のビンを割り当てる。liner / log は表示幅の 1 列ごとに割り当てる
+	const getBandMap = (binCount: number, columns: number, scale: FrequencyScale | 'pixel') => {
+		const minBin =
+			scale == 'log' && nodeAnalyser ? minBinOf(binCount, nodeAnalyser.context.sampleRate) : 1;
+		const key = `${scale}:${binCount}:${columns}:${minBin}`;
+		if (!bandMap || key != bandMapKey) {
+			bandMap =
+				scale == 'pixel'
+					? createDistinctLogBandMap(binCount, columns)
+					: createBandMap(binCount, columns, scale, minBin);
+			bandMapKey = key;
+		}
+		return bandMap;
+	};
+
+	const readLevels = (analyser: AnalyserNode, map: BandMap, reduce: 'max' | 'avg') => {
+		if (freqByteData.length != analyser.frequencyBinCount) {
+			freqByteData = new Uint8Array(analyser.frequencyBinCount);
+		}
+		analyser.getByteFrequencyData(freqByteData);
+		if (levels.length != map.begin.length) levels = new Float32Array(map.begin.length);
+		return computeBandLevels(freqByteData, map, levels, reduce);
+	};
+
+	// 画像まわりのキャッシュ。imageData が差し替わったときに作り直す
+	let preparedImage: ImageData | null = null;
+	// pixel モードの描画先。画像サイズの canvas に毎フレーム透明度だけ書き換えて、拡大して貼る
+	let pixelCanvas: HTMLCanvasElement;
+	let pixelCtx: CanvasRenderingContext2D;
+	let pixelOut: ImageData;
+	let pixelAlpha: Float32Array; // 各ピクセルの現在の不透明度（0〜1）
+	let sourceAlpha: Float32Array; // 元画像の不透明度（0〜1）
+	let columnThreshold: Float32Array; // この行より下を点灯する
+
+	const prepareImage = (image: ImageData) => {
+		preparedImage = image;
+		const { width, height } = image;
+
+		pixelCanvas ??= document.createElement('canvas');
+		pixelCanvas.width = width;
+		pixelCanvas.height = height;
+		pixelCtx = pixelCanvas.getContext('2d')!;
+		pixelOut = new ImageData(new Uint8ClampedArray(image.data), width, height);
+		pixelAlpha = new Float32Array(width * height);
+		sourceAlpha = new Float32Array(width * height);
+		for (let i = 0; i < width * height; i++) {
+			sourceAlpha[i] = image.data[i * 4 + 3] / 255;
+			pixelOut.data[i * 4 + 3] = 0;
+		}
+		columnThreshold = new Float32Array(width);
+	};
+
+	// 縮小するときは補間し、拡大するときはドットを保つ
+	const drawScaled = (source: HTMLCanvasElement, w: number, h: number) => {
+		playerCtx.imageSmoothingEnabled = source.width > w || source.height > h;
+		playerCtx.drawImage(source, 0, 0, w, h);
+	};
+
+	const drawPixelSpectrum = (analyser: AnalyserNode, w: number, h: number, elapsed: number) => {
+		const W = imageData.width;
+		const H = imageData.height;
+		const lv = readLevels(analyser, getBandMap(analyser.frequencyBinCount, W, 'pixel'), 'avg');
+
+		// 1 - y / H <= level のピクセルを点灯する。y >= H * (1 - level) と同じ
+		for (let x = 0; x < W; x++) {
+			columnThreshold[x] = H * (1 - (lv[x] / 256) * spectrumSensitivity);
+		}
+		// スムーズは「点灯から消えるまでの時間（ms）」。フレームレートに依らないよう経過時間で減らす
+		const decrement = spectrumSmoothTime <= 0 ? 1 : elapsed / spectrumSmoothTime;
+		const out = pixelOut.data;
+		for (let y = 0, i = 0; y < H; y++) {
+			for (let x = 0; x < W; x++, i++) {
+				const a = y >= columnThreshold[x] ? sourceAlpha[i] : Math.max(pixelAlpha[i] - decrement, 0);
+				pixelAlpha[i] = a;
+				out[i * 4 + 3] = a * 255;
+			}
+		}
+		pixelCtx.putImageData(pixelOut, 0, 0);
+		drawScaled(pixelCanvas, w, h);
+
+		// グリッドはセルの境目を背景色で塗って表す（セルを内側に gridSize / 2 ずつ縮めるのと同じ見た目）
+		if (spectrumGridSize > 0) {
+			const half = spectrumGridSize / 2;
+			const cellWidth = w / W;
+			const cellHeight = h / H;
+			playerCtx.beginPath();
+			for (let x = 0; x <= W; x++) playerCtx.rect(cellWidth * x - half, 0, half * 2, h);
+			for (let y = 0; y <= H; y++) playerCtx.rect(0, cellHeight * y - half, w, half * 2);
+			playerCtx.fillStyle = background;
+			playerCtx.fill();
+		}
+	};
+
+	// liner / log のスペクトラム
+	const drawBarSpectrum = (analyser: AnalyserNode, w: number, h: number) => {
+		const scale: FrequencyScale = spectrumType == 'log' ? 'log' : 'linear';
+		// 表示の 1 列に 1 本の棒を描く。1 列に複数のビンが入るときは最大値をとる
+		const lv = readLevels(analyser, getBandMap(analyser.frequencyBinCount, w, scale), 'max');
+
+		playerCtx.beginPath();
+		for (let x = 0; x < w; x++) {
+			const v = lv[x] / 256;
+			if (v > 0) playerCtx.rect(x, (1 - v) * h, 1, v * h);
+		}
+		playerCtx.fillStyle = 'lightskyblue';
+		playerCtx.fill();
+	};
+
 	const draw = () => {
 		if (!playerRef) return;
 		requestAnimationFrame(draw);
 
-		// counting fps
-		const diffMsec = performance.now() - lastTime;
-		lastTime = performance.now();
-		// デバッグ用。下の console.log を戻すと fps を確認できる
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const realFps = 1000 / diffMsec;
-		// console.log(realFps);
+		const now = performance.now();
+		const elapsed = now - lastTime;
+		lastTime = now;
 
 		const w = playerRef.width;
 		const h = playerRef.height;
-		playerCtx.clearRect(0, 0, w, h);
-		playerCtx.beginPath();
-		playerCtx.rect(0, 0, w, h);
 		playerCtx.fillStyle = background;
-		playerCtx.fill();
+		playerCtx.fillRect(0, 0, w, h);
 
 		if (!nodeAnalyser) return;
-		const freqByteData = new Uint8Array(fftSize / 2);
-		nodeAnalyser.getByteFrequencyData(freqByteData);
-
 		if (spectrumType == 'pixel') {
+			// pixel モードは画像そのものをスペクトラムとして見せる
 			if (imageLoaded) {
-				const cellWidth = w / imageData.width;
-				const cellHeight = h / imageData.height;
-
-				// note
-				// spectrumSmoothTime ... 1sec -> 30fr -> 1/30
-				// spectrumSmoothTime ... 1000msec -> 30fr -> 1/60
-				// spectrumSmoothTime ... 2sec -> 60fr -> 1/60
-				const fps = 30;
-				const alphaDecrement = spectrumSmoothTime <= 0 ? 1 : 1000 / (spectrumSmoothTime * fps);
-
-				for (let x = 0; x < imageData.width; x++) {
-					const begin = logToPixelIndexMap[x].begin as number;
-					const end = logToPixelIndexMap[x].end as number;
-					const sum = freqByteData.slice(begin, end + 1).reduce((sum, num) => sum + num, 0);
-					const ave = sum / (end - begin + 1) / 256;
-					const gridSize = spectrumGridSize / 2;
-
-					for (let y = 0; y < imageData.height; y++) {
-						const rgba = getRGBAbyImageData(imageData, x, y, imageData.width);
-						if (1 - y / imageData.height <= ave * spectrumSensitivity) {
-							memoAlpha[y * imageData.height + x] = rgba[3];
-						} else {
-							memoAlpha[y * imageData.height + x] = Math.max(
-								memoAlpha[y * imageData.height + x] - alphaDecrement,
-								0
-							);
-						}
-						playerCtx.beginPath();
-						playerCtx.rect(
-							gridSize + cellWidth * x,
-							gridSize + cellHeight * y,
-							cellWidth - gridSize * 2,
-							cellHeight - gridSize * 2
-						);
-
-						playerCtx.fillStyle = `rgba(${rgba[0]}, ${rgba[1]}, ${rgba[2]}, ${
-							memoAlpha[y * imageData.height + x]
-						})`;
-						playerCtx.fill();
-					}
-				}
+				if (imageData !== preparedImage) prepareImage(imageData);
+				drawPixelSpectrum(nodeAnalyser, w, h, elapsed);
 			} else {
 				playerCtx.fillStyle = 'white';
 				playerCtx.fillText('No Image', 10, 20);
-				playerCtx.fillStyle = 'black';
 			}
 		} else {
-			// liner or log
-			playerCtx.beginPath();
-
-			for (let i = 0; i < freqByteData.length; i++) {
-				const freqSum = freqByteData[i] / 256;
-
-				if (spectrumType == 'log') {
-					playerCtx.rect(
-						(Math.log(i) / Math.log(freqByteData.length)) * w,
-						(1 - freqSum) * h,
-						1,
-						freqSum * h
-					);
-				} else if (spectrumType == 'liner') {
-					playerCtx.rect(
-						(w / freqByteData.length) * i,
-						(1 - freqSum) * h,
-						w / freqByteData.length,
-						freqSum * h
-					);
-				}
-			}
-
-			playerCtx.fillStyle = 'lightskyblue';
-			playerCtx.fill();
+			drawBarSpectrum(nodeAnalyser, w, h);
 		}
 	};
 

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
-	import { toBase64 } from '#lib/image.ts';
 
 	const dispatch = createEventDispatcher();
 
@@ -13,12 +12,15 @@
 
 	let files: FileList;
 	let audioLoaded = false;
+	let objectUrl: string | null = null;
 
 	const uploadSound = async () => {
 		if (!audioRef) return;
-		const result = await toBase64(files[0]);
+		// data URL（base64）にすると長い曲でメモリと時間を食うため、object URL で読む
+		if (objectUrl) URL.revokeObjectURL(objectUrl);
+		objectUrl = URL.createObjectURL(files[0]);
 
-		audioRef.src = result;
+		audioRef.src = objectUrl;
 		audioLoaded = true;
 
 		if (!audioContext) {
@@ -62,5 +64,11 @@
 		bind:files
 		on:change={() => uploadSound()}
 	/><br />
-	<audio controls={audioLoaded} src="" controlslist="nodownload" bind:this={audioRef}></audio>
+	<audio
+		controls={audioLoaded}
+		src=""
+		controlslist="nodownload"
+		bind:this={audioRef}
+		on:loadedmetadata={() => dispatch('duration', { duration: audioRef?.duration ?? 0 })}
+	></audio>
 </section>

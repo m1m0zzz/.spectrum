@@ -1,15 +1,7 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 
-	import {
-		generateLogToPixelIndexMap,
-		isSpectrumType,
-		spectrumTypes,
-		type LogToPixelIndexMap,
-		type SpectrumType,
-		capitalize,
-		clamp
-	} from '#lib';
+	import { isSpectrumType, spectrumTypes, type SpectrumType, capitalize, clamp } from '#lib';
 
 	import ImageUploader from './imageUploader.svelte';
 	import AudioUploader from './audioUploader.svelte';
@@ -19,8 +11,7 @@
 
 	let imageLoaded = false;
 	let imageData: ImageData;
-	let memoAlpha: number[];
-	let logToPixelIndexMap: LogToPixelIndexMap;
+	let audioDuration = 0;
 	let audioContext: AudioContext | null;
 	let nodeAnalyser: AnalyserNode | null;
 	let recorderDestination: MediaStreamAudioDestinationNode;
@@ -64,16 +55,14 @@
 		{/if}
 
 		<ImageUploader
-			{fftSize}
 			on:message={(event) => {
 				if (event.detail.imageLoaded) imageLoaded = event.detail.imageLoaded;
 				imageData = event.detail.imageData;
-				memoAlpha = event.detail.memoAlpha;
-				logToPixelIndexMap = event.detail.logToPixelIndexMap;
 			}}
 		/>
 		<AudioUploader
 			on:mount={(event) => (audioRef = event.detail.audioRef)}
+			on:duration={(event) => (audioDuration = event.detail.duration)}
 			on:message={(event) => {
 				audioContext = event.detail.audioContext;
 				nodeAnalyser = event.detail.nodeAnalyser;
@@ -117,13 +106,14 @@
 						on:change={(e) => {
 							const fftSize = Number(e.currentTarget.value);
 							if (nodeAnalyser) nodeAnalyser.fftSize = fftSize;
-							if (imageLoaded) {
-								logToPixelIndexMap = generateLogToPixelIndexMap(fftSize, imageData.width);
-							}
 						}}
 					>
 						{#each [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768] as size (size)}
-							<option value={size} selected={size == fftSize} disabled={size < playerWidth}
+							<!-- pixel モードで画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする -->
+							<option
+								value={size}
+								selected={size == fftSize}
+								disabled={imageLoaded && size / 2 - 1 < imageData.width}
 								>{capitalize(String(size))}</option
 							>
 						{/each}
@@ -192,17 +182,21 @@
 			{/if}
 		</section>
 
-		<PlayerMenu {playerRef} {audioContext} {audioRef} {imageLoaded} {recorderDestination} />
+		<PlayerMenu
+			{playerRef}
+			{audioContext}
+			{audioRef}
+			{imageLoaded}
+			{recorderDestination}
+			{audioDuration}
+		/>
 
 		<PlayerCanvas
 			on:mount={(event) => (playerRef = event.detail.playerRef)}
 			{imageLoaded}
 			{playerRef}
 			{background}
-			{fftSize}
 			{imageData}
-			{logToPixelIndexMap}
-			{memoAlpha}
 			{nodeAnalyser}
 			{playerHeight}
 			{playerWidth}

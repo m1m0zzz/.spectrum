@@ -1,5 +1,6 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
+import { buildOutputArgs, mimeTypeOf, type EncodeSettings, type Trim } from './encode.ts';
 // コアはビルドに同梱して同じオリジンから配る（?url でファイルとして出力される）。
 // $ffmpeg-core / $ffmpeg-core-mt は vite.config.ts の別名で、各パッケージの dist/esm を指す。
 // どちらも約 32MB あるため、service worker の事前キャッシュからは外している
@@ -63,23 +64,26 @@ export const load = () => {
 
 const VIDEO_KEY = 'video';
 
-// MediaRecorder の WebM は可変フレームレートで、フレームの間隔が揃わないと ffmpeg はタイムスタンプの単位（1ms）から
-// 1000fps と推定し、同じフレームを複製して 1000fps の MP4 を書き出す。出力のフレームレートを固定して防ぐ
-const OUTPUT_FPS = '30';
-
-// return: blob url
-export const convertMp4 = async (file: File, outputName = 'output.mp4') => {
+// 録画した WebM を設定に従って変換する。return: blob url
+export const convertVideo = async (file: File, settings: EncodeSettings, trim?: Trim) => {
 	const { ffmpeg, multiThread } = await load();
+	const outputName = `output.${settings.format}`;
 	await ffmpeg.writeFile(VIDEO_KEY, await fetchFile(file));
-	const output = ['-r', OUTPUT_FPS, outputName];
+	const output = [...buildOutputArgs(settings, trim), outputName];
 	const args = multiThread
 		? [...MT_ARGS.input, '-i', VIDEO_KEY, ...MT_ARGS.output, ...output]
 		: ['-i', VIDEO_KEY, ...output];
-	console.time('exec');
-	await ffmpeg.exec(args);
-	console.timeEnd('exec');
-	// バイナリで読むので Uint8Array が返る。worker から転送された通常の ArrayBuffer で、SharedArrayBuffer ではない
-	const data = (await ffmpeg.readFile(outputName)) as Uint8Array<ArrayBuffer>;
-
-	return URL.createObjectURL(new Blob([data], { type: 'video/mp4' }));
+	try {
+		console.time('exec');
+		const code = await ffmpeg.exec(args);
+		console.timeEnd('exec');
+		if (code != 0) throw new Error(`ffmpeg exited with code ${code}`);
+		// バイナリで読むので Uint8Array が返る。worker から転送された通常の ArrayBuffer で、SharedArrayBuffer ではない
+		const data = (await ffmpeg.readFile(outputName)) as Uint8Array<ArrayBuffer>;
+		return URL.createObjectURL(new Blob([data], { type: mimeTypeOf(settings.format) }));
+	} finally {
+		// 仮想ファイルシステムはメモリ上にあるため、書き出すたびに消さないと溜まっていく
+		await ffmpeg.deleteFile(VIDEO_KEY).catch(() => {});
+		await ffmpeg.deleteFile(outputName).catch(() => {});
+	}
 };

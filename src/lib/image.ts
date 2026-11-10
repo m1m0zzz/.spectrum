@@ -1,10 +1,5 @@
-export const toBase64 = (file: File) =>
-	new Promise<string>((resolve, reject) => {
-		const reader = new FileReader();
-		reader.readAsDataURL(file);
-		reader.onload = () => resolve(reader.result as string);
-		reader.onerror = reject;
-	});
+// pixel モードでそのまま扱える画像の画素数の上限。超えるときはドット化を勧める
+export const MAX_IMAGE_PIXELS = 1024 * 1024;
 
 export const loadImage = (src: string) =>
 	new Promise<HTMLImageElement>((resolve, reject) => {
@@ -14,16 +9,8 @@ export const loadImage = (src: string) =>
 		img.src = src;
 	});
 
-export const getRGBAbyImageData = (imageData: ImageData, x: number, y: number, width: number) => {
-	return [
-		imageData.data[(x + y * width) * 4],
-		imageData.data[(x + y * width) * 4 + 1],
-		imageData.data[(x + y * width) * 4 + 2],
-		imageData.data[(x + y * width) * 4 + 3] / 255
-	];
-};
-
 // ピクセル化(サンプリング) (pixelSizeの大きさ)
+// pixelSize 四方の左上のピクセルを拾う。割り切れない端の余りは捨てる
 export const executePixelationSampling = (
 	context: CanvasRenderingContext2D,
 	img: HTMLImageElement,
@@ -37,20 +24,18 @@ export const executePixelationSampling = (
 	context.canvas.height = img.height;
 	context.drawImage(img, 0, 0);
 
-	const imageData = context.getImageData(0, 0, img.width, img.height);
+	const src = context.getImageData(0, 0, img.width, img.height).data;
 	const newImageData = new ImageData(newWidth, newHeight);
+	const dst = newImageData.data;
 
-	for (let y = 0; y < img.height; y += pixelSize) {
-		for (let x = 0; x < img.width; x += pixelSize) {
-			const red = imageData.data[(img.width * y + x) * 4];
-			const green = imageData.data[(img.width * y + x) * 4 + 1];
-			const blue = imageData.data[(img.width * y + x) * 4 + 2];
-			const alpha = imageData.data[(img.width * y + x) * 4 + 3];
-
-			newImageData.data[(newWidth * (y / pixelSize) + x / pixelSize) * 4] = red;
-			newImageData.data[(newWidth * (y / pixelSize) + x / pixelSize) * 4 + 1] = green;
-			newImageData.data[(newWidth * (y / pixelSize) + x / pixelSize) * 4 + 2] = blue;
-			newImageData.data[(newWidth * (y / pixelSize) + x / pixelSize) * 4 + 3] = alpha;
+	for (let y = 0; y < newHeight; y++) {
+		for (let x = 0; x < newWidth; x++) {
+			const from = (img.width * y * pixelSize + x * pixelSize) * 4;
+			const to = (newWidth * y + x) * 4;
+			dst[to] = src[from];
+			dst[to + 1] = src[from + 1];
+			dst[to + 2] = src[from + 2];
+			dst[to + 3] = src[from + 3];
 		}
 	}
 

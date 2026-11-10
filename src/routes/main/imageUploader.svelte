@@ -1,12 +1,9 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
-	import { generateLogToPixelIndexMap } from '#lib';
-	import { executePixelationSampling, loadImage, toBase64 } from '#lib/image.ts';
+	import { executePixelationSampling, loadImage, MAX_IMAGE_PIXELS } from '#lib/image.ts';
 
 	const dispatch = createEventDispatcher();
-
-	export let fftSize: number;
 
 	let previewRef: HTMLCanvasElement | null;
 	let img: HTMLImageElement | null;
@@ -43,24 +40,27 @@
 			imageData = previewCtx.getImageData(0, 0, img.width, img.height);
 		}
 
-		let obj = {
-			imageData: imageData,
-			memoAlpha: Array(imageData.width * imageData.height).fill(0),
-			logToPixelIndexMap: generateLogToPixelIndexMap(fftSize, imageData.width)
-		};
+		let obj = { imageData: imageData };
 		if (_imageLoaded) {
 			obj = Object.assign(obj, { imageLoaded: true });
 		}
 		dispatch('message', obj);
 	};
 
-	const uploadImage = async () => {
-		const result = await toBase64(files[0]);
-		img = await loadImage(result);
+	let objectUrl: string | null = null;
 
-		if (img.width * img.height > 256 * 256) {
+	const uploadImage = async () => {
+		// data URL（base64）にすると大きい画像でメモリと時間を食うため、object URL で読む
+		if (objectUrl) URL.revokeObjectURL(objectUrl);
+		objectUrl = URL.createObjectURL(files[0]);
+		img = await loadImage(objectUrl);
+
+		const pixels = img.width * img.height;
+		if (pixels > MAX_IMAGE_PIXELS) {
 			imgError = true;
 			isDoPixelation = true;
+			// 上限に収まる最小の間引き幅
+			pixelationSize = Math.max(2, Math.ceil(Math.sqrt(pixels / MAX_IMAGE_PIXELS)));
 		} else {
 			imgError = false;
 			isDoPixelation = false;
