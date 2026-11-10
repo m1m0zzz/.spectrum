@@ -18,7 +18,6 @@
 	"parameters_note": "※ ドット絵のピクセル数×n倍の値にすると、きれいに表示できます",
 	"parameters_background": "背景色: ",
 	"parameters_fft_size": "FFTサイズ: ",
-	"parameters_spectrum_type": "タイプ: ",
 	"parameters_sensitivity": "感度: ",
 	"parameters_grid_size": "グリッドサイズ: ",
 	"parameters_smooth": "スムーズ: ",

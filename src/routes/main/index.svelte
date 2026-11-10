@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
 
-	import { isSpectrumType, spectrumTypes, type SpectrumType } from '#lib/canvas.ts';
 	import { capitalize, clamp } from '#lib/util.ts';
 
 	import ImageUploader from './imageUploader.svelte';
@@ -25,7 +24,6 @@
 	let playerHeight = 320;
 	let background = '#000000';
 	let fftSize = 8192;
-	let spectrumType: SpectrumType = 'pixel';
 	let spectrumSensitivity = 1;
 	let spectrumGridSize = 0;
 	let spectrumSmoothTime = 0;
@@ -179,7 +177,7 @@
 							}}
 						>
 							{#each [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768] as size (size)}
-								<!-- pixel モードで画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする -->
+								<!-- 画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする -->
 								<option
 									value={size}
 									selected={size == fftSize}
@@ -192,65 +190,43 @@
 				</p>
 				<p>
 					<label
-						>{$_('parameters_spectrum_type')}
-						<select
-							bind:value={spectrumType}
-							on:change={(e) => {
-								const type = e.currentTarget.value;
-								if (isSpectrumType(type)) spectrumType = type;
-							}}
-						>
-							{#each spectrumTypes as type (type)}
-								<option value={type}>{capitalize(type)}</option>
-							{/each}
-						</select>
+						>{$_('parameters_sensitivity')}
+						<input
+							type="number"
+							min="0.1"
+							max="10"
+							step="0.1"
+							bind:value={spectrumSensitivity}
+							on:change={(e) =>
+								(spectrumSensitivity = clamp(Number(e.currentTarget.value), 0.1, 10))}
+						/>
 					</label>
 				</p>
-				{#if spectrumType == 'pixel'}
-					<div>
-						<p>- pixel mode setting -</p>
-						<p>
-							<label
-								>{$_('parameters_sensitivity')}
-								<input
-									type="number"
-									min="0.1"
-									max="10"
-									step="0.1"
-									bind:value={spectrumSensitivity}
-									on:change={(e) =>
-										(spectrumSensitivity = clamp(Number(e.currentTarget.value), 0.1, 10))}
-								/>
-							</label>
-						</p>
-						<p>
-							<label
-								>{$_('parameters_grid_size')}
-								<input
-									type="number"
-									min="0"
-									bind:value={spectrumGridSize}
-									on:change={(e) => (spectrumGridSize = Math.max(0, Number(e.currentTarget.value)))}
-								/>
-							</label>
-							<span>px</span>
-						</p>
-						<p>
-							<label
-								>{$_('parameters_smooth')}
-								<input
-									type="number"
-									min="0"
-									step="100"
-									bind:value={spectrumSmoothTime}
-									on:change={(e) =>
-										(spectrumSmoothTime = Math.max(0, Number(e.currentTarget.value)))}
-								/>
-							</label>
-							<span>ms</span>
-						</p>
-					</div>
-				{/if}
+				<p>
+					<label
+						>{$_('parameters_grid_size')}
+						<input
+							type="number"
+							min="0"
+							bind:value={spectrumGridSize}
+							on:change={(e) => (spectrumGridSize = Math.max(0, Number(e.currentTarget.value)))}
+						/>
+					</label>
+					<span>px</span>
+				</p>
+				<p>
+					<label
+						>{$_('parameters_smooth')}
+						<input
+							type="number"
+							min="0"
+							step="100"
+							bind:value={spectrumSmoothTime}
+							on:change={(e) => (spectrumSmoothTime = Math.max(0, Number(e.currentTarget.value)))}
+						/>
+					</label>
+					<span>ms</span>
+				</p>
 			</section>
 		</div>
 
@@ -310,7 +286,6 @@
 			{spectrumGridSize}
 			{spectrumSensitivity}
 			{spectrumSmoothTime}
-			{spectrumType}
 		/>
 	</div>
 </main>

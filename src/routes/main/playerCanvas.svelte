@@ -1,13 +1,5 @@
 <script lang="ts">
-	import {
-		computeBandLevels,
-		createBandMap,
-		createDistinctLogBandMap,
-		minBinOf,
-		type BandMap,
-		type FrequencyScale,
-		type SpectrumType
-	} from '#lib/canvas.ts';
+	import { computeBandLevels, createBandMap, type BandMap } from '#lib/canvas.ts';
 	import { createEventDispatcher, onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -20,7 +12,6 @@
 	export let playerWidth: number;
 	export let playerHeight: number;
 	export let background: string;
-	export let spectrumType: SpectrumType;
 	export let spectrumSensitivity: number;
 	export let spectrumGridSize: number;
 	export let spectrumSmoothTime: number;
@@ -36,33 +27,28 @@
 	let bandMap: BandMap | null = null;
 	let bandMapKey = '';
 
-	// pixel は画像の 1 列ごとに別のビンを割り当てる。liner / log は表示幅の 1 列ごとに割り当てる
-	const getBandMap = (binCount: number, columns: number, scale: FrequencyScale | 'pixel') => {
-		const minBin =
-			scale == 'log' && nodeAnalyser ? minBinOf(binCount, nodeAnalyser.context.sampleRate) : 1;
-		const key = `${scale}:${binCount}:${columns}:${minBin}`;
+	// 画像の 1 列ごとに別のビンを割り当てる
+	const getBandMap = (binCount: number, columns: number) => {
+		const key = `${binCount}:${columns}`;
 		if (!bandMap || key != bandMapKey) {
-			bandMap =
-				scale == 'pixel'
-					? createDistinctLogBandMap(binCount, columns)
-					: createBandMap(binCount, columns, scale, minBin);
+			bandMap = createBandMap(binCount, columns);
 			bandMapKey = key;
 		}
 		return bandMap;
 	};
 
-	const readLevels = (analyser: AnalyserNode, map: BandMap, reduce: 'max' | 'avg') => {
+	const readLevels = (analyser: AnalyserNode, map: BandMap) => {
 		if (freqByteData.length != analyser.frequencyBinCount) {
 			freqByteData = new Uint8Array(analyser.frequencyBinCount);
 		}
 		analyser.getByteFrequencyData(freqByteData);
 		if (levels.length != map.begin.length) levels = new Float32Array(map.begin.length);
-		return computeBandLevels(freqByteData, map, levels, reduce);
+		return computeBandLevels(freqByteData, map, levels);
 	};
 
 	// 画像まわりのキャッシュ。imageData が差し替わったときに作り直す
 	let preparedImage: ImageData | null = null;
-	// pixel モードの描画先。画像サイズの canvas に毎フレーム透明度だけ書き換えて、拡大して貼る
+	// 描画先。画像サイズの canvas に毎フレーム透明度だけ書き換えて、拡大して貼る
 	let pixelCanvas: HTMLCanvasElement;
 	let pixelCtx: CanvasRenderingContext2D;
 	let pixelOut: ImageData;
@@ -97,7 +83,7 @@
 	const drawPixelSpectrum = (analyser: AnalyserNode, w: number, h: number, elapsed: number) => {
 		const W = imageData.width;
 		const H = imageData.height;
-		const lv = readLevels(analyser, getBandMap(analyser.frequencyBinCount, W, 'pixel'), 'avg');
+		const lv = readLevels(analyser, getBandMap(analyser.frequencyBinCount, W));
 
 		// 1 - y / H <= level のピクセルを点灯する。y >= H * (1 - level) と同じ
 		for (let x = 0; x < W; x++) {
@@ -129,21 +115,6 @@
 		}
 	};
 
-	// liner / log のスペクトラム
-	const drawBarSpectrum = (analyser: AnalyserNode, w: number, h: number) => {
-		const scale: FrequencyScale = spectrumType == 'log' ? 'log' : 'linear';
-		// 表示の 1 列に 1 本の棒を描く。1 列に複数のビンが入るときは最大値をとる
-		const lv = readLevels(analyser, getBandMap(analyser.frequencyBinCount, w, scale), 'max');
-
-		playerCtx.beginPath();
-		for (let x = 0; x < w; x++) {
-			const v = lv[x] / 256;
-			if (v > 0) playerCtx.rect(x, (1 - v) * h, 1, v * h);
-		}
-		playerCtx.fillStyle = 'lightskyblue';
-		playerCtx.fill();
-	};
-
 	const draw = () => {
 		if (!playerRef) return;
 		requestAnimationFrame(draw);
@@ -158,17 +129,13 @@
 		playerCtx.fillRect(0, 0, w, h);
 
 		if (!nodeAnalyser) return;
-		if (spectrumType == 'pixel') {
-			// pixel モードは画像そのものをスペクトラムとして見せる
-			if (imageLoaded) {
-				if (imageData !== preparedImage) prepareImage(imageData);
-				drawPixelSpectrum(nodeAnalyser, w, h, elapsed);
-			} else {
-				playerCtx.fillStyle = 'white';
-				playerCtx.fillText('No Image', 10, 20);
-			}
+		// 画像そのものをスペクトラムとして見せる
+		if (imageLoaded) {
+			if (imageData !== preparedImage) prepareImage(imageData);
+			drawPixelSpectrum(nodeAnalyser, w, h, elapsed);
 		} else {
-			drawBarSpectrum(nodeAnalyser, w, h);
+			playerCtx.fillStyle = 'white';
+			playerCtx.fillText('No Image', 10, 20);
 		}
 	};
 

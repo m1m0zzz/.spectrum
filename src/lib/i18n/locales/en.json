@@ -18,7 +18,6 @@
 	"parameters_note": "NOTE: The value should be n times the number of pixels in the image to display it nicely",
 	"parameters_background": "background: ",
 	"parameters_fft_size": "FFT size: ",
-	"parameters_spectrum_type": "spectrum type: ",
 	"parameters_sensitivity": "sensitivity: ",
 	"parameters_grid_size": "grid size: ",
 	"parameters_smooth": "smooth: ",
