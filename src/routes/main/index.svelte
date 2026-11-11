@@ -248,7 +248,6 @@
 				bind:rangeEnd
 				{rangeError}
 				{audioDuration}
-				{audioRef}
 				busy={exporting}
 			/>
 		</div>
@@ -256,7 +255,13 @@
 		<!-- 再生プレイヤーは、どのタブを開いていても操作できるようタブの外に置き、音声を読み込む前から常に表示する。
 		     録画中は一時停止やシークで録画が止まる・ずれるため、操作できなくする -->
 		<section>
-			<AudioPlayer bind:audio={audioRef} bind:duration={audioDuration} locked={recording} />
+			<AudioPlayer
+				bind:audio={audioRef}
+				bind:duration={audioDuration}
+				bind:rangeStart
+				bind:rangeEnd
+				locked={recording}
+			/>
 		</section>
 
 		<PlayerCanvas

@@ -17,11 +17,8 @@
 	// 曲を読み込んだうえで範囲が正しくないとき true
 	export let rangeError: boolean;
 	export let audioDuration: number;
-	export let audioRef: HTMLAudioElement | null;
 	// 書き出し中は設定を変えられないようにする
 	export let busy: boolean;
-
-	const roundTime = (t: number) => Math.round(t * 10) / 10;
 
 	$: formatOptions = videoFormats.map((v) => ({ value: v, label: $_(`export_format_${v}`) }));
 	$: qualityOptions = qualities.map((v) => ({ value: v, label: $_(`export_quality_${v}`) }));
@@ -33,49 +30,30 @@
 <section>
 	<p>
 		<span>{$_('export_range')}</span>
-		<label>
-			{$_('export_range_start')}
-			<PixelNumber>
-				<input
-					type="number"
-					min="0"
-					max={audioDuration}
-					step="0.1"
-					bind:value={rangeStart}
-					disabled={busy}
-				/>
-			</PixelNumber>
-		</label>
-		<button
-			class="no-button action-link"
-			disabled={busy || !audioRef}
-			on:click={() => audioRef && (rangeStart = roundTime(audioRef.currentTime))}
-			>{$_('export_set_current')}</button
-		>
+		<PixelNumber>
+			<input
+				type="number"
+				min="0"
+				max={audioDuration}
+				step="0.1"
+				bind:value={rangeStart}
+				aria-label={$_('export_range_start')}
+				disabled={busy}
+			/>
+		</PixelNumber>
 		<span>〜</span>
-		<label>
-			{$_('export_range_end')}
-			<PixelNumber>
-				<input
-					type="number"
-					min="0"
-					max={audioDuration}
-					step="0.1"
-					bind:value={rangeEnd}
-					disabled={busy}
-				/>
-			</PixelNumber>
-		</label>
-		<button
-			class="no-button action-link"
-			disabled={busy || !audioRef}
-			on:click={() => audioRef && (rangeEnd = roundTime(audioRef.currentTime))}
-			>{$_('export_set_current')}</button
-		>
-		<!-- 「秒（曲の長さ: …）」は途中で折り返さない -->
-		<span style:white-space="nowrap"
-			>{$_('export_range_seconds', { values: { duration: audioDuration.toFixed(1) } })}</span
-		>
+		<PixelNumber>
+			<input
+				type="number"
+				min="0"
+				max={audioDuration}
+				step="0.1"
+				bind:value={rangeEnd}
+				aria-label={$_('export_range_end')}
+				disabled={busy}
+			/>
+		</PixelNumber>
+		<span>{$_('export_range_seconds')}</span>
 	</p>
 	{#if rangeError}
 		<p class="error">{$_('export_range_error')}</p>

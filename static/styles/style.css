@@ -503,11 +503,10 @@ input[type='color'] {
 	}
 }
 
-/* 再生プレイヤー（audioPlayer.svelte） */
+/* 再生プレイヤー（audioPlayer.svelte）。上にトリムバー、下に再生・時間・ミュート・音量 */
 .audio-player {
 	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
+	flex-direction: column;
 	gap: 0.6rem;
 	width: 460px;
 	max-width: 100%;
@@ -516,6 +515,12 @@ input[type='color'] {
 	&.locked {
 		pointer-events: none;
 	}
+}
+
+.audio-player-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
 }
 
 .audio-player-button {
@@ -527,19 +532,162 @@ input[type='color'] {
 	padding: 0.35rem 0.5rem;
 }
 
+/* ミュートと音量は右に寄せる */
+.audio-player-mute {
+	margin-left: auto;
+}
+
 /* 時間の表示で幅が揺れないよう、数字の幅をそろえる */
 .audio-player-time {
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 }
 
-.audio-player-seek {
-	flex: 1 1 120px;
-	min-width: 0;
-}
-
 .audio-player-volume {
 	width: 70px;
+}
+
+/* トリムバー（trimBar.svelte）。スマホの動画編集アプリのように、範囲を枠と左右のハンドルで囲み、
+   範囲の外を暗くする。再生位置はバーより上下に 2 ドットずつはみ出す白い縦棒。
+   ハンドルは範囲の外側に付くので、両端にハンドルの幅（5 ドット）の余白をとる */
+.trim-bar {
+	--handle: calc(var(--dot) * 5);
+	position: relative;
+	height: calc(var(--dot) * 15);
+	cursor: pointer;
+	user-select: none;
+	/* ドラッグでページがスクロールしないようにする */
+	touch-action: none;
+
+	&.disabled {
+		filter: grayscale(1);
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+/* 秒と位置（%）の対応をとる帯。範囲の外にあたるところは、1 ドットおきの点線の枠だけを見せる。
+   点線は帯全体に描き、範囲（.trim-bar-frame）で上から覆う。範囲の外ごとの要素に描くと、
+   範囲を動かしたときに点線の模様が一緒に動いたり長さが変わったりして見えるため
+   （border の dotted は丸い点になるブラウザがあるため、四辺をグラデーションで描く） */
+.trim-bar-track {
+	--dash: linear-gradient(to right, var(--color-footer-link) 50%, transparent 0);
+	--dash-v: linear-gradient(to bottom, var(--color-footer-link) 50%, transparent 0);
+	position: absolute;
+	inset: calc(var(--dot) * 2) var(--handle);
+	background:
+		var(--dash) left top / calc(var(--dot) * 2) var(--dot) repeat-x,
+		var(--dash) left bottom / calc(var(--dot) * 2) var(--dot) repeat-x,
+		var(--dash-v) left top / var(--dot) calc(var(--dot) * 2) repeat-y,
+		var(--dash-v) right top / var(--dot) calc(var(--dot) * 2) repeat-y,
+		var(--color-bg-2);
+}
+
+.trim-bar-frame,
+.trim-bar-handle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+}
+
+.trim-bar-frame {
+	box-sizing: border-box;
+	background-color: var(--color-brand);
+	border-block: var(--dot) solid var(--color-footer-link);
+}
+
+/* ハンドル。外側の角を 1 ドット欠き、真ん中に 2 × 3 の点を打つ */
+.trim-bar-handle {
+	width: var(--handle);
+	background-color: var(--color-footer-link);
+	cursor: ew-resize;
+
+	&.start {
+		translate: -100% 0;
+		clip-path: polygon(
+			var(--dot) 0,
+			100% 0,
+			100% 100%,
+			var(--dot) 100%,
+			var(--dot) calc(100% - var(--dot)),
+			0 calc(100% - var(--dot)),
+			0 var(--dot),
+			var(--dot) var(--dot)
+		);
+	}
+
+	&.end {
+		clip-path: polygon(
+			0 0,
+			calc(100% - var(--dot)) 0,
+			calc(100% - var(--dot)) var(--dot),
+			100% var(--dot),
+			100% calc(100% - var(--dot)),
+			calc(100% - var(--dot)) calc(100% - var(--dot)),
+			calc(100% - var(--dot)) 100%,
+			0 100%
+		);
+	}
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: calc(50% - var(--dot) * 2.5);
+		left: var(--dot);
+		width: var(--dot);
+		height: var(--dot);
+		background-color: var(--color-bg-1);
+		box-shadow:
+			calc(var(--dot) * 2) 0 var(--color-bg-1),
+			0 calc(var(--dot) * 2) var(--color-bg-1),
+			calc(var(--dot) * 2) calc(var(--dot) * 2) var(--color-bg-1),
+			0 calc(var(--dot) * 4) var(--color-bg-1),
+			calc(var(--dot) * 2) calc(var(--dot) * 4) var(--color-bg-1);
+	}
+
+	/* :focus の outline を全体で消しているため、色を変えて示す */
+	&:focus-visible {
+		background-color: var(--color-active);
+	}
+}
+
+/* 再生位置。明るい帯の上でも見えるよう、白い棒を濃い色の 1 ドットの縁で囲む */
+.trim-bar-playhead {
+	position: absolute;
+	top: calc(var(--dot) * -2);
+	bottom: calc(var(--dot) * -2);
+	box-sizing: border-box;
+	width: calc(var(--dot) * 4);
+	translate: -50% 0;
+	background-color: white;
+	border: var(--dot) solid var(--color-footer-link);
+	cursor: grab;
+	clip-path: polygon(
+		var(--dot) 0,
+		calc(100% - var(--dot)) 0,
+		calc(100% - var(--dot)) var(--dot),
+		100% var(--dot),
+		100% calc(100% - var(--dot)),
+		calc(100% - var(--dot)) calc(100% - var(--dot)),
+		calc(100% - var(--dot)) 100%,
+		var(--dot) 100%,
+		var(--dot) calc(100% - var(--dot)),
+		0 calc(100% - var(--dot)),
+		0 var(--dot),
+		var(--dot) var(--dot)
+	);
+
+	.trim-bar.dragging & {
+		cursor: grabbing;
+	}
+
+	&:focus-visible {
+		border-color: var(--color-active);
+	}
+}
+
+.trim-bar.disabled :is(.trim-bar-handle, .trim-bar-playhead) {
+	cursor: not-allowed;
 }
 
 /* アイコンはドットで描く（色は文字色） */

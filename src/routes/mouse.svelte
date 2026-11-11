@@ -25,7 +25,7 @@
 			};
 
 			const hoverTargets = document.querySelectorAll(
-				'a,button,input,select,.pixel-button,[role=option]'
+				'a,button,input,select,.pixel-button,[role=option],.trim-bar'
 			);
 
 			hoverTargets.forEach((target) => {
