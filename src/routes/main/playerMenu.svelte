@@ -42,9 +42,17 @@
 			});
 	};
 
+	// シークが終わるのを待つ。Firefox では読み込みが止まっているとき（曲の最後まで送ったあとなど）に
+	// seeked が来ないことがあるため、1 秒で先へ進む。再生を始めれば読み込まれ、位置はもう移っている
 	const seek = (audio: HTMLAudioElement, time: number) =>
 		new Promise<void>((resolve) => {
-			audio.addEventListener('seeked', () => resolve(), { once: true });
+			const done = () => {
+				clearTimeout(timer);
+				audio.removeEventListener('seeked', done);
+				resolve();
+			};
+			const timer = setTimeout(done, 1000);
+			audio.addEventListener('seeked', done);
 			audio.currentTime = time;
 		});
 
