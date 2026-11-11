@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
+	import PixelNumber from './pixelNumber.svelte';
 	import PixelSelect from './pixelSelect.svelte';
 	import {
 		audioBitrates,
@@ -34,14 +35,16 @@
 		<span>{$_('export_range')}</span>
 		<label>
 			{$_('export_range_start')}
-			<input
-				type="number"
-				min="0"
-				max={audioDuration}
-				step="0.1"
-				bind:value={rangeStart}
-				disabled={busy}
-			/>
+			<PixelNumber>
+				<input
+					type="number"
+					min="0"
+					max={audioDuration}
+					step="0.1"
+					bind:value={rangeStart}
+					disabled={busy}
+				/>
+			</PixelNumber>
 		</label>
 		<button
 			class="no-button action-link"
@@ -52,14 +55,16 @@
 		<span>〜</span>
 		<label>
 			{$_('export_range_end')}
-			<input
-				type="number"
-				min="0"
-				max={audioDuration}
-				step="0.1"
-				bind:value={rangeEnd}
-				disabled={busy}
-			/>
+			<PixelNumber>
+				<input
+					type="number"
+					min="0"
+					max={audioDuration}
+					step="0.1"
+					bind:value={rangeEnd}
+					disabled={busy}
+				/>
+			</PixelNumber>
 		</label>
 		<button
 			class="no-button action-link"
@@ -67,7 +72,10 @@
 			on:click={() => audioRef && (rangeEnd = roundTime(audioRef.currentTime))}
 			>{$_('export_set_current')}</button
 		>
-		<span>{$_('export_range_seconds', { values: { duration: audioDuration.toFixed(1) } })}</span>
+		<!-- 「秒（曲の長さ: …）」は途中で折り返さない -->
+		<span style:white-space="nowrap"
+			>{$_('export_range_seconds', { values: { duration: audioDuration.toFixed(1) } })}</span
+		>
 	</p>
 	{#if rangeError}
 		<p class="error">{$_('export_range_error')}</p>

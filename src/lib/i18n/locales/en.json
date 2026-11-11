@@ -49,5 +49,12 @@
 	"tab_settings": "⚙️ Settings",
 	"tab_video": "🎬 Video",
 	"choose_file": "Choose file",
-	"no_file_selected": "No file selected"
+	"no_file_selected": "No file selected",
+	"number_increment": "Increase",
+	"number_decrement": "Decrease",
+	"audio_play": "Play",
+	"audio_pause": "Pause",
+	"audio_seek": "Seek",
+	"audio_mute": "Mute",
+	"audio_volume": "Volume"
 }

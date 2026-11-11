@@ -17,6 +17,8 @@
 	export let rangeError: boolean;
 	// 書き出し中か。親に渡して、動画設定を変えられないようにする
 	export let busy = false;
+	// 録画中か。親に渡して、再生プレイヤーを操作できないようにする
+	export let recording = false;
 
 	let anchorRef: HTMLAnchorElement | null;
 	let status: 'none' | 'generating' | 'converting' | 'completed' = 'none';
@@ -25,6 +27,7 @@
 	let convertError = false;
 
 	$: busy = status == 'generating' || status == 'converting';
+	$: recording = status == 'generating';
 
 	// ffmpeg のコア（約 32MB）はページを開いたときではなく、動画を作り始めたときに読み込む。
 	// 録画（曲の長さ）のあいだに読み込みが終わるので、変換を待つ時間はほとんど増えない
@@ -123,10 +126,6 @@
 
 		// play!
 		mediaRecorder.start();
-		// 録画中に一時停止やシークをされると録画が止まる・ずれるため、表示したまま操作できなくする。
-		// inert に対応していないブラウザ（Firefox 111 以前）のため、マウス操作も止める
-		audio.inert = true;
-		audio.style.pointerEvents = 'none';
 		try {
 			await audio.play();
 		} catch (error) {
@@ -139,8 +138,6 @@
 				console.log('stop video');
 				audio.pause();
 				mediaRecorder.stop();
-				audio.inert = false;
-				audio.style.pointerEvents = '';
 				return;
 			}
 			requestAnimationFrame(watch);

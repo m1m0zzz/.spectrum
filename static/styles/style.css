@@ -62,20 +62,149 @@ input {
 	background: var(--color-none);
 }
 
-input[type='number'] {
-	padding-left: 0.5rem;
-	max-width: 100px;
-	text-align: center;
+/* ドット絵風の入力欄（数値・色）。1 ドットの枠で四隅を欠き、左上を暗くして凹ませる */
+input[type='number'],
+input[type='color'] {
+	font: inherit;
+	letter-spacing: inherit;
+	color: inherit;
+	vertical-align: middle;
+	background-color: var(--color-bg-1);
+	border: var(--dot) solid var(--color-footer-link);
+	box-shadow: inset var(--dot) var(--dot) 0 0 var(--color-border);
+	clip-path: polygon(
+		var(--dot) 0,
+		calc(100% - var(--dot)) 0,
+		calc(100% - var(--dot)) var(--dot),
+		100% var(--dot),
+		100% calc(100% - var(--dot)),
+		calc(100% - var(--dot)) calc(100% - var(--dot)),
+		calc(100% - var(--dot)) 100%,
+		var(--dot) 100%,
+		var(--dot) calc(100% - var(--dot)),
+		0 calc(100% - var(--dot)),
+		0 var(--dot),
+		var(--dot) var(--dot)
+	);
 
-	border-top: none;
-	border-right: none;
-	border-left: none;
-	border-bottom: solid 2px var(--color-border);
-	transition: border 250ms linear;
-
+	/* :focus の outline を全体で消しているため、枠の色を変えて示す */
 	&:focus {
-		outline: none;
-		border-bottom: solid 2px var(--color-active);
+		border-color: var(--color-active);
+	}
+
+	&:disabled {
+		filter: grayscale(1);
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+input[type='number'] {
+	width: 6em;
+	padding: 0.15rem 0.4rem 0.15rem 0.6rem;
+	text-align: center;
+	/* ブラウザの増減ボタンは見た目を変えられないので隠し、pixelNumber.svelte の ▲▼ を使う */
+	appearance: textfield;
+
+	&::-webkit-inner-spin-button,
+	&::-webkit-outer-spin-button {
+		margin: 0;
+		appearance: none;
+	}
+}
+
+input[type='color'] {
+	width: calc(var(--dot) * 14);
+	height: calc(var(--dot) * 10);
+	padding: calc(var(--dot) * 2);
+	appearance: none;
+	cursor: pointer;
+
+	&::-webkit-color-swatch-wrapper {
+		padding: 0;
+	}
+
+	&::-webkit-color-swatch,
+	&::-moz-color-swatch {
+		border: none;
+		border-radius: 0;
+	}
+}
+
+/* 数値の入力欄の ▲▼（pixelNumber.svelte） */
+.pixel-number {
+	display: inline-flex;
+	align-items: stretch;
+	gap: var(--dot);
+	vertical-align: middle;
+}
+
+.pixel-number-steps {
+	display: flex;
+	flex-direction: column;
+	gap: var(--dot);
+}
+
+.pixel-number-step {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	padding: 0 calc(var(--dot) * 2);
+	color: white;
+	background-color: var(--color-brand);
+	border: var(--dot) solid var(--color-footer-link);
+	clip-path: polygon(
+		var(--dot) 0,
+		calc(100% - var(--dot)) 0,
+		calc(100% - var(--dot)) var(--dot),
+		100% var(--dot),
+		100% calc(100% - var(--dot)),
+		calc(100% - var(--dot)) calc(100% - var(--dot)),
+		calc(100% - var(--dot)) 100%,
+		var(--dot) 100%,
+		var(--dot) calc(100% - var(--dot)),
+		0 calc(100% - var(--dot)),
+		0 var(--dot),
+		var(--dot) var(--dot)
+	);
+	cursor: pointer;
+
+	&:hover {
+		background-color: #9ccacd;
+	}
+
+	&:active {
+		background-color: var(--color-active);
+	}
+
+	/* 入力欄が使えないときは押せなくする */
+	.pixel-number:has(input:disabled) & {
+		filter: grayscale(1);
+		opacity: 0.5;
+		pointer-events: none;
+	}
+
+	/* ▲（3 ドット・1 ドットの 2 段）。▼ は上下を返す */
+	&::after {
+		content: '';
+		width: calc(var(--dot) * 3);
+		height: calc(var(--dot) * 2);
+		background-color: currentColor;
+		clip-path: polygon(
+			var(--dot) 0,
+			calc(var(--dot) * 2) 0,
+			calc(var(--dot) * 2) var(--dot),
+			100% var(--dot),
+			100% 100%,
+			0 100%,
+			0 var(--dot),
+			var(--dot) var(--dot)
+		);
+	}
+
+	&.down::after {
+		transform: scaleY(-1);
 	}
 }
 
@@ -306,6 +435,201 @@ input[type='number'] {
 	}
 }
 
+/* ドット絵風のスライダー（シークバー・音量）。--progress までを塗る */
+.pixel-range {
+	--progress: 0%;
+	height: calc(var(--dot) * 6);
+	margin: 0;
+	vertical-align: middle;
+	background: transparent;
+	cursor: pointer;
+	appearance: none;
+
+	&::-webkit-slider-runnable-track {
+		box-sizing: content-box;
+		height: var(--dot);
+		background: linear-gradient(
+			to right,
+			var(--color-brand) var(--progress),
+			var(--color-bg-1) var(--progress)
+		);
+		border: var(--dot) solid var(--color-footer-link);
+	}
+
+	&::-moz-range-track {
+		box-sizing: content-box;
+		height: var(--dot);
+		background-color: var(--color-bg-1);
+		border: var(--dot) solid var(--color-footer-link);
+	}
+
+	&::-moz-range-progress {
+		height: var(--dot);
+		background-color: var(--color-brand);
+	}
+
+	/* つまみは 2 ドット × 5 ドットの四角 */
+	&::-webkit-slider-thumb {
+		width: calc(var(--dot) * 2);
+		height: calc(var(--dot) * 5);
+		margin-top: calc(var(--dot) * -2);
+		background-color: var(--color-footer-link);
+		border: none;
+		border-radius: 0;
+		appearance: none;
+	}
+
+	&::-moz-range-thumb {
+		width: calc(var(--dot) * 2);
+		height: calc(var(--dot) * 5);
+		background-color: var(--color-footer-link);
+		border: none;
+		border-radius: 0;
+	}
+
+	/* :focus の outline を全体で消しているため、つまみの色を変えて示す */
+	&:focus-visible::-webkit-slider-thumb {
+		background-color: var(--color-active);
+	}
+
+	&:focus-visible::-moz-range-thumb {
+		background-color: var(--color-active);
+	}
+
+	&:disabled {
+		filter: grayscale(1);
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+/* 再生プレイヤー（audioPlayer.svelte） */
+.audio-player {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem;
+	width: 460px;
+	max-width: 100%;
+
+	/* 録画中は操作させない（inert に対応していないブラウザのため、マウス操作も止める） */
+	&.locked {
+		pointer-events: none;
+	}
+}
+
+.audio-player-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--dot);
+	min-width: calc(var(--dot) * 13);
+	padding: 0.35rem 0.5rem;
+}
+
+/* 時間の表示で幅が揺れないよう、数字の幅をそろえる */
+.audio-player-time {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.audio-player-seek {
+	flex: 1 1 120px;
+	min-width: 0;
+}
+
+.audio-player-volume {
+	width: 70px;
+}
+
+/* アイコンはドットで描く（色は文字色） */
+.icon-play,
+.icon-pause,
+.icon-speaker,
+.icon-waves,
+.icon-muted {
+	display: block;
+	flex-shrink: 0;
+}
+
+/* ▶（4 ドット × 7 ドット） */
+.icon-play {
+	width: calc(var(--dot) * 4);
+	height: calc(var(--dot) * 7);
+	background-color: currentColor;
+	clip-path: polygon(
+		0 0,
+		calc(var(--dot) * 1) 0,
+		calc(var(--dot) * 1) calc(var(--dot) * 1),
+		calc(var(--dot) * 2) calc(var(--dot) * 1),
+		calc(var(--dot) * 2) calc(var(--dot) * 2),
+		calc(var(--dot) * 3) calc(var(--dot) * 2),
+		calc(var(--dot) * 3) calc(var(--dot) * 3),
+		100% calc(var(--dot) * 3),
+		100% calc(var(--dot) * 4),
+		calc(var(--dot) * 3) calc(var(--dot) * 4),
+		calc(var(--dot) * 3) calc(var(--dot) * 5),
+		calc(var(--dot) * 2) calc(var(--dot) * 5),
+		calc(var(--dot) * 2) calc(var(--dot) * 6),
+		calc(var(--dot) * 1) calc(var(--dot) * 6),
+		calc(var(--dot) * 1) 100%,
+		0 100%
+	);
+}
+
+/* ❚❚（2 ドットの棒を 1 ドットあけて 2 本） */
+.icon-pause {
+	width: calc(var(--dot) * 5);
+	height: calc(var(--dot) * 6);
+	background:
+		linear-gradient(currentColor, currentColor) 0 0 / calc(var(--dot) * 2) 100% no-repeat,
+		linear-gradient(currentColor, currentColor) 100% 0 / calc(var(--dot) * 2) 100% no-repeat;
+}
+
+/* スピーカー（4 ドット × 7 ドット） */
+.icon-speaker {
+	width: calc(var(--dot) * 4);
+	height: calc(var(--dot) * 7);
+	background-color: currentColor;
+	clip-path: polygon(
+		0 calc(var(--dot) * 2),
+		calc(var(--dot) * 2) calc(var(--dot) * 2),
+		calc(var(--dot) * 2) calc(var(--dot) * 1),
+		calc(var(--dot) * 3) calc(var(--dot) * 1),
+		calc(var(--dot) * 3) 0,
+		100% 0,
+		100% 100%,
+		calc(var(--dot) * 3) 100%,
+		calc(var(--dot) * 3) calc(var(--dot) * 6),
+		calc(var(--dot) * 2) calc(var(--dot) * 6),
+		calc(var(--dot) * 2) calc(var(--dot) * 5),
+		0 calc(var(--dot) * 5)
+	);
+}
+
+/* 音の波（短い棒と長い棒） */
+.icon-waves {
+	width: calc(var(--dot) * 3);
+	height: calc(var(--dot) * 7);
+	background:
+		linear-gradient(currentColor, currentColor) 0 calc(var(--dot) * 2) / var(--dot)
+			calc(var(--dot) * 3) no-repeat,
+		linear-gradient(currentColor, currentColor) calc(var(--dot) * 2) var(--dot) / var(--dot)
+			calc(var(--dot) * 5) no-repeat;
+}
+
+/* ミュートの ×（3 ドット × 3 ドット） */
+.icon-muted {
+	width: calc(var(--dot) * 3);
+	height: calc(var(--dot) * 3);
+	background:
+		linear-gradient(currentColor, currentColor) 0 0 / var(--dot) var(--dot) no-repeat,
+		linear-gradient(currentColor, currentColor) 100% 0 / var(--dot) var(--dot) no-repeat,
+		linear-gradient(currentColor, currentColor) 50% 50% / var(--dot) var(--dot) no-repeat,
+		linear-gradient(currentColor, currentColor) 0 100% / var(--dot) var(--dot) no-repeat,
+		linear-gradient(currentColor, currentColor) 100% 100% / var(--dot) var(--dot) no-repeat;
+}
+
 .file-input .pixel-button {
 	flex-shrink: 0;
 }
@@ -508,22 +832,37 @@ footer {
 	display: flex;
 	align-items: flex-end;
 	margin-top: 1.5rem;
-	border-bottom: 2px solid var(--color-border);
+	border-bottom: var(--dot) solid var(--color-footer-link);
 }
 
+/* ドット絵風のタブ。ボタンと同じ 1 ドットの枠で上の 2 隅を欠く。
+   選んでいないタブは浮かせ（左上を明るく、右下を暗く）、選んでいるタブは平らにしてパネルとつなげる */
 .tab {
 	padding: 0.4rem 1rem;
 	white-space: nowrap;
 	color: var(--color-note);
-	border: 2px solid var(--color-border);
+	border: var(--dot) solid var(--color-footer-link);
 	border-bottom: none;
 	/* 背景はページと同じ色。選択中のタブで、タブの列の下線を隠すのに使う */
 	background-color: var(--color-bg-2);
+	box-shadow:
+		inset var(--dot) var(--dot) 0 0 rgba(255, 255, 255, 0.7),
+		inset calc(var(--dot) * -1) 0 0 0 var(--color-border);
+	clip-path: polygon(
+		var(--dot) 0,
+		calc(100% - var(--dot)) 0,
+		calc(100% - var(--dot)) var(--dot),
+		100% var(--dot),
+		100% 100%,
+		0 100%,
+		0 var(--dot),
+		var(--dot) var(--dot)
+	);
 	cursor: pointer;
 
 	/* 隣のタブと枠線を重ね、隙間も二重線も作らない */
 	& + .tab {
-		margin-left: -2px;
+		margin-left: calc(var(--dot) * -1);
 	}
 
 	&:hover {
@@ -534,17 +873,18 @@ footer {
 	&[aria-selected='true'] {
 		/* 重ねた枠線が隣のタブに隠れないよう前に出す */
 		position: relative;
-		/* 下に 2px はみ出させ、タブの列の下線を背景で隠す */
-		margin-bottom: -2px;
+		/* 下に 1 ドットはみ出させ、タブの列の下線を背景で隠す */
+		margin-bottom: calc(var(--dot) * -1);
 		padding-top: 0.6rem;
-		padding-bottom: calc(0.4rem + 2px);
+		padding-bottom: calc(0.4rem + var(--dot));
 		color: var(--color-active);
+		box-shadow: none;
 		cursor: default;
 	}
 
+	/* outline は clip-path で切れるため、キーボード操作のときは枠の色を変えて示す */
 	&:focus-visible {
-		outline: 2px solid var(--color-active);
-		outline-offset: -4px;
+		border-color: var(--color-active);
 	}
 }
 
@@ -558,9 +898,30 @@ footer {
 }
 
 .tab-panel {
+	position: relative;
 	padding: 0 1rem 1rem;
-	border: 2px solid var(--color-border);
+	border: var(--dot) solid var(--color-footer-link);
 	border-top: none;
+
+	/* 下の 2 隅を 1 ドット欠く。clip-path を使うと中の選択欄のリスト（popover の無いブラウザで
+	   position: fixed で出すもの）まで切れるため、隅の 1 ドットをページの背景色で塗って欠く */
+	&::before,
+	&::after {
+		content: '';
+		position: absolute;
+		bottom: calc(var(--dot) * -1);
+		width: var(--dot);
+		height: var(--dot);
+		background-color: var(--color-bg-2);
+	}
+
+	&::before {
+		left: calc(var(--dot) * -1);
+	}
+
+	&::after {
+		right: calc(var(--dot) * -1);
+	}
 
 	& > section:first-child {
 		margin-top: 0;

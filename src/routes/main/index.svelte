@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
+	import PixelNumber from './pixelNumber.svelte';
 
 	import { clamp } from '#lib/util.ts';
 
@@ -10,6 +11,7 @@
 	import ExportSettings from './exportSettings.svelte';
 	import SizeInput from './sizeInput.svelte';
 	import PixelSelect from './pixelSelect.svelte';
+	import AudioPlayer from './audioPlayer.svelte';
 	import { defaultEncodeSettings, type EncodeSettings } from '#lib/encode.ts';
 
 	let imageLoaded = false;
@@ -47,6 +49,7 @@
 	let rangeStart = 0;
 	let rangeEnd = 0;
 	let exporting = false;
+	let recording = false;
 	const resetRange = (duration: number) => {
 		rangeStart = 0;
 		rangeEnd = Number.isFinite(duration) ? duration : 0;
@@ -187,39 +190,45 @@
 				<p>
 					<label
 						>{$_('parameters_sensitivity')}
-						<input
-							type="number"
-							min="0.1"
-							max="10"
-							step="0.1"
-							bind:value={spectrumSensitivity}
-							on:change={(e) =>
-								(spectrumSensitivity = clamp(Number(e.currentTarget.value), 0.1, 10))}
-						/>
+						<PixelNumber>
+							<input
+								type="number"
+								min="0.1"
+								max="10"
+								step="0.1"
+								bind:value={spectrumSensitivity}
+								on:change={(e) =>
+									(spectrumSensitivity = clamp(Number(e.currentTarget.value), 0.1, 10))}
+							/>
+						</PixelNumber>
 					</label>
 				</p>
 				<p>
 					<label
 						>{$_('parameters_grid_size')}
-						<input
-							type="number"
-							min="0"
-							bind:value={spectrumGridSize}
-							on:change={(e) => (spectrumGridSize = Math.max(0, Number(e.currentTarget.value)))}
-						/>
+						<PixelNumber>
+							<input
+								type="number"
+								min="0"
+								bind:value={spectrumGridSize}
+								on:change={(e) => (spectrumGridSize = Math.max(0, Number(e.currentTarget.value)))}
+							/>
+						</PixelNumber>
 					</label>
 					<span>px</span>
 				</p>
 				<p>
 					<label
 						>{$_('parameters_smooth')}
-						<input
-							type="number"
-							min="0"
-							step="100"
-							bind:value={spectrumSmoothTime}
-							on:change={(e) => (spectrumSmoothTime = Math.max(0, Number(e.currentTarget.value)))}
-						/>
+						<PixelNumber>
+							<input
+								type="number"
+								min="0"
+								step="100"
+								bind:value={spectrumSmoothTime}
+								on:change={(e) => (spectrumSmoothTime = Math.max(0, Number(e.currentTarget.value)))}
+							/>
+						</PixelNumber>
 					</label>
 					<span>ms</span>
 				</p>
@@ -244,14 +253,10 @@
 			/>
 		</div>
 
-		<!-- 再生プレイヤーは、どのタブを開いていても操作できるようタブの外に置き、音声を読み込む前から常に表示する -->
+		<!-- 再生プレイヤーは、どのタブを開いていても操作できるようタブの外に置き、音声を読み込む前から常に表示する。
+		     録画中は一時停止やシークで録画が止まる・ずれるため、操作できなくする -->
 		<section>
-			<audio
-				controls
-				controlslist="nodownload"
-				bind:this={audioRef}
-				on:loadedmetadata={() => (audioDuration = audioRef?.duration ?? 0)}
-			></audio>
+			<AudioPlayer bind:audio={audioRef} bind:duration={audioDuration} locked={recording} />
 		</section>
 
 		<PlayerCanvas
@@ -279,6 +284,7 @@
 			{rangeEnd}
 			{rangeError}
 			bind:busy={exporting}
+			bind:recording
 		/>
 	</div>
 </main>

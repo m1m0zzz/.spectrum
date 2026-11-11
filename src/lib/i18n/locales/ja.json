@@ -49,5 +49,12 @@
 	"tab_settings": "⚙️ 設定",
 	"tab_video": "🎬 動画設定",
 	"choose_file": "ファイルを選択",
-	"no_file_selected": "選択されていません"
+	"no_file_selected": "選択されていません",
+	"number_increment": "増やす",
+	"number_decrement": "減らす",
+	"audio_play": "再生",
+	"audio_pause": "一時停止",
+	"audio_seek": "再生位置",
+	"audio_mute": "ミュート",
+	"audio_volume": "音量"
 }

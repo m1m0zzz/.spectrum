@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
+	import PixelNumber from './pixelNumber.svelte';
 	import { _ } from 'svelte-i18n';
 	import { executePixelationSampling, loadImage, MAX_IMAGE_PIXELS } from '#lib/image.ts';
 	import FileInput from './fileInput.svelte';
@@ -114,23 +115,25 @@
 				<p>
 					<span>X: </span>
 					<span>1 / </span>
-					<input
-						type="number"
-						min="2"
-						bind:value={pixelationSize}
-						on:change={(e) => {
-							if (previewRef && img) {
-								pixelationImage(
-									isDoPixelation,
-									Math.max(2, Number(e.currentTarget.value)),
-									previewRef,
-									img
-								);
-							} else {
-								console.error('at onChange pixelationSize');
-							}
-						}}
-					/>
+					<PixelNumber>
+						<input
+							type="number"
+							min="2"
+							bind:value={pixelationSize}
+							on:change={(e) => {
+								if (previewRef && img) {
+									pixelationImage(
+										isDoPixelation,
+										Math.max(2, Number(e.currentTarget.value)),
+										previewRef,
+										img
+									);
+								} else {
+									console.error('at onChange pixelationSize');
+								}
+							}}
+						/>
+					</PixelNumber>
 					<span>
 						=&gt; ( {pixelationSize ? Math.floor((img?.width || 0) / pixelationSize) : 0} px × {pixelationSize
 							? Math.floor((img?.height || 0) / pixelationSize)

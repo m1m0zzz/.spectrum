@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { clamp } from '#lib/util.ts';
+	import PixelNumber from './pixelNumber.svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import PixelSelect from './pixelSelect.svelte';
@@ -56,30 +57,34 @@
 		<br />
 		<label style:padding-right="20px"
 			>{$_('parameters_width')}
-			<input
-				type="number"
-				min="1"
-				max="16384"
-				bind:value={playerWidth}
-				on:change={(e) => {
-					playerWidth = clamp(Number(e.currentTarget.value), 1, 16384);
-					dispatch('message', { playerWidth: playerWidth });
-				}}
-			/>
+			<PixelNumber>
+				<input
+					type="number"
+					min="1"
+					max="16384"
+					bind:value={playerWidth}
+					on:change={(e) => {
+						playerWidth = clamp(Number(e.currentTarget.value), 1, 16384);
+						dispatch('message', { playerWidth: playerWidth });
+					}}
+				/>
+			</PixelNumber>
 			<span>px</span>
 		</label>
 		<label style:padding-right="20px"
 			>{$_('parameters_height')}
-			<input
-				type="number"
-				min="1"
-				max="16384"
-				bind:value={playerHeight}
-				on:change={(e) => {
-					playerHeight = clamp(Number(e.currentTarget.value), 1, 16384);
-					dispatch('message', { playerHeight: playerHeight });
-				}}
-			/>
+			<PixelNumber>
+				<input
+					type="number"
+					min="1"
+					max="16384"
+					bind:value={playerHeight}
+					on:change={(e) => {
+						playerHeight = clamp(Number(e.currentTarget.value), 1, 16384);
+						dispatch('message', { playerHeight: playerHeight });
+					}}
+				/>
+			</PixelNumber>
 			<span>px</span>
 		</label>
 	{/if}
