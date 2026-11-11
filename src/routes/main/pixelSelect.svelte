@@ -30,7 +30,7 @@
 
 	let root: HTMLElement;
 	let button: HTMLButtonElement;
-	let list: HTMLUListElement;
+	let list: HTMLElement;
 	let open = false;
 	// リスト内でいま指している選択肢（キーボードやマウスで動く）
 	let active = -1;
@@ -238,8 +238,10 @@
 		</span>
 		<span class="pixel-select-arrow" aria-hidden="true"></span>
 	</button>
-	<!-- マウスで押してもボタンからフォーカスが外れないよう、pointerdown の既定の動作を止める -->
-	<ul
+	<!-- リストは <p> の中にも置くため、<ul>/<li> ではなく span に役割を付ける（<p> の中に <ul> は置けず、
+	     ブラウザが <p> を途中で閉じて、サーバーで作った HTML とブラウザでの描画が食い違う）。
+	     マウスで押してもボタンからフォーカスが外れないよう、pointerdown の既定の動作を止める -->
+	<span
 		id="{id}-list"
 		class="pixel-select-list"
 		class:open
@@ -258,11 +260,12 @@
 			<!-- キーボード操作はフォーカスを持つボタン（combobox）が受け持ち、aria-activedescendant で選択肢を指す
 			     （select-only combobox パターン）。選択肢そのものにはキー操作を付けない -->
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<li
+			<span
 				id={optionId(i)}
 				class="pixel-select-option"
 				class:active={i == active}
 				role="option"
+				tabindex="-1"
 				aria-selected={i == selectedIndex}
 				aria-disabled={option.disabled ? 'true' : undefined}
 				on:pointermove={() => {
@@ -276,7 +279,7 @@
 				}}
 			>
 				{option.label}
-			</li>
+			</span>
 		{/each}
-	</ul>
+	</span>
 </span>
