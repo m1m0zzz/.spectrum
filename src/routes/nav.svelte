@@ -2,6 +2,7 @@
 	import { locale } from 'svelte-i18n';
 	import { defaultLocale, languagesList } from '#lib/i18n/index.ts';
 	import PixelSelect from './main/pixelSelect.svelte';
+	import logo from '../assets/logo_192_trim.png';
 
 	const options = languagesList.map(({ lang, name }) => ({ value: lang, label: name }));
 	// いまの言語。ブラウザの言語（en-US など）から決まるので、先頭の言語コードで選択肢と対応させる
@@ -10,7 +11,7 @@
 
 <nav>
 	<a href="https://m1m0zzz.github.io/.spectrum/">
-		<img src="assets/logo_192_trim.png" width="143px" height="40px" alt="logo" />
+		<img src={logo} width="143px" height="40px" alt="logo" />
 	</a>
 
 	<div class="utility">

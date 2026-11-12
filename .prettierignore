@@ -13,4 +13,4 @@ package-lock.json
 yarn.lock
 
 # 外部の minify 済み CSS
-/static/styles/modern-css-reset
+/src/styles/modern-css-reset
