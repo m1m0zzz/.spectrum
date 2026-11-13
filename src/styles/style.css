@@ -947,10 +947,54 @@ footer {
 	margin-left: auto;
 }
 
+/* ドット化した画像のプレビュー。画像の大きさのままではなく、パネルの幅いっぱいに拡大・縮小して見せる。
+   ドットがぼけないよう、拡大は最近傍で行う */
 .img-preview-container {
-	/* display: none; */
-	overflow: auto;
+	max-width: 100%;
 	margin-top: 1rem;
+}
+
+#preview {
+	display: block;
+	width: 100%;
+	height: auto;
+	image-rendering: pixelated;
+}
+
+/* ドット化の縮小率。上の段に「縮小率・スライダー・N%」、下の段に右寄せで出来上がりの大きさを出す */
+.pixelation-size-row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+
+	& label {
+		white-space: nowrap;
+	}
+
+	& .pixel-range {
+		flex: 1;
+		min-width: 0;
+	}
+}
+
+/* 値の桁数でスライダーの幅が変わらないよう、見えない「100%」を重ねて、% の欄をその幅にそろえる */
+.pixelation-size-percent {
+	display: inline-grid;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+
+	& > * {
+		grid-area: 1 / 1;
+	}
+
+	& > [aria-hidden='true'] {
+		visibility: hidden;
+	}
+}
+
+.pixelation-size-result {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
 }
 
 .canvas-container {
@@ -1022,9 +1066,9 @@ footer {
 	overflow: hidden;
 }
 
-/* 後から出たり長さが変わったりするもの（エラー・画像のプレビュー）は、パネルの幅に効かせず、その幅の中で折り返す・スクロールする。
+/* 後から出たり長さが変わったりするもの（エラー・画像のプレビュー・ドット化の大きさ）は、パネルの幅に効かせず、その幅の中に収める。
    幅に効かせると、出たときにタブの幅が広がってしまう */
-.tab-panel :is(.error, .img-preview-container) {
+.tab-panel :is(.error, .img-preview-container, .pixelation-size) {
 	width: 0;
 	min-width: 100%;
 }

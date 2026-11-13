@@ -10,6 +10,7 @@
 	"is_pixelation": "ドット化しますか？",
 	"do_pixelation": "する",
 	"do_not_pixelation": "しない",
+	"pixelation_size": "縮小率",
 	"upload_audio": "音声をアップロード",
 	"parameters_window_size": "画面サイズ: ",
 	"parameters_custom": "カスタム",

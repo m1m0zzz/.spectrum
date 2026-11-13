@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import PixelNumber from './pixelNumber.svelte';
 	import { _ } from 'svelte-i18n';
-	import { executePixelationSampling, loadImage, MAX_IMAGE_PIXELS } from '#lib/image.ts';
+	import {
+		loadImage,
+		MAX_IMAGE_PIXELS,
+		maxPercentWithin,
+		resample,
+		scaledSize
+	} from '#lib/image.ts';
 	import FileInput from './fileInput.svelte';
 
 	const dispatch = createEventDispatcher();
@@ -14,36 +19,36 @@
 	let img: HTMLImageElement | null;
 	let files: FileList | undefined;
 
+	// 読み込んだ画像の画素。ドット化の割合を動かすたびに読み直さないよう、読み込んだときに 1 回だけ取る
+	let source: ImageData | null = null;
 	let imageData: ImageData;
 
-	let pixelationSize = 2;
+	// ドット化したときの大きさ（元の画像に対する %、1〜100）
+	let pixelationPercent = 50;
 	let isDoPixelation = false;
 
 	let imgError = false;
 	$: imageLoaded = Boolean(img && img.src != '');
+	$: pixelatedSize = source
+		? scaledSize(source.width, source.height, pixelationPercent)
+		: { width: 0, height: 0 };
 
 	onMount(() => {
 		img = new Image();
 	});
 
-	const pixelationImage = (
-		isDoPixelation: boolean,
-		pixelationSize: number,
-		previewRef: HTMLCanvasElement | null,
-		img: HTMLImageElement | null,
-		_imageLoaded = false
-	) => {
-		if (!previewRef || !img) return;
-		const previewCtx = previewRef.getContext('2d') as CanvasRenderingContext2D;
-		previewRef.width = img.width;
-		previewRef.height = img.height;
-		previewCtx.drawImage(img, 0, 0);
-
+	// プレビューに描き、スペクトラムに使う画像として親に渡す
+	const pixelationImage = (_imageLoaded = false) => {
+		if (!previewRef || !source) return;
 		if (isDoPixelation) {
-			imageData = executePixelationSampling(previewCtx, img, pixelationSize);
+			const { width, height, data } = resample(source, pixelationPercent);
+			imageData = new ImageData(data, width, height);
 		} else {
-			imageData = previewCtx.getImageData(0, 0, img.width, img.height);
+			imageData = source;
 		}
+		previewRef.width = imageData.width;
+		previewRef.height = imageData.height;
+		previewRef.getContext('2d')?.putImageData(imageData, 0, 0);
 
 		let obj = { imageData: imageData };
 		if (_imageLoaded) {
@@ -62,18 +67,25 @@
 		objectUrl = URL.createObjectURL(files[0]);
 		img = await loadImage(objectUrl);
 
-		const pixels = img.width * img.height;
-		if (pixels > MAX_IMAGE_PIXELS) {
+		// 画素を取るための作業用の canvas
+		const work = document.createElement('canvas');
+		work.width = img.width;
+		work.height = img.height;
+		const ctx = work.getContext('2d') as CanvasRenderingContext2D;
+		ctx.drawImage(img, 0, 0);
+		source = ctx.getImageData(0, 0, img.width, img.height);
+
+		if (img.width * img.height > MAX_IMAGE_PIXELS) {
 			imgError = true;
 			isDoPixelation = true;
-			// 上限に収まる最小の間引き幅
-			pixelationSize = Math.max(2, Math.ceil(Math.sqrt(pixels / MAX_IMAGE_PIXELS)));
+			// 上限に収まるいちばん大きい割合
+			pixelationPercent = maxPercentWithin(img.width, img.height);
 		} else {
 			imgError = false;
 			isDoPixelation = false;
 		}
 
-		pixelationImage(isDoPixelation, pixelationSize, previewRef, img, true);
+		pixelationImage(true);
 	};
 </script>
 
@@ -104,7 +116,7 @@
 					{disabled}
 					on:click={() => {
 						isDoPixelation = true;
-						pixelationImage(isDoPixelation, pixelationSize, previewRef, img);
+						pixelationImage();
 					}}>{isDoPixelation ? '>' : ''}{$_('do_pixelation')}</button
 				>
 				<span>/</span>
@@ -113,40 +125,38 @@
 					{disabled}
 					on:click={() => {
 						isDoPixelation = false;
-						pixelationImage(isDoPixelation, pixelationSize, previewRef, img);
+						pixelationImage();
 					}}>{isDoPixelation ? '' : '>'}{$_('do_not_pixelation')}</button
 				>
 			</p>
 			{#if isDoPixelation}
-				<p>
-					<span>X: </span>
-					<span>1 / </span>
-					<PixelNumber>
+				<!-- 上の段に縮小率（スライダーと %）、下の段に右寄せで出来上がりの大きさ -->
+				<div class="pixelation-size">
+					<div class="pixelation-size-row">
+						<label for="pixelation-percent">{$_('pixelation_size')}</label>
 						<input
-							type="number"
-							min="2"
+							id="pixelation-percent"
+							type="range"
+							class="pixel-range"
+							min="1"
+							max="100"
+							step="1"
 							{disabled}
-							bind:value={pixelationSize}
-							on:change={(e) => {
-								if (previewRef && img) {
-									pixelationImage(
-										isDoPixelation,
-										Math.max(2, Number(e.currentTarget.value)),
-										previewRef,
-										img
-									);
-								} else {
-									console.error('at onChange pixelationSize');
-								}
+							value={pixelationPercent}
+							on:input={(e) => {
+								pixelationPercent = Number(e.currentTarget.value);
+								pixelationImage();
 							}}
+							style:--progress="{((pixelationPercent - 1) / 99) * 100}%"
 						/>
-					</PixelNumber>
-					<span>
-						=&gt; ( {pixelationSize ? Math.floor((img?.width || 0) / pixelationSize) : 0} px × {pixelationSize
-							? Math.floor((img?.height || 0) / pixelationSize)
-							: 0} px )
-					</span>
-				</p>
+						<span class="pixelation-size-percent"
+							><span>{pixelationPercent}%</span><span aria-hidden="true">100%</span></span
+						>
+					</div>
+					<p class="pixelation-size-result">
+						{pixelatedSize.width} px × {pixelatedSize.height} px
+					</p>
+				</div>
 			{/if}
 		</div>
 	{/if}

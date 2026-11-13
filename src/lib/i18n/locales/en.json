@@ -10,6 +10,7 @@
 	"is_pixelation": "Do you want to pixelate?",
 	"do_pixelation": " yes",
 	"do_not_pixelation": " no",
+	"pixelation_size": "Scale",
 	"upload_audio": "Upload audio file.",
 	"parameters_window_size": "window size: ",
 	"parameters_custom": "custom",
