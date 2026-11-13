@@ -5,7 +5,7 @@
 	"usage_3": "Play music!",
 	"supported_version": "Supported Versions",
 	"upload_image": "Upload image file",
-	"upload_image_error": "The image is too large, so it was pixelated. (Without pixelation, images up to about 1024px x 1024px are recommended.)",
+	"upload_image_error": "The image is large, so it was pixelated to keep drawing smooth. (Without pixelation, images up to about 1024px x 1024px are recommended.)",
 	"image_info": "Image size ( width: {width}px, height: {height}px )",
 	"is_pixelation": "Do you want to pixelate?",
 	"do_pixelation": " yes",

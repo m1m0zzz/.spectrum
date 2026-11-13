@@ -5,7 +5,7 @@
 	"usage_3": "音声を再生！",
 	"supported_version": "サポートされているバージョン",
 	"upload_image": "画像をアップロード",
-	"upload_image_error": "画像が大き過ぎるため、ドット化しました。（ドット化しない場合は 1024px × 1024px 相当以下の画像を推奨します。）",
+	"upload_image_error": "画像が大きいため、描画が重くならないようドット化しました。（ドット化しない場合は 1024px × 1024px 相当以下の画像を推奨します。）",
 	"image_info": "画像サイズ（幅: {width}px, 高さ: {height}px）",
 	"is_pixelation": "ドット化しますか？",
 	"do_pixelation": "する",
