@@ -15,8 +15,6 @@
 	--color-border: #dac5a4;
 	--color-active: #579bb1;
 	--color-footer-link: #30736c;
-	/* タブとパネルの幅。最も広いタブ（英語の「動画設定」）が収まる幅 */
-	--tab-width: 760px;
 	/* ドット絵風のボタンの 1 ドットの大きさ */
 	--dot: 3px;
 }
@@ -223,10 +221,9 @@ input[type='color'] {
 
 /* ファイルの選択（fileInput.svelte）。ブラウザの input は隠し、label をボタンにする */
 .file-input {
-	display: inline-flex;
+	display: flex;
 	align-items: center;
 	gap: 0.75rem;
-	max-width: 100%;
 	margin: 0.5rem 0;
 }
 
@@ -790,8 +787,11 @@ input[type='color'] {
 	pointer-events: none;
 }
 
-/* 長いファイル名は末尾を … で省く（title で全体を出す） */
+/* 長いファイル名は末尾を … で省く（title で全体を出す）。パネル（タブ）の幅が広がらないよう、
+   幅には効かせず、ボタンの横の空いた幅に収める */
 .file-name {
+	flex: 1 1 0;
+	width: 0;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -945,7 +945,6 @@ footer {
 	/* display: none; */
 	overflow: auto;
 	margin-top: 1rem;
-	width: 100%;
 }
 
 .canvas-container {
@@ -989,12 +988,37 @@ footer {
 		height 0.3s ease-out;
 }
 
-/* タブ（ファイル / 設定 / 動画設定） */
-/* どのタブを開いても幅が変わらないよう固定する */
-.tabs,
-.tab-panel {
-	width: var(--tab-width);
+/* タブ（ファイル / 設定 / 動画設定）。
+   どのタブを開いても幅が変わらないよう、タブの列とすべてのパネルを 1 列のグリッドに重ね、
+   いちばん広いパネル（言語や中身で変わる）に列の幅を合わせる。固定の幅にすると、中身が変わるたびに合わせ直す必要がある */
+.tab-view {
+	display: grid;
+	width: fit-content;
 	max-width: 100%;
+}
+
+.tab-view > .tab-panel {
+	grid-row: 2;
+	grid-column: 1;
+}
+
+/* 選んでいないパネルは、幅だけを列に効かせて見えなくする（display: none だと幅に効かない）。
+   visibility: hidden なのでフォーカスも読み上げもされない。高さと上下の余白・枠は 0 にし、行の高さに効かせない */
+.tab-view > .tab-panel[hidden] {
+	display: block;
+	visibility: hidden;
+	height: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	border-bottom-width: 0;
+	overflow: hidden;
+}
+
+/* 後から出たり長さが変わったりするもの（エラー・画像のプレビュー）は、パネルの幅に効かせず、その幅の中で折り返す・スクロールする。
+   幅に効かせると、出たときにタブの幅が広がってしまう */
+.tab-panel :is(.error, .img-preview-container) {
+	width: 0;
+	min-width: 100%;
 }
 
 .tabs {
