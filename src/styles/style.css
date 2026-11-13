@@ -510,11 +510,6 @@ input[type='color'] {
 	gap: 0.6rem;
 	width: 460px;
 	max-width: 100%;
-
-	/* 録画中は操作させない（inert に対応していないブラウザのため、マウス操作も止める） */
-	&.locked {
-		pointer-events: none;
-	}
 }
 
 .audio-player-controls {
@@ -787,6 +782,14 @@ input[type='color'] {
 	border-color: var(--color-active);
 }
 
+/* ボタンに見えているのは label なので、:disabled の代わりに隠した input を見て、押せないことを示す */
+.file-input input:disabled + .pixel-button {
+	filter: grayscale(1);
+	opacity: 0.5;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
 /* 長いファイル名は末尾を … で省く（title で全体を出す） */
 .file-name {
 	min-width: 0;
@@ -841,6 +844,19 @@ main {
 
 section {
 	margin-top: 1.5rem;
+}
+
+/* 「動画を作成する」ボタンと、その下のメッセージ・ダウンロードのリンク（playerMenu.svelte）は中央に並べる */
+.player-menu {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	text-align: center;
+
+	& p {
+		margin: 0;
+	}
 }
 
 footer {
@@ -905,6 +921,11 @@ footer {
 .no-button {
 	border: none;
 	background-color: var(--color-none);
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
 }
 
 .action-link {

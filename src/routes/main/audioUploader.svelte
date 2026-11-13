@@ -11,6 +11,8 @@
 	export let nodeAnalyser: AnalyserNode | null;
 	export let fftSize: number;
 	export let recorderDestination: MediaStreamAudioDestinationNode;
+	// 動画の作成中は曲を差し替えられないようにする
+	export let disabled = false;
 
 	let files: FileList | undefined;
 	let objectUrl: string | null = null;
@@ -56,6 +58,7 @@
 		id="audio-file"
 		accept="audio/*"
 		ariaLabel="Upload audio"
+		{disabled}
 		bind:files
 		on:change={() => uploadSound()}
 	/>

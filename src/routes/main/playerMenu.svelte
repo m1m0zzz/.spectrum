@@ -15,10 +15,8 @@
 	export let rangeEnd: number;
 	// 曲を読み込んだうえで範囲が正しくないとき true
 	export let rangeError: boolean;
-	// 書き出し中か。親に渡して、動画設定を変えられないようにする
+	// 作成中（録画・変換）か。親に渡して、作成に関わる操作をできないようにする
 	export let busy = false;
-	// 録画中か。親に渡して、再生プレイヤーを操作できないようにする
-	export let recording = false;
 
 	let anchorRef: HTMLAnchorElement | null;
 	let status: 'none' | 'generating' | 'converting' | 'completed' = 'none';
@@ -27,7 +25,6 @@
 	let convertError = false;
 
 	$: busy = status == 'generating' || status == 'converting';
-	$: recording = status == 'generating';
 
 	// ffmpeg のコア（約 32MB）はページを開いたときではなく、動画を作り始めたときに読み込む。
 	// 録画（曲の長さ）のあいだに読み込みが終わるので、変換を待つ時間はほとんど増えない
@@ -146,11 +143,10 @@
 	};
 </script>
 
-<section>
+<section class="player-menu">
 	<button class="pixel-button" disabled={busy || rangeError} on:click={makeVideo}
 		>{$_('generate_video')}</button
 	>
-	<br />
 	<p style:display={busy ? 'block' : 'none'}>
 		{$_('generate_video_message')}
 	</p>

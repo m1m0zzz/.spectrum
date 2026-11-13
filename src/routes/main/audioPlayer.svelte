@@ -16,7 +16,7 @@
 	// 書き出しの範囲（秒）
 	export let rangeStart: number;
 	export let rangeEnd: number;
-	// 録画中など、操作させたくないとき true
+	// 動画の作成中など、操作させたくないとき true
 	export let locked = false;
 
 	let currentTime = 0;
@@ -91,8 +91,7 @@
 	};
 </script>
 
-<!-- inert に対応していないブラウザ（Firefox 111 以前）のため、locked のときはマウス操作も CSS で止める -->
-<div class="audio-player" class:locked inert={locked || undefined}>
+<div class="audio-player">
 	<audio
 		bind:this={audio}
 		on:loadedmetadata={readState}
@@ -114,7 +113,7 @@
 		bind:start={rangeStart}
 		bind:end={rangeEnd}
 		current={currentTime}
-		disabled={!ready}
+		disabled={!ready || locked}
 		on:seek={(e) => seek(e.detail)}
 		on:trimstart={() => (trimming = true)}
 		on:trimend={() => {
@@ -127,7 +126,7 @@
 			type="button"
 			class="pixel-button audio-player-button"
 			aria-label={paused ? $_('audio_play') : $_('audio_pause')}
-			disabled={!ready}
+			disabled={!ready || locked}
 			on:click={toggle}
 		>
 			<span class={paused ? 'icon-play' : 'icon-pause'} aria-hidden="true"></span>
@@ -141,6 +140,7 @@
 			class="pixel-button audio-player-button audio-player-mute"
 			aria-label={$_('audio_mute')}
 			aria-pressed={muted}
+			disabled={locked}
 			on:click={() => audio && (audio.muted = !audio.muted)}
 		>
 			<span class="icon-speaker" aria-hidden="true"></span>
@@ -154,6 +154,7 @@
 			step="0.05"
 			value={volume}
 			aria-label={$_('audio_volume')}
+			disabled={locked}
 			on:input={(e) => {
 				if (!audio) return;
 				audio.volume = Number(e.currentTarget.value);

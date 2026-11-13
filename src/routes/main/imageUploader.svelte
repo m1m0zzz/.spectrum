@@ -7,6 +7,9 @@
 
 	const dispatch = createEventDispatcher();
 
+	// 動画の作成中は画像やドット化の設定を変えられないようにする
+	export let disabled = false;
+
 	let previewRef: HTMLCanvasElement | null;
 	let img: HTMLImageElement | null;
 	let files: FileList | undefined;
@@ -80,6 +83,7 @@
 		id="image-file"
 		accept="image/*"
 		ariaLabel="Upload image"
+		{disabled}
 		bind:files
 		on:change={() => uploadImage()}
 	/>
@@ -97,6 +101,7 @@
 				<span>{$_('is_pixelation')}</span>
 				<button
 					class={'no-button ' + (isDoPixelation ? 'pixelation-active' : 'action-link')}
+					{disabled}
 					on:click={() => {
 						isDoPixelation = true;
 						pixelationImage(isDoPixelation, pixelationSize, previewRef, img);
@@ -105,6 +110,7 @@
 				<span>/</span>
 				<button
 					class={'no-button ' + (isDoPixelation ? 'action-link' : 'pixelation-active')}
+					{disabled}
 					on:click={() => {
 						isDoPixelation = false;
 						pixelationImage(isDoPixelation, pixelationSize, previewRef, img);
@@ -119,6 +125,7 @@
 						<input
 							type="number"
 							min="2"
+							{disabled}
 							bind:value={pixelationSize}
 							on:change={(e) => {
 								if (previewRef && img) {

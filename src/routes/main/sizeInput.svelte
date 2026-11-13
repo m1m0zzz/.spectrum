@@ -9,6 +9,8 @@
 
 	export let playerWidth: number;
 	export let playerHeight: number;
+	// 動画の作成中はキャンバスの大きさを変えられないようにする
+	export let disabled = false;
 
 	const DISPLAY_SIZES: { [key: string]: number[] | undefined } = {
 		'144p (256×144)': [256, 144],
@@ -51,6 +53,7 @@
 		labelledby="size-label"
 		options={sizeOptions}
 		bind:value={sizeValue}
+		{disabled}
 		on:change={(e) => onSizeChange(e.detail.value)}
 	/>
 	{#if customInput}
@@ -62,6 +65,7 @@
 					type="number"
 					min="1"
 					max="16384"
+					{disabled}
 					bind:value={playerWidth}
 					on:change={(e) => {
 						playerWidth = clamp(Number(e.currentTarget.value), 1, 16384);
@@ -78,6 +82,7 @@
 					type="number"
 					min="1"
 					max="16384"
+					{disabled}
 					bind:value={playerHeight}
 					on:change={(e) => {
 						playerHeight = clamp(Number(e.currentTarget.value), 1, 16384);

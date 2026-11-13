@@ -48,8 +48,8 @@
 	let encodeSettings: EncodeSettings = { ...defaultEncodeSettings };
 	let rangeStart = 0;
 	let rangeEnd = 0;
+	// 動画の作成中（録画・変換）か。作成中は、作成に関わる操作（ファイル・設定・再生プレイヤー）をすべて止める
 	let exporting = false;
-	let recording = false;
 	const resetRange = (duration: number) => {
 		rangeStart = 0;
 		rangeEnd = Number.isFinite(duration) ? duration : 0;
@@ -129,6 +129,7 @@
 			hidden={activeTab != 'file'}
 		>
 			<ImageUploader
+				disabled={exporting}
 				on:message={(event) => {
 					if (event.detail.imageLoaded) imageLoaded = event.detail.imageLoaded;
 					imageData = event.detail.imageData;
@@ -146,6 +147,7 @@
 				{nodeAnalyser}
 				{fftSize}
 				{recorderDestination}
+				disabled={exporting}
 			/>
 		</div>
 
@@ -161,6 +163,7 @@
 					<SizeInput
 						{playerWidth}
 						{playerHeight}
+						disabled={exporting}
 						on:message={(event) => {
 							if (event.detail.playerWidth) playerWidth = event.detail.playerWidth;
 							if (event.detail.playerHeight) playerHeight = event.detail.playerHeight;
@@ -170,7 +173,7 @@
 				<p>
 					<label
 						>{$_('parameters_background')}
-						<input type="color" bind:value={background} />
+						<input type="color" bind:value={background} disabled={exporting} />
 						<!-- TODO: text color input -->
 						<!-- <input bind:value={background}> -->
 					</label>
@@ -182,6 +185,7 @@
 						labelledby="fft-size-label"
 						options={fftOptions}
 						bind:value={fftSize}
+						disabled={exporting}
 						on:change={(e) => {
 							if (nodeAnalyser) nodeAnalyser.fftSize = e.detail.value;
 						}}
@@ -196,6 +200,7 @@
 								min="0.1"
 								max="10"
 								step="0.1"
+								disabled={exporting}
 								bind:value={spectrumSensitivity}
 								on:change={(e) =>
 									(spectrumSensitivity = clamp(Number(e.currentTarget.value), 0.1, 10))}
@@ -210,6 +215,7 @@
 							<input
 								type="number"
 								min="0"
+								disabled={exporting}
 								bind:value={spectrumGridSize}
 								on:change={(e) => (spectrumGridSize = Math.max(0, Number(e.currentTarget.value)))}
 							/>
@@ -225,6 +231,7 @@
 								type="number"
 								min="0"
 								step="100"
+								disabled={exporting}
 								bind:value={spectrumSmoothTime}
 								on:change={(e) => (spectrumSmoothTime = Math.max(0, Number(e.currentTarget.value)))}
 							/>
@@ -253,14 +260,14 @@
 		</div>
 
 		<!-- 再生プレイヤーは、どのタブを開いていても操作できるようタブの外に置き、音声を読み込む前から常に表示する。
-		     録画中は一時停止やシークで録画が止まる・ずれるため、操作できなくする -->
+		     作成中は一時停止・シーク・音量で録画が止まる・ずれる・音が変わるため、操作できなくする -->
 		<section>
 			<AudioPlayer
 				bind:audio={audioRef}
 				bind:duration={audioDuration}
 				bind:rangeStart
 				bind:rangeEnd
-				locked={recording}
+				locked={exporting}
 			/>
 		</section>
 
@@ -289,7 +296,6 @@
 			{rangeEnd}
 			{rangeError}
 			bind:busy={exporting}
-			bind:recording
 		/>
 	</div>
 </main>

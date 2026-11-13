@@ -7,6 +7,7 @@
 	// input のアクセシブルな名前（読み上げや自動テストで使う）
 	export let ariaLabel: string;
 	export let files: FileList | undefined = undefined;
+	export let disabled = false;
 
 	// ブラウザの input はファイル名を表示しないよう隠し、change イベントから取った名前を横に出す。
 	// ダイアログを取り消すと（Chrome では）選択が空になるので、名前も消える
@@ -24,6 +25,7 @@
 		type="file"
 		{accept}
 		aria-label={ariaLabel}
+		{disabled}
 		bind:files
 		on:change={onChange}
 		on:change
