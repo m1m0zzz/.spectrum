@@ -933,10 +933,16 @@ footer {
 	cursor: pointer;
 }
 
+/* メインの中身。キャンバスより上（.controls）・キャンバス・「動画を作成する」は、それぞれ別に中央に揃える。
+   まとめて 1 つの幅で中央に置くと、広い方（大きいキャンバスなど）に合わせて、狭い方が左に寄る */
 .container {
+	padding: 1rem;
+}
+
+/* キャンバスより上（使い方・タブ・再生プレイヤー）。中は左揃えのまま、かたまりごと中央に置く */
+.controls {
 	width: fit-content;
 	max-width: 100%;
-	padding: 1rem;
 	margin-right: auto;
 	margin-left: auto;
 }
@@ -952,6 +958,8 @@ footer {
 	width: min-content;
 	max-width: 100%;
 	max-height: 100vh;
+	margin-right: auto;
+	margin-left: auto;
 }
 
 #img-error {
