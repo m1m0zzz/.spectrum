@@ -24,25 +24,17 @@
 				mouse.style.transform = `translate(${x - (x % width)}px, ${y - (y % height)}px)`;
 			};
 
-			const hoverTargets = document.querySelectorAll(
-				'a,button,input,select,.pixel-button,[role=option],.trim-bar'
-			);
-
-			hoverTargets.forEach((target) => {
-				target.addEventListener(
-					'mouseenter',
-					() => {
-						mouse.classList.add('js-hover');
-					},
-					false
-				);
-				target.addEventListener(
-					'mouseleave',
-					() => {
-						mouse.classList.remove('js-hover');
-					},
-					false
-				);
+			// ボタンや入力欄などの上では大きくする。音声を読み込んでから出る範囲のバーや、トリミングの枠のように
+			// 後から出る要素もあるため、要素ごとにイベントを付けず、ページ全体でカーソルの下の要素を調べる
+			const hoverTargets =
+				'a,button,input,select,.pixel-button,[role=option],.trim-bar,.crop-frame';
+			document.addEventListener('mouseover', (e) => {
+				const target = e.target instanceof Element ? e.target.closest(hoverTargets) : null;
+				mouse.classList.toggle('js-hover', target != null);
+			});
+			// ウィンドウの外へ出たら戻す
+			document.addEventListener('mouseout', (e) => {
+				if (!e.relatedTarget) mouse.classList.remove('js-hover');
 			});
 		}
 	});
