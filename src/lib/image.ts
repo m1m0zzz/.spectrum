@@ -12,7 +12,7 @@ export const loadImage = (src: string) =>
 // ドット化（間引き）。元の画像を percent %（1〜100 の整数）の大きさにし、各ドットには対応する位置の
 // 左上の画素をそのまま使う（平均すると色が混ざり、ドット絵らしさが失われるため）。
 // 大きさは切り捨て、1 ドットより小さくはしない
-type Pixels<T extends ArrayBufferLike = ArrayBufferLike> = {
+export type Pixels<T extends ArrayBufferLike = ArrayBufferLike> = {
 	width: number;
 	height: number;
 	data: Uint8ClampedArray<T>;

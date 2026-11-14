@@ -6,9 +6,12 @@
 		MAX_IMAGE_PIXELS,
 		maxPercentWithin,
 		resample,
-		scaledSize
+		scaledSize,
+		type Pixels
 	} from '#lib/image.ts';
+	import { aspectLabel, cropPixels, fullRect, isFullRect, type Rect } from '#lib/crop.ts';
 	import FileInput from './fileInput.svelte';
+	import CropBox from './cropBox.svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -27,34 +30,55 @@
 	let pixelationPercent = 50;
 	let isDoPixelation = false;
 
+	// トリミングの範囲（元の画像の px）と、プレビューで範囲を調整しているところか。
+	// トリミングしてからドット化する（縮小率はトリミングした画像に対する割合）
+	let crop: Rect = fullRect({ width: 0, height: 0 });
+	let cropping = false;
+
 	let imgError = false;
 	$: imageLoaded = Boolean(img && img.src != '');
-	$: pixelatedSize = source
-		? scaledSize(source.width, source.height, pixelationPercent)
-		: { width: 0, height: 0 };
+	$: pixelatedSize = scaledSize(crop.width, crop.height, pixelationPercent);
+	$: cropped = source != null && !isFullRect(crop, source);
+	$: cropAspect = aspectLabel(crop);
 
 	onMount(() => {
 		img = new Image();
 	});
 
-	// プレビューに描き、スペクトラムに使う画像として親に渡す
-	const pixelationImage = (_imageLoaded = false) => {
-		if (!previewRef || !source) return;
-		if (isDoPixelation) {
-			const { width, height, data } = resample(source, pixelationPercent);
-			imageData = new ImageData(data, width, height);
-		} else {
-			imageData = source;
-		}
-		previewRef.width = imageData.width;
-		previewRef.height = imageData.height;
-		previewRef.getContext('2d')?.putImageData(imageData, 0, 0);
+	const toImageData = ({ width, height, data }: Pixels<ArrayBuffer>) =>
+		new ImageData(data, width, height);
+	const pixelate = (pixels: ImageData) =>
+		isDoPixelation ? toImageData(resample(pixels, pixelationPercent)) : pixels;
+
+	// トリミングとドット化をして、スペクトラムに使う画像として親に渡す
+	const applyImage = (_imageLoaded = false) => {
+		if (!source) return;
+		imageData = pixelate(isFullRect(crop, source) ? source : toImageData(cropPixels(source, crop)));
 
 		let obj = { imageData: imageData };
 		if (_imageLoaded) {
 			obj = Object.assign(obj, { imageLoaded: true });
 		}
 		dispatch('message', obj);
+	};
+
+	// プレビュー。トリミングの範囲を調整している間は、範囲を選べるように画像全体（ドット化したもの）を見せる
+	const drawPreview = () => {
+		if (!previewRef || !source) return;
+		const shown = cropping ? pixelate(source) : imageData;
+		previewRef.width = shown.width;
+		previewRef.height = shown.height;
+		previewRef.getContext('2d')?.putImageData(shown, 0, 0);
+	};
+
+	const pixelationImage = (_imageLoaded = false) => {
+		applyImage(_imageLoaded);
+		drawPreview();
+	};
+
+	const toggleCropping = () => {
+		cropping = !cropping;
+		drawPreview();
 	};
 
 	let objectUrl: string | null = null;
@@ -74,6 +98,8 @@
 		const ctx = work.getContext('2d') as CanvasRenderingContext2D;
 		ctx.drawImage(img, 0, 0);
 		source = ctx.getImageData(0, 0, img.width, img.height);
+		crop = fullRect(source);
+		cropping = false;
 
 		if (img.width * img.height > MAX_IMAGE_PIXELS) {
 			imgError = true;
@@ -162,6 +188,38 @@
 	{/if}
 
 	<div class="img-preview-container" style:display={imageLoaded ? 'block' : 'none'}>
-		<canvas id="preview" bind:this={previewRef} width="0" height="0"></canvas>
+		<!-- トリミング。押すと、プレビューに枠を出して範囲を調整できる。調整している間は大きさと縦横比を出す -->
+		<div class="img-crop-toolbar">
+			<button class="pixel-button" aria-pressed={cropping} {disabled} on:click={toggleCropping}
+				>{cropping ? $_('crop_done') : $_('crop')}</button
+			>
+			{#if cropping}
+				<button
+					class="no-button action-link"
+					disabled={disabled || !cropped}
+					on:click={() => {
+						if (!source) return;
+						crop = fullRect(source);
+						applyImage();
+					}}>{$_('crop_reset')}</button
+				>
+				<p class="img-crop-size">
+					{#if cropAspect}<span class="img-crop-aspect">{cropAspect}</span>{/if}
+					<span>{crop.width} px × {crop.height} px</span>
+				</p>
+			{/if}
+		</div>
+		<div class="img-crop">
+			<canvas id="preview" bind:this={previewRef} width="0" height="0"></canvas>
+			{#if cropping && source}
+				<CropBox
+					width={source.width}
+					height={source.height}
+					{disabled}
+					bind:rect={crop}
+					on:change={() => applyImage()}
+				/>
+			{/if}
+		</div>
 	</div>
 </section>
