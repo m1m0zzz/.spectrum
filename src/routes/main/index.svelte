@@ -187,13 +187,11 @@
           <section>
             <div style:display="flex" style:flex-wrap="wrap">
               <SizeInput
-                {playerWidth}
-                {playerHeight}
+                bind:playerWidth
+                bind:playerHeight
+                imageWidth={imageLoaded ? imageData.width : 0}
+                imageHeight={imageLoaded ? imageData.height : 0}
                 disabled={exporting}
-                on:message={(event) => {
-                  if (event.detail.playerWidth) playerWidth = event.detail.playerWidth;
-                  if (event.detail.playerHeight) playerHeight = event.detail.playerHeight;
-                }}
               />
             </div>
             <p>
