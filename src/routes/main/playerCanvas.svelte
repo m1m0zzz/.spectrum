@@ -128,15 +128,10 @@
 		playerCtx.fillStyle = background;
 		playerCtx.fillRect(0, 0, w, h);
 
-		if (!nodeAnalyser) return;
-		// 画像そのものをスペクトラムとして見せる
-		if (imageLoaded) {
-			if (imageData !== preparedImage) prepareImage(imageData);
-			drawPixelSpectrum(nodeAnalyser, w, h, elapsed);
-		} else {
-			playerCtx.fillStyle = 'white';
-			playerCtx.fillText('No Image', 10, 20);
-		}
+		// 画像そのものをスペクトラムとして見せる。画像がまだないときは背景だけにする
+		if (!nodeAnalyser || !imageLoaded) return;
+		if (imageData !== preparedImage) prepareImage(imageData);
+		drawPixelSpectrum(nodeAnalyser, w, h, elapsed);
 	};
 
 	onMount(() => {
