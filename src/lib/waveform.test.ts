@@ -28,4 +28,13 @@ describe('resamplePeaks', () => {
 	it('増やすときは同じ値を繰り返す', () => {
 		expect([...resamplePeaks(f32([0.5, 1]), 4)]).toEqual([0.5, 0.5, 1, 1]);
 	});
+
+	it('範囲を指定すると、その部分だけをまとめ直す', () => {
+		const peaks = f32([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
+		expect([...resamplePeaks(peaks, 2, 0.25, 0.75)]).toEqual([...f32([0.4, 0.6])]);
+		// ズームして区間より細かくすると、同じ値を繰り返す
+		expect([...resamplePeaks(peaks, 4, 0.5, 0.75)]).toEqual([...f32([0.5, 0.5, 0.6, 0.6])]);
+		// 端を越えても、端の値で止める
+		expect([...resamplePeaks(peaks, 2, 0.875, 1.125)]).toEqual([...f32([0.8, 0.8])]);
+	});
 });
