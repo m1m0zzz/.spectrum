@@ -24,8 +24,8 @@
       MAX_SIZE
     );
 
-  // 選択欄の値。プリセットは高さ、カスタムは 'custom'
-  let sizeValue = 'custom';
+  // 選択欄の値。プリセットは高さ、カスタムは 'custom'。既定は 360h
+  let sizeValue = '360';
   $: customInput = sizeValue == 'custom';
   $: sizeOptions = [
     ...HEIGHTS.map((height) => ({

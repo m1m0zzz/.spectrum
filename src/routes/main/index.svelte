@@ -28,8 +28,8 @@
   let recorderDestination: MediaStreamAudioDestinationNode;
 
   // parameters
-  let playerWidth = 320;
-  let playerHeight = 320;
+  let playerWidth = 360;
+  let playerHeight = 360;
   let background = '#000000';
   let fftSize = 8192;
   let spectrumSensitivity = 1;
