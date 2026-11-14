@@ -1,573 +1,573 @@
 @font-face {
-	font-family: 'x12y12pxMaruMinya';
-	src: url('../assets/x12y12pxMaruMinya_2023-07-14/x12y12pxMaruMinya.ttf') format('truetype');
-	font-display: swap;
+  font-family: 'x12y12pxMaruMinya';
+  src: url('../assets/x12y12pxMaruMinya_2023-07-14/x12y12pxMaruMinya.ttf') format('truetype');
+  font-display: swap;
 }
 
 :root {
-	--color-none: #0000;
-	--color-error: #f56565;
-	--color-note: #718096;
-	--color-selection: #c1e5f1;
-	--color-brand: #89b9bd;
-	--color-bg-1: #f8f4ea;
-	--color-bg-2: #ece8dd;
-	--color-border: #dac5a4;
-	--color-active: #579bb1;
-	--color-footer-link: #30736c;
-	/* ドット絵風のボタンの 1 ドットの大きさ */
-	--dot: 3px;
+  --color-none: #0000;
+  --color-error: #f56565;
+  --color-note: #718096;
+  --color-selection: #c1e5f1;
+  --color-brand: #89b9bd;
+  --color-bg-1: #f8f4ea;
+  --color-bg-2: #ece8dd;
+  --color-border: #dac5a4;
+  --color-active: #579bb1;
+  --color-footer-link: #30736c;
+  /* ドット絵風のボタンの 1 ドットの大きさ */
+  --dot: 3px;
 }
 
 :focus {
-	outline: none;
+  outline: none;
 }
 
 ::selection {
-	background-color: var(--color-selection);
+  background-color: var(--color-selection);
 }
 
 body {
-	font-family: 'x12y12pxMaruMinya', sans-serif;
-	letter-spacing: 0.1em;
+  font-family: 'x12y12pxMaruMinya', sans-serif;
+  letter-spacing: 0.1em;
 }
 
 h2 {
-	font-weight: bold;
-	margin-bottom: 0.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 h3 {
-	font-weight: normal;
-	margin-bottom: 0.5rem;
+  font-weight: normal;
+  margin-bottom: 0.5rem;
 }
 
 p {
-	margin-bottom: 0.2rem;
+  margin-bottom: 0.2rem;
 }
 
 a,
 a:visited {
-	color: var(--color-brand);
+  color: var(--color-brand);
 }
 
 ol {
-	margin-top: 1rem;
-	margin-bottom: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 input {
-	background: var(--color-none);
+  background: var(--color-none);
 }
 
 /* ドット絵風の入力欄（数値・色）。1 ドットの枠で四隅を欠き、左上を暗くして凹ませる */
 input[type='number'],
 input[type='color'] {
-	font: inherit;
-	letter-spacing: inherit;
-	color: inherit;
-	vertical-align: middle;
-	background-color: var(--color-bg-1);
-	border: var(--dot) solid var(--color-footer-link);
-	box-shadow: inset var(--dot) var(--dot) 0 0 var(--color-border);
-	clip-path: polygon(
-		var(--dot) 0,
-		calc(100% - var(--dot)) 0,
-		calc(100% - var(--dot)) var(--dot),
-		100% var(--dot),
-		100% calc(100% - var(--dot)),
-		calc(100% - var(--dot)) calc(100% - var(--dot)),
-		calc(100% - var(--dot)) 100%,
-		var(--dot) 100%,
-		var(--dot) calc(100% - var(--dot)),
-		0 calc(100% - var(--dot)),
-		0 var(--dot),
-		var(--dot) var(--dot)
-	);
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  vertical-align: middle;
+  background-color: var(--color-bg-1);
+  border: var(--dot) solid var(--color-footer-link);
+  box-shadow: inset var(--dot) var(--dot) 0 0 var(--color-border);
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% calc(100% - var(--dot)),
+    calc(100% - var(--dot)) calc(100% - var(--dot)),
+    calc(100% - var(--dot)) 100%,
+    var(--dot) 100%,
+    var(--dot) calc(100% - var(--dot)),
+    0 calc(100% - var(--dot)),
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
 
-	/* :focus の outline を全体で消しているため、枠の色を変えて示す */
-	&:focus {
-		border-color: var(--color-active);
-	}
+  /* :focus の outline を全体で消しているため、枠の色を変えて示す */
+  &:focus {
+    border-color: var(--color-active);
+  }
 
-	&:disabled {
-		filter: grayscale(1);
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+  &:disabled {
+    filter: grayscale(1);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 input[type='number'] {
-	width: 6em;
-	padding: 0.15rem 0.4rem 0.15rem 0.6rem;
-	text-align: center;
-	/* ブラウザの増減ボタンは見た目を変えられないので隠し、pixelNumber.svelte の ▲▼ を使う */
-	appearance: textfield;
+  width: 6em;
+  padding: 0.15rem 0.4rem 0.15rem 0.6rem;
+  text-align: center;
+  /* ブラウザの増減ボタンは見た目を変えられないので隠し、pixelNumber.svelte の ▲▼ を使う */
+  appearance: textfield;
 
-	&::-webkit-inner-spin-button,
-	&::-webkit-outer-spin-button {
-		margin: 0;
-		appearance: none;
-	}
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
+  }
 }
 
 input[type='color'] {
-	width: calc(var(--dot) * 14);
-	height: calc(var(--dot) * 10);
-	padding: calc(var(--dot) * 2);
-	appearance: none;
-	cursor: pointer;
+  width: calc(var(--dot) * 14);
+  height: calc(var(--dot) * 10);
+  padding: calc(var(--dot) * 2);
+  appearance: none;
+  cursor: pointer;
 
-	&::-webkit-color-swatch-wrapper {
-		padding: 0;
-	}
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
 
-	&::-webkit-color-swatch,
-	&::-moz-color-swatch {
-		border: none;
-		border-radius: 0;
-	}
+  &::-webkit-color-swatch,
+  &::-moz-color-swatch {
+    border: none;
+    border-radius: 0;
+  }
 }
 
 /* 数値の入力欄の ▲▼（pixelNumber.svelte） */
 .pixel-number {
-	display: inline-flex;
-	align-items: stretch;
-	gap: var(--dot);
-	vertical-align: middle;
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--dot);
+  vertical-align: middle;
 }
 
 .pixel-number-steps {
-	display: flex;
-	flex-direction: column;
-	gap: var(--dot);
+  display: flex;
+  flex-direction: column;
+  gap: var(--dot);
 }
 
 .pixel-number-step {
-	display: flex;
-	flex: 1;
-	align-items: center;
-	justify-content: center;
-	padding: 0 calc(var(--dot) * 2);
-	color: white;
-	background-color: var(--color-brand);
-	border: var(--dot) solid var(--color-footer-link);
-	clip-path: polygon(
-		var(--dot) 0,
-		calc(100% - var(--dot)) 0,
-		calc(100% - var(--dot)) var(--dot),
-		100% var(--dot),
-		100% calc(100% - var(--dot)),
-		calc(100% - var(--dot)) calc(100% - var(--dot)),
-		calc(100% - var(--dot)) 100%,
-		var(--dot) 100%,
-		var(--dot) calc(100% - var(--dot)),
-		0 calc(100% - var(--dot)),
-		0 var(--dot),
-		var(--dot) var(--dot)
-	);
-	cursor: pointer;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(var(--dot) * 2);
+  color: white;
+  background-color: var(--color-brand);
+  border: var(--dot) solid var(--color-footer-link);
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% calc(100% - var(--dot)),
+    calc(100% - var(--dot)) calc(100% - var(--dot)),
+    calc(100% - var(--dot)) 100%,
+    var(--dot) 100%,
+    var(--dot) calc(100% - var(--dot)),
+    0 calc(100% - var(--dot)),
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
+  cursor: pointer;
 
-	&:hover {
-		background-color: #9ccacd;
-	}
+  &:hover {
+    background-color: #9ccacd;
+  }
 
-	&:active {
-		background-color: var(--color-active);
-	}
+  &:active {
+    background-color: var(--color-active);
+  }
 
-	/* 入力欄が使えないときは押せなくする */
-	.pixel-number:has(input:disabled) & {
-		filter: grayscale(1);
-		opacity: 0.5;
-		pointer-events: none;
-	}
+  /* 入力欄が使えないときは押せなくする */
+  .pixel-number:has(input:disabled) & {
+    filter: grayscale(1);
+    opacity: 0.5;
+    pointer-events: none;
+  }
 
-	/* ▲（3 ドット・1 ドットの 2 段）。▼ は上下を返す */
-	&::after {
-		content: '';
-		width: calc(var(--dot) * 3);
-		height: calc(var(--dot) * 2);
-		background-color: currentColor;
-		clip-path: polygon(
-			var(--dot) 0,
-			calc(var(--dot) * 2) 0,
-			calc(var(--dot) * 2) var(--dot),
-			100% var(--dot),
-			100% 100%,
-			0 100%,
-			0 var(--dot),
-			var(--dot) var(--dot)
-		);
-	}
+  /* ▲（3 ドット・1 ドットの 2 段）。▼ は上下を返す */
+  &::after {
+    content: '';
+    width: calc(var(--dot) * 3);
+    height: calc(var(--dot) * 2);
+    background-color: currentColor;
+    clip-path: polygon(
+      var(--dot) 0,
+      calc(var(--dot) * 2) 0,
+      calc(var(--dot) * 2) var(--dot),
+      100% var(--dot),
+      100% 100%,
+      0 100%,
+      0 var(--dot),
+      var(--dot) var(--dot)
+    );
+  }
 
-	&.down::after {
-		transform: scaleY(-1);
-	}
+  &.down::after {
+    transform: scaleY(-1);
+  }
 }
 
 /* 見た目からは隠し、読み上げやキーボード操作では使えるようにする */
 .visually-hidden {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0 0 0 0);
-	white-space: nowrap;
-	border: 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ファイルの選択（fileInput.svelte）。ブラウザの input は隠し、label をボタンにする */
 .file-input {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
-	margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
 }
 
 /* ドット絵風のボタン（ファイルの選択、動画を作成する）。枠を 1 ドットの太さで描き、四隅を 1 ドットずつ欠く。
    内側は左上を明るく、右下を暗くして立体に見せる */
 .pixel-button {
-	padding: 0.3rem 0.9rem;
-	font: inherit;
-	/* button はブラウザの既定で letter-spacing が normal になるため、本文に揃える */
-	letter-spacing: inherit;
-	color: white;
-	background-color: var(--color-brand);
-	border: var(--dot) solid var(--color-footer-link);
-	box-shadow:
-		inset var(--dot) var(--dot) 0 0 #b7d6d9,
-		inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 0 var(--color-active);
-	clip-path: polygon(
-		var(--dot) 0,
-		calc(100% - var(--dot)) 0,
-		calc(100% - var(--dot)) var(--dot),
-		100% var(--dot),
-		100% calc(100% - var(--dot)),
-		calc(100% - var(--dot)) calc(100% - var(--dot)),
-		calc(100% - var(--dot)) 100%,
-		var(--dot) 100%,
-		var(--dot) calc(100% - var(--dot)),
-		0 calc(100% - var(--dot)),
-		0 var(--dot),
-		var(--dot) var(--dot)
-	);
-	cursor: pointer;
-	user-select: none;
+  padding: 0.3rem 0.9rem;
+  font: inherit;
+  /* button はブラウザの既定で letter-spacing が normal になるため、本文に揃える */
+  letter-spacing: inherit;
+  color: white;
+  background-color: var(--color-brand);
+  border: var(--dot) solid var(--color-footer-link);
+  box-shadow:
+    inset var(--dot) var(--dot) 0 0 #b7d6d9,
+    inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 0 var(--color-active);
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% calc(100% - var(--dot)),
+    calc(100% - var(--dot)) calc(100% - var(--dot)),
+    calc(100% - var(--dot)) 100%,
+    var(--dot) 100%,
+    var(--dot) calc(100% - var(--dot)),
+    0 calc(100% - var(--dot)),
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
+  cursor: pointer;
+  user-select: none;
 
-	&:hover:not(:disabled) {
-		background-color: #9ccacd;
-	}
+  &:hover:not(:disabled) {
+    background-color: #9ccacd;
+  }
 
-	/* 押している間は陰影を逆にし、文字を 1 ドット下げて沈んだように見せる */
-	&:active:not(:disabled) {
-		padding-top: calc(0.3rem + var(--dot));
-		padding-bottom: calc(0.3rem - var(--dot));
-		box-shadow: inset var(--dot) var(--dot) 0 0 var(--color-active);
-	}
+  /* 押している間は陰影を逆にし、文字を 1 ドット下げて沈んだように見せる */
+  &:active:not(:disabled) {
+    padding-top: calc(0.3rem + var(--dot));
+    padding-bottom: calc(0.3rem - var(--dot));
+    box-shadow: inset var(--dot) var(--dot) 0 0 var(--color-active);
+  }
 
-	/* :focus の outline を全体で消しているため、キーボード操作のときは枠の色を変えて示す */
-	&:focus-visible {
-		border-color: var(--color-active);
-	}
+  /* :focus の outline を全体で消しているため、キーボード操作のときは枠の色を変えて示す */
+  &:focus-visible {
+    border-color: var(--color-active);
+  }
 
-	/* 押せないときは色を抜いて薄くする */
-	&:disabled {
-		filter: grayscale(1);
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+  /* 押せないときは色を抜いて薄くする */
+  &:disabled {
+    filter: grayscale(1);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* ドット絵風の選択欄（pixelSelect.svelte）。ボタン・リストとも 1 ドットの枠で四隅を欠く */
 .pixel-select {
-	display: inline-block;
-	vertical-align: middle;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .pixel-select-button,
 .pixel-select-list {
-	border: var(--dot) solid var(--color-footer-link);
-	clip-path: polygon(
-		var(--dot) 0,
-		calc(100% - var(--dot)) 0,
-		calc(100% - var(--dot)) var(--dot),
-		100% var(--dot),
-		100% calc(100% - var(--dot)),
-		calc(100% - var(--dot)) calc(100% - var(--dot)),
-		calc(100% - var(--dot)) 100%,
-		var(--dot) 100%,
-		var(--dot) calc(100% - var(--dot)),
-		0 calc(100% - var(--dot)),
-		0 var(--dot),
-		var(--dot) var(--dot)
-	);
+  border: var(--dot) solid var(--color-footer-link);
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% calc(100% - var(--dot)),
+    calc(100% - var(--dot)) calc(100% - var(--dot)),
+    calc(100% - var(--dot)) 100%,
+    var(--dot) 100%,
+    var(--dot) calc(100% - var(--dot)),
+    0 calc(100% - var(--dot)),
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
 }
 
 .pixel-select-button {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.75rem;
-	padding: 0.15rem 0.6rem;
-	font: inherit;
-	letter-spacing: inherit;
-	color: inherit;
-	text-align: left;
-	background-color: var(--color-bg-1);
-	/* 左上を明るく、右下を暗くして少し浮かせる */
-	box-shadow:
-		inset var(--dot) var(--dot) 0 0 white,
-		inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 0 var(--color-border);
-	cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.15rem 0.6rem;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-align: left;
+  background-color: var(--color-bg-1);
+  /* 左上を明るく、右下を暗くして少し浮かせる */
+  box-shadow:
+    inset var(--dot) var(--dot) 0 0 white,
+    inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 0 var(--color-border);
+  cursor: pointer;
 
-	&:hover:not(:disabled) {
-		background-color: white;
-	}
+  &:hover:not(:disabled) {
+    background-color: white;
+  }
 
-	&:focus-visible,
-	&[aria-expanded='true'] {
-		border-color: var(--color-active);
-	}
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    border-color: var(--color-active);
+  }
 
-	&:disabled {
-		filter: grayscale(1);
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+  &:disabled {
+    filter: grayscale(1);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* 選択中の値と、幅を決めるための全選択肢を同じマスに重ねる。全選択肢は見えないようにする */
 .pixel-select-value {
-	display: grid;
+  display: grid;
 
-	& > * {
-		grid-area: 1 / 1;
-		white-space: nowrap;
-	}
+  & > * {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+  }
 }
 
 .pixel-select-sizer {
-	visibility: hidden;
+  visibility: hidden;
 }
 
 /* ▼ をドットで描く（5 ドット・3 ドット・1 ドットの 3 段） */
 .pixel-select-arrow {
-	flex-shrink: 0;
-	width: calc(var(--dot) * 5);
-	height: calc(var(--dot) * 3);
-	background-color: var(--color-footer-link);
-	clip-path: polygon(
-		0 0,
-		100% 0,
-		100% calc(var(--dot) * 1),
-		calc(var(--dot) * 4) calc(var(--dot) * 1),
-		calc(var(--dot) * 4) calc(var(--dot) * 2),
-		calc(var(--dot) * 3) calc(var(--dot) * 2),
-		calc(var(--dot) * 3) 100%,
-		calc(var(--dot) * 2) 100%,
-		calc(var(--dot) * 2) calc(var(--dot) * 2),
-		calc(var(--dot) * 1) calc(var(--dot) * 2),
-		calc(var(--dot) * 1) calc(var(--dot) * 1),
-		0 calc(var(--dot) * 1)
-	);
+  flex-shrink: 0;
+  width: calc(var(--dot) * 5);
+  height: calc(var(--dot) * 3);
+  background-color: var(--color-footer-link);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(var(--dot) * 1),
+    calc(var(--dot) * 4) calc(var(--dot) * 1),
+    calc(var(--dot) * 4) calc(var(--dot) * 2),
+    calc(var(--dot) * 3) calc(var(--dot) * 2),
+    calc(var(--dot) * 3) 100%,
+    calc(var(--dot) * 2) 100%,
+    calc(var(--dot) * 2) calc(var(--dot) * 2),
+    calc(var(--dot) * 1) calc(var(--dot) * 2),
+    calc(var(--dot) * 1) calc(var(--dot) * 1),
+    0 calc(var(--dot) * 1)
+  );
 
-	[aria-expanded='true'] > & {
-		transform: rotate(180deg);
-	}
+  [aria-expanded='true'] > & {
+    transform: rotate(180deg);
+  }
 }
 
 /* 開いたリスト。popover のときは最前面（top layer）に、そうでないときは fixed で出す。
    位置（top / left）と大きさは pixelSelect.svelte がボタンの位置から決める */
 .pixel-select-list {
-	position: fixed;
-	z-index: 1000;
-	display: none;
-	inset: auto;
-	width: max-content;
-	height: auto;
-	margin: 0;
-	padding: var(--dot);
-	overflow-y: auto;
-	list-style: none;
-	color: inherit;
-	background-color: var(--color-bg-1);
+  position: fixed;
+  z-index: 1000;
+  display: none;
+  inset: auto;
+  width: max-content;
+  height: auto;
+  margin: 0;
+  padding: var(--dot);
+  overflow-y: auto;
+  list-style: none;
+  color: inherit;
+  background-color: var(--color-bg-1);
 
-	&.open {
-		display: block;
-	}
+  &.open {
+    display: block;
+  }
 }
 
 .pixel-select-option {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.2rem 0.75rem 0.2rem 0.5rem;
-	white-space: nowrap;
-	cursor: pointer;
-	user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.75rem 0.2rem 0.5rem;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
 
-	/* 選択中の印（2 ドット四方）。ほかの行も同じ幅をあけて文字の位置をそろえる */
-	&::before {
-		content: '';
-		flex-shrink: 0;
-		width: calc(var(--dot) * 2);
-		height: calc(var(--dot) * 2);
-	}
+  /* 選択中の印（2 ドット四方）。ほかの行も同じ幅をあけて文字の位置をそろえる */
+  &::before {
+    content: '';
+    flex-shrink: 0;
+    width: calc(var(--dot) * 2);
+    height: calc(var(--dot) * 2);
+  }
 
-	&[aria-selected='true']::before {
-		background-color: currentColor;
-	}
+  &[aria-selected='true']::before {
+    background-color: currentColor;
+  }
 
-	&.active {
-		color: white;
-		background-color: var(--color-brand);
-	}
+  &.active {
+    color: white;
+    background-color: var(--color-brand);
+  }
 
-	&[aria-disabled='true'] {
-		color: var(--color-note);
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+  &[aria-disabled='true'] {
+    color: var(--color-note);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* ドット絵風のスライダー（シークバー・音量）。--progress までを塗る */
 .pixel-range {
-	--progress: 0%;
-	height: calc(var(--dot) * 6);
-	margin: 0;
-	vertical-align: middle;
-	background: transparent;
-	cursor: pointer;
-	appearance: none;
+  --progress: 0%;
+  height: calc(var(--dot) * 6);
+  margin: 0;
+  vertical-align: middle;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
 
-	&::-webkit-slider-runnable-track {
-		box-sizing: content-box;
-		height: var(--dot);
-		background: linear-gradient(
-			to right,
-			var(--color-brand) var(--progress),
-			var(--color-bg-1) var(--progress)
-		);
-		border: var(--dot) solid var(--color-footer-link);
-	}
+  &::-webkit-slider-runnable-track {
+    box-sizing: content-box;
+    height: var(--dot);
+    background: linear-gradient(
+      to right,
+      var(--color-brand) var(--progress),
+      var(--color-bg-1) var(--progress)
+    );
+    border: var(--dot) solid var(--color-footer-link);
+  }
 
-	&::-moz-range-track {
-		box-sizing: content-box;
-		height: var(--dot);
-		background-color: var(--color-bg-1);
-		border: var(--dot) solid var(--color-footer-link);
-	}
+  &::-moz-range-track {
+    box-sizing: content-box;
+    height: var(--dot);
+    background-color: var(--color-bg-1);
+    border: var(--dot) solid var(--color-footer-link);
+  }
 
-	&::-moz-range-progress {
-		height: var(--dot);
-		background-color: var(--color-brand);
-	}
+  &::-moz-range-progress {
+    height: var(--dot);
+    background-color: var(--color-brand);
+  }
 
-	/* つまみは 2 ドット × 5 ドットの四角 */
-	&::-webkit-slider-thumb {
-		width: calc(var(--dot) * 2);
-		height: calc(var(--dot) * 5);
-		margin-top: calc(var(--dot) * -2);
-		background-color: var(--color-footer-link);
-		border: none;
-		border-radius: 0;
-		appearance: none;
-	}
+  /* つまみは 2 ドット × 5 ドットの四角 */
+  &::-webkit-slider-thumb {
+    width: calc(var(--dot) * 2);
+    height: calc(var(--dot) * 5);
+    margin-top: calc(var(--dot) * -2);
+    background-color: var(--color-footer-link);
+    border: none;
+    border-radius: 0;
+    appearance: none;
+  }
 
-	&::-moz-range-thumb {
-		width: calc(var(--dot) * 2);
-		height: calc(var(--dot) * 5);
-		background-color: var(--color-footer-link);
-		border: none;
-		border-radius: 0;
-	}
+  &::-moz-range-thumb {
+    width: calc(var(--dot) * 2);
+    height: calc(var(--dot) * 5);
+    background-color: var(--color-footer-link);
+    border: none;
+    border-radius: 0;
+  }
 
-	/* :focus の outline を全体で消しているため、つまみの色を変えて示す */
-	&:focus-visible::-webkit-slider-thumb {
-		background-color: var(--color-active);
-	}
+  /* :focus の outline を全体で消しているため、つまみの色を変えて示す */
+  &:focus-visible::-webkit-slider-thumb {
+    background-color: var(--color-active);
+  }
 
-	&:focus-visible::-moz-range-thumb {
-		background-color: var(--color-active);
-	}
+  &:focus-visible::-moz-range-thumb {
+    background-color: var(--color-active);
+  }
 
-	&:disabled {
-		filter: grayscale(1);
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+  &:disabled {
+    filter: grayscale(1);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* 再生プレイヤー（audioPlayer.svelte）。上にシークバー、下に再生・時間・ミュート・音量 */
 .audio-player {
-	display: flex;
-	flex-direction: column;
-	gap: 0.6rem;
-	width: 460px;
-	max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 460px;
+  max-width: 100%;
 }
 
 .audio-player-seek {
-	width: 100%;
+  width: 100%;
 }
 
 /* 書き出す範囲（audioRange.svelte）。音声の下に、範囲指定付きのシークバーと秒の入力欄を置く */
 .audio-range {
-	display: flex;
-	flex-direction: column;
-	gap: 0.6rem;
-	margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
 }
 
 .audio-player-controls {
-	display: flex;
-	align-items: center;
-	gap: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .audio-player-button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: var(--dot);
-	min-width: calc(var(--dot) * 13);
-	padding: 0.35rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dot);
+  min-width: calc(var(--dot) * 13);
+  padding: 0.35rem 0.5rem;
 }
 
 /* ミュートと音量は右に寄せる */
 .audio-player-mute {
-	margin-left: auto;
+  margin-left: auto;
 }
 
 /* 時間の表示で幅が揺れないよう、数字の幅をそろえる */
 .audio-player-time {
-	font-variant-numeric: tabular-nums;
-	white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .audio-player-volume {
-	width: 70px;
+  width: 70px;
 }
 
 /* トリムバー（trimBar.svelte）。スマホの動画編集アプリのように、範囲を枠と左右のハンドルで囲み、
    範囲の外を暗くする。再生位置はバーより上下に 2 ドットずつはみ出す白い縦棒。
    ハンドルは範囲の外側に付くので、両端にハンドルの幅（5 ドット）の余白をとる */
 .trim-bar {
-	--handle: calc(var(--dot) * 5);
-	position: relative;
-	height: calc(var(--dot) * 26);
-	cursor: pointer;
-	user-select: none;
-	/* ドラッグでページがスクロールしないようにする */
-	touch-action: none;
+  --handle: calc(var(--dot) * 5);
+  position: relative;
+  height: calc(var(--dot) * 26);
+  cursor: pointer;
+  user-select: none;
+  /* ドラッグでページがスクロールしないようにする */
+  touch-action: none;
 
-	&.disabled {
-		filter: grayscale(1);
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+  &.disabled {
+    filter: grayscale(1);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* 秒と位置（%）の対応をとる帯。範囲の外にあたるところは、1 ドットおきの点線の枠だけを見せる。
@@ -575,133 +575,133 @@ input[type='color'] {
    範囲を動かしたときに点線の模様が一緒に動いたり長さが変わったりして見えるため
    （border の dotted は丸い点になるブラウザがあるため、四辺をグラデーションで描く） */
 .trim-bar-track {
-	--dash: linear-gradient(to right, var(--color-footer-link) 50%, transparent 0);
-	--dash-v: linear-gradient(to bottom, var(--color-footer-link) 50%, transparent 0);
-	position: absolute;
-	inset: calc(var(--dot) * 2) var(--handle);
-	background:
-		var(--dash) left top / calc(var(--dot) * 2) var(--dot) repeat-x,
-		var(--dash) left bottom / calc(var(--dot) * 2) var(--dot) repeat-x,
-		var(--dash-v) left top / var(--dot) calc(var(--dot) * 2) repeat-y,
-		var(--dash-v) right top / var(--dot) calc(var(--dot) * 2) repeat-y,
-		var(--color-bg-2);
+  --dash: linear-gradient(to right, var(--color-footer-link) 50%, transparent 0);
+  --dash-v: linear-gradient(to bottom, var(--color-footer-link) 50%, transparent 0);
+  position: absolute;
+  inset: calc(var(--dot) * 2) var(--handle);
+  background:
+    var(--dash) left top / calc(var(--dot) * 2) var(--dot) repeat-x,
+    var(--dash) left bottom / calc(var(--dot) * 2) var(--dot) repeat-x,
+    var(--dash-v) left top / var(--dot) calc(var(--dot) * 2) repeat-y,
+    var(--dash-v) right top / var(--dot) calc(var(--dot) * 2) repeat-y,
+    var(--color-bg-2);
 }
 
 .trim-bar-frame,
 .trim-bar-handle {
-	position: absolute;
-	top: 0;
-	bottom: 0;
+  position: absolute;
+  top: 0;
+  bottom: 0;
 }
 
 /* 波形。1 ドットを 1 画素として描いた canvas を、帯いっぱいにぼかさず拡大する */
 .trim-bar-wave {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	image-rendering: pixelated;
-	pointer-events: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
 .trim-bar-frame {
-	box-sizing: border-box;
-	background-color: var(--color-brand);
-	border-block: var(--dot) solid var(--color-footer-link);
+  box-sizing: border-box;
+  background-color: var(--color-brand);
+  border-block: var(--dot) solid var(--color-footer-link);
 }
 
 /* ハンドル。外側の角を 1 ドット欠き、真ん中に 2 × 3 の点を打つ */
 .trim-bar-handle {
-	width: var(--handle);
-	background-color: var(--color-footer-link);
-	cursor: ew-resize;
+  width: var(--handle);
+  background-color: var(--color-footer-link);
+  cursor: ew-resize;
 
-	&.start {
-		translate: -100% 0;
-		clip-path: polygon(
-			var(--dot) 0,
-			100% 0,
-			100% 100%,
-			var(--dot) 100%,
-			var(--dot) calc(100% - var(--dot)),
-			0 calc(100% - var(--dot)),
-			0 var(--dot),
-			var(--dot) var(--dot)
-		);
-	}
+  &.start {
+    translate: -100% 0;
+    clip-path: polygon(
+      var(--dot) 0,
+      100% 0,
+      100% 100%,
+      var(--dot) 100%,
+      var(--dot) calc(100% - var(--dot)),
+      0 calc(100% - var(--dot)),
+      0 var(--dot),
+      var(--dot) var(--dot)
+    );
+  }
 
-	&.end {
-		clip-path: polygon(
-			0 0,
-			calc(100% - var(--dot)) 0,
-			calc(100% - var(--dot)) var(--dot),
-			100% var(--dot),
-			100% calc(100% - var(--dot)),
-			calc(100% - var(--dot)) calc(100% - var(--dot)),
-			calc(100% - var(--dot)) 100%,
-			0 100%
-		);
-	}
+  &.end {
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--dot)) 0,
+      calc(100% - var(--dot)) var(--dot),
+      100% var(--dot),
+      100% calc(100% - var(--dot)),
+      calc(100% - var(--dot)) calc(100% - var(--dot)),
+      calc(100% - var(--dot)) 100%,
+      0 100%
+    );
+  }
 
-	&::before {
-		content: '';
-		position: absolute;
-		top: calc(50% - var(--dot) * 2.5);
-		left: var(--dot);
-		width: var(--dot);
-		height: var(--dot);
-		background-color: var(--color-bg-1);
-		box-shadow:
-			calc(var(--dot) * 2) 0 var(--color-bg-1),
-			0 calc(var(--dot) * 2) var(--color-bg-1),
-			calc(var(--dot) * 2) calc(var(--dot) * 2) var(--color-bg-1),
-			0 calc(var(--dot) * 4) var(--color-bg-1),
-			calc(var(--dot) * 2) calc(var(--dot) * 4) var(--color-bg-1);
-	}
+  &::before {
+    content: '';
+    position: absolute;
+    top: calc(50% - var(--dot) * 2.5);
+    left: var(--dot);
+    width: var(--dot);
+    height: var(--dot);
+    background-color: var(--color-bg-1);
+    box-shadow:
+      calc(var(--dot) * 2) 0 var(--color-bg-1),
+      0 calc(var(--dot) * 2) var(--color-bg-1),
+      calc(var(--dot) * 2) calc(var(--dot) * 2) var(--color-bg-1),
+      0 calc(var(--dot) * 4) var(--color-bg-1),
+      calc(var(--dot) * 2) calc(var(--dot) * 4) var(--color-bg-1);
+  }
 
-	/* :focus の outline を全体で消しているため、色を変えて示す */
-	&:focus-visible {
-		background-color: var(--color-active);
-	}
+  /* :focus の outline を全体で消しているため、色を変えて示す */
+  &:focus-visible {
+    background-color: var(--color-active);
+  }
 }
 
 /* 再生位置。明るい帯の上でも見えるよう、白い棒を濃い色の 1 ドットの縁で囲む */
 .trim-bar-playhead {
-	position: absolute;
-	top: calc(var(--dot) * -2);
-	bottom: calc(var(--dot) * -2);
-	box-sizing: border-box;
-	width: calc(var(--dot) * 4);
-	translate: -50% 0;
-	background-color: white;
-	border: var(--dot) solid var(--color-footer-link);
-	cursor: grab;
-	clip-path: polygon(
-		var(--dot) 0,
-		calc(100% - var(--dot)) 0,
-		calc(100% - var(--dot)) var(--dot),
-		100% var(--dot),
-		100% calc(100% - var(--dot)),
-		calc(100% - var(--dot)) calc(100% - var(--dot)),
-		calc(100% - var(--dot)) 100%,
-		var(--dot) 100%,
-		var(--dot) calc(100% - var(--dot)),
-		0 calc(100% - var(--dot)),
-		0 var(--dot),
-		var(--dot) var(--dot)
-	);
+  position: absolute;
+  top: calc(var(--dot) * -2);
+  bottom: calc(var(--dot) * -2);
+  box-sizing: border-box;
+  width: calc(var(--dot) * 4);
+  translate: -50% 0;
+  background-color: white;
+  border: var(--dot) solid var(--color-footer-link);
+  cursor: grab;
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% calc(100% - var(--dot)),
+    calc(100% - var(--dot)) calc(100% - var(--dot)),
+    calc(100% - var(--dot)) 100%,
+    var(--dot) 100%,
+    var(--dot) calc(100% - var(--dot)),
+    0 calc(100% - var(--dot)),
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
 
-	.trim-bar.dragging & {
-		cursor: grabbing;
-	}
+  .trim-bar.dragging & {
+    cursor: grabbing;
+  }
 
-	&:focus-visible {
-		border-color: var(--color-active);
-	}
+  &:focus-visible {
+    border-color: var(--color-active);
+  }
 }
 
 .trim-bar.disabled :is(.trim-bar-handle, .trim-bar-playhead) {
-	cursor: not-allowed;
+  cursor: not-allowed;
 }
 
 /* アイコンはドットで描く（色は文字色） */
@@ -710,610 +710,610 @@ input[type='color'] {
 .icon-speaker,
 .icon-waves,
 .icon-muted {
-	display: block;
-	flex-shrink: 0;
+  display: block;
+  flex-shrink: 0;
 }
 
 /* ▶（4 ドット × 7 ドット） */
 .icon-play {
-	width: calc(var(--dot) * 4);
-	height: calc(var(--dot) * 7);
-	background-color: currentColor;
-	clip-path: polygon(
-		0 0,
-		calc(var(--dot) * 1) 0,
-		calc(var(--dot) * 1) calc(var(--dot) * 1),
-		calc(var(--dot) * 2) calc(var(--dot) * 1),
-		calc(var(--dot) * 2) calc(var(--dot) * 2),
-		calc(var(--dot) * 3) calc(var(--dot) * 2),
-		calc(var(--dot) * 3) calc(var(--dot) * 3),
-		100% calc(var(--dot) * 3),
-		100% calc(var(--dot) * 4),
-		calc(var(--dot) * 3) calc(var(--dot) * 4),
-		calc(var(--dot) * 3) calc(var(--dot) * 5),
-		calc(var(--dot) * 2) calc(var(--dot) * 5),
-		calc(var(--dot) * 2) calc(var(--dot) * 6),
-		calc(var(--dot) * 1) calc(var(--dot) * 6),
-		calc(var(--dot) * 1) 100%,
-		0 100%
-	);
+  width: calc(var(--dot) * 4);
+  height: calc(var(--dot) * 7);
+  background-color: currentColor;
+  clip-path: polygon(
+    0 0,
+    calc(var(--dot) * 1) 0,
+    calc(var(--dot) * 1) calc(var(--dot) * 1),
+    calc(var(--dot) * 2) calc(var(--dot) * 1),
+    calc(var(--dot) * 2) calc(var(--dot) * 2),
+    calc(var(--dot) * 3) calc(var(--dot) * 2),
+    calc(var(--dot) * 3) calc(var(--dot) * 3),
+    100% calc(var(--dot) * 3),
+    100% calc(var(--dot) * 4),
+    calc(var(--dot) * 3) calc(var(--dot) * 4),
+    calc(var(--dot) * 3) calc(var(--dot) * 5),
+    calc(var(--dot) * 2) calc(var(--dot) * 5),
+    calc(var(--dot) * 2) calc(var(--dot) * 6),
+    calc(var(--dot) * 1) calc(var(--dot) * 6),
+    calc(var(--dot) * 1) 100%,
+    0 100%
+  );
 }
 
 /* ❚❚（2 ドットの棒を 1 ドットあけて 2 本） */
 .icon-pause {
-	width: calc(var(--dot) * 5);
-	height: calc(var(--dot) * 6);
-	background:
-		linear-gradient(currentColor, currentColor) 0 0 / calc(var(--dot) * 2) 100% no-repeat,
-		linear-gradient(currentColor, currentColor) 100% 0 / calc(var(--dot) * 2) 100% no-repeat;
+  width: calc(var(--dot) * 5);
+  height: calc(var(--dot) * 6);
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / calc(var(--dot) * 2) 100% no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / calc(var(--dot) * 2) 100% no-repeat;
 }
 
 /* スピーカー（4 ドット × 7 ドット） */
 .icon-speaker {
-	width: calc(var(--dot) * 4);
-	height: calc(var(--dot) * 7);
-	background-color: currentColor;
-	clip-path: polygon(
-		0 calc(var(--dot) * 2),
-		calc(var(--dot) * 2) calc(var(--dot) * 2),
-		calc(var(--dot) * 2) calc(var(--dot) * 1),
-		calc(var(--dot) * 3) calc(var(--dot) * 1),
-		calc(var(--dot) * 3) 0,
-		100% 0,
-		100% 100%,
-		calc(var(--dot) * 3) 100%,
-		calc(var(--dot) * 3) calc(var(--dot) * 6),
-		calc(var(--dot) * 2) calc(var(--dot) * 6),
-		calc(var(--dot) * 2) calc(var(--dot) * 5),
-		0 calc(var(--dot) * 5)
-	);
+  width: calc(var(--dot) * 4);
+  height: calc(var(--dot) * 7);
+  background-color: currentColor;
+  clip-path: polygon(
+    0 calc(var(--dot) * 2),
+    calc(var(--dot) * 2) calc(var(--dot) * 2),
+    calc(var(--dot) * 2) calc(var(--dot) * 1),
+    calc(var(--dot) * 3) calc(var(--dot) * 1),
+    calc(var(--dot) * 3) 0,
+    100% 0,
+    100% 100%,
+    calc(var(--dot) * 3) 100%,
+    calc(var(--dot) * 3) calc(var(--dot) * 6),
+    calc(var(--dot) * 2) calc(var(--dot) * 6),
+    calc(var(--dot) * 2) calc(var(--dot) * 5),
+    0 calc(var(--dot) * 5)
+  );
 }
 
 /* 音の波（短い棒と長い棒） */
 .icon-waves {
-	width: calc(var(--dot) * 3);
-	height: calc(var(--dot) * 7);
-	background:
-		linear-gradient(currentColor, currentColor) 0 calc(var(--dot) * 2) / var(--dot)
-			calc(var(--dot) * 3) no-repeat,
-		linear-gradient(currentColor, currentColor) calc(var(--dot) * 2) var(--dot) / var(--dot)
-			calc(var(--dot) * 5) no-repeat;
+  width: calc(var(--dot) * 3);
+  height: calc(var(--dot) * 7);
+  background:
+    linear-gradient(currentColor, currentColor) 0 calc(var(--dot) * 2) / var(--dot)
+      calc(var(--dot) * 3) no-repeat,
+    linear-gradient(currentColor, currentColor) calc(var(--dot) * 2) var(--dot) / var(--dot)
+      calc(var(--dot) * 5) no-repeat;
 }
 
 /* ミュートの ×（3 ドット × 3 ドット） */
 .icon-muted {
-	width: calc(var(--dot) * 3);
-	height: calc(var(--dot) * 3);
-	background:
-		linear-gradient(currentColor, currentColor) 0 0 / var(--dot) var(--dot) no-repeat,
-		linear-gradient(currentColor, currentColor) 100% 0 / var(--dot) var(--dot) no-repeat,
-		linear-gradient(currentColor, currentColor) 50% 50% / var(--dot) var(--dot) no-repeat,
-		linear-gradient(currentColor, currentColor) 0 100% / var(--dot) var(--dot) no-repeat,
-		linear-gradient(currentColor, currentColor) 100% 100% / var(--dot) var(--dot) no-repeat;
+  width: calc(var(--dot) * 3);
+  height: calc(var(--dot) * 3);
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 50% 50% / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 100% / var(--dot) var(--dot) no-repeat;
 }
 
 .file-input .pixel-button {
-	flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 /* ファイルの選択では、フォーカスを受けるのは隠した input なので、その隣のボタンの枠の色を変える */
 .file-input input:focus-visible + .pixel-button {
-	border-color: var(--color-active);
+  border-color: var(--color-active);
 }
 
 /* ボタンに見えているのは label なので、:disabled の代わりに隠した input を見て、押せないことを示す */
 .file-input input:disabled + .pixel-button {
-	filter: grayscale(1);
-	opacity: 0.5;
-	cursor: not-allowed;
-	pointer-events: none;
+  filter: grayscale(1);
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* 長いファイル名は末尾を … で省く（title で全体を出す）。パネル（タブ）の幅が広がらないよう、
    幅には効かせず、ボタンの横の空いた幅に収める */
 .file-name {
-	flex: 1 1 0;
-	width: 0;
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 select {
-	background: var(--color-none);
-	min-height: 2rem;
-	border-width: 1px;
-	border-style: solid;
-	border-color: gray;
+  background: var(--color-none);
+  min-height: 2rem;
+  border-width: 1px;
+  border-style: solid;
+  border-color: gray;
 }
 
 button {
-	background-color: inherit;
-	border: 2px solid var(--color-border);
-	padding: 0.5rem;
+  background-color: inherit;
+  border: 2px solid var(--color-border);
+  padding: 0.5rem;
 }
 
 nav {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	background: var(--color-bg-1);
-	padding: 4px 8px 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-1);
+  padding: 4px 8px 4px 8px;
 
-	& .utility {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-left: 10px;
-		background: var(--color-bg-1);
+  & .utility {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 10px;
+    background: var(--color-bg-1);
 
-		& > * {
-			margin-left: 10px;
-		}
-	}
+    & > * {
+      margin-left: 10px;
+    }
+  }
 }
 
 main {
-	padding-bottom: 2rem;
-	background: var(--color-bg-2);
-	line-height: 150%;
+  padding-bottom: 2rem;
+  background: var(--color-bg-2);
+  line-height: 150%;
 
-	& p {
-		max-width: 720px;
-	}
+  & p {
+    max-width: 720px;
+  }
 }
 
 section {
-	margin-top: 1.5rem;
+  margin-top: 1.5rem;
 }
 
 /* 「動画を作成する」ボタンと、その下のメッセージ・ダウンロードのリンク（playerMenu.svelte）は中央に並べる */
 .player-menu {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 0.5rem;
-	text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
 
-	& p {
-		margin: 0;
-	}
+  & p {
+    margin: 0;
+  }
 }
 
 footer {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 2rem 1rem;
-	color: white;
-	background: var(--color-brand);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  color: white;
+  background: var(--color-brand);
 
-	& a,
-	:visited {
-		color: var(--color-footer-link);
-	}
+  & a,
+  :visited {
+    color: var(--color-footer-link);
+  }
 
-	& a:hover {
-		color: white;
-	}
+  & a:hover {
+    color: white;
+  }
 
-	/* 3 段（リンク・ライセンス・コピーライト）の間をあける */
-	& > div {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
+  /* 3 段（リンク・ライセンス・コピーライト）の間をあける */
+  & > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
 
-	/* リンクとライセンスの間の水平線。幅はリンクの段にそろえる */
-	& hr {
-		width: 80%;
-		margin: 0 auto;
-		border: none;
-		border-top: 2px solid rgba(255, 255, 255, 0.4);
-	}
+  /* リンクとライセンスの間の水平線。幅はリンクの段にそろえる */
+  & hr {
+    width: 80%;
+    margin: 0 auto;
+    border: none;
+    border-top: 2px solid rgba(255, 255, 255, 0.4);
+  }
 
-	& div {
-		width: 100%;
+  & div {
+    width: 100%;
 
-		& p {
-			margin: 0;
-			text-align: center;
-		}
+    & p {
+      margin: 0;
+      text-align: center;
+    }
 
-		& div {
-			display: flex;
-			width: 80%;
-			max-width: 500px;
-			margin: 0 auto;
-			align-items: center;
-			justify-content: space-around;
-		}
-	}
+    & div {
+      display: flex;
+      width: 80%;
+      max-width: 500px;
+      margin: 0 auto;
+      align-items: center;
+      justify-content: space-around;
+    }
+  }
 }
 
 .error {
-	color: var(--color-error);
+  color: var(--color-error);
 }
 
 .note {
-	color: var(--color-note);
+  color: var(--color-note);
 }
 
 .no-button {
-	border: none;
-	background-color: var(--color-none);
+  border: none;
+  background-color: var(--color-none);
 
-	&:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .action-link {
-	text-decoration: underline;
-	cursor: pointer;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* メインの中身。キャンバスより上（.controls）・キャンバス・「動画を作成する」は、それぞれ別に中央に揃える。
    まとめて 1 つの幅で中央に置くと、広い方（大きいキャンバスなど）に合わせて、狭い方が左に寄る */
 .container {
-	padding: 1rem;
+  padding: 1rem;
 }
 
 /* キャンバスより上（使い方・タブ・再生プレイヤー）。中は左揃えのまま、かたまりごと中央に置く */
 .controls {
-	width: fit-content;
-	max-width: 100%;
-	margin-right: auto;
-	margin-left: auto;
+  width: fit-content;
+  max-width: 100%;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 /* ドット化した画像のプレビュー。画像の大きさのままではなく、パネルの幅いっぱいに拡大・縮小して見せる。
    ドットがぼけないよう、拡大は最近傍で行う */
 .img-preview-container {
-	max-width: 100%;
-	margin-top: 1rem;
+  max-width: 100%;
+  margin-top: 1rem;
 }
 
 #preview {
-	display: block;
-	width: 100%;
-	height: auto;
-	image-rendering: pixelated;
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
 }
 
 /* トリミングのボタンの列。右端に、調整中の範囲の大きさと縦横比を出す */
 .img-crop-toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem 0.75rem;
-	margin-bottom: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .img-crop-size {
-	display: flex;
-	gap: 0.5rem;
-	margin-left: auto;
-	font-variant-numeric: tabular-nums;
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
 }
 
 .img-crop-aspect {
-	color: var(--color-active);
+  color: var(--color-active);
 }
 
 /* プレビューとトリミングの枠（cropBox.svelte）を重ねる */
 .img-crop {
-	position: relative;
+  position: relative;
 }
 
 .crop-layer {
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 /* 範囲の外を暗くする。範囲と同じ位置の要素に大きな影を付け、プレビューからはみ出た影を切る */
 .crop-shade {
-	position: absolute;
-	inset: 0;
-	overflow: hidden;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 
-	& > div {
-		position: absolute;
-		box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.5);
-	}
+  & > div {
+    position: absolute;
+    box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.5);
+  }
 }
 
 /* 枠。ドラッグでページがスクロールしないよう、枠とハンドルの上ではタッチの既定の動きを止める */
 .crop-frame {
-	position: absolute;
-	box-sizing: border-box;
-	border: var(--dot) solid var(--color-bg-1);
-	outline: 1px solid rgb(0 0 0 / 0.4);
-	pointer-events: auto;
-	touch-action: none;
-	cursor: move;
-	user-select: none;
+  position: absolute;
+  box-sizing: border-box;
+  border: var(--dot) solid var(--color-bg-1);
+  outline: 1px solid rgb(0 0 0 / 0.4);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: move;
+  user-select: none;
 
-	/* :focus の outline を全体で消しているため、枠の色を変えて示す */
-	&:focus-visible {
-		border-color: var(--color-active);
-	}
+  /* :focus の outline を全体で消しているため、枠の色を変えて示す */
+  &:focus-visible {
+    border-color: var(--color-active);
+  }
 
-	.disabled & {
-		pointer-events: none;
-		opacity: 0.5;
-	}
+  .disabled & {
+    pointer-events: none;
+    opacity: 0.5;
+  }
 }
 
 /* ハンドル。つかみやすいよう、見た目（4 ドット四方の点）より広い 32px 四方で受ける。
    辺の真ん中と角に、中心を合わせて置く */
 .crop-handle {
-	position: absolute;
-	width: 32px;
-	height: 32px;
-	translate: -50% -50%;
-	touch-action: none;
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  translate: -50% -50%;
+  touch-action: none;
 
-	&::after {
-		content: '';
-		position: absolute;
-		inset: calc(50% - var(--dot) * 2);
-		background-color: var(--color-footer-link);
-		box-shadow: 0 0 0 var(--dot) var(--color-bg-1);
-	}
+  &::after {
+    content: '';
+    position: absolute;
+    inset: calc(50% - var(--dot) * 2);
+    background-color: var(--color-footer-link);
+    box-shadow: 0 0 0 var(--dot) var(--color-bg-1);
+  }
 
-	&.n,
-	&.s {
-		left: 50%;
-		cursor: ns-resize;
-	}
-	&.e,
-	&.w {
-		top: 50%;
-		cursor: ew-resize;
-	}
-	&.n,
-	&.nw,
-	&.ne {
-		top: 0;
-	}
-	&.s,
-	&.sw,
-	&.se {
-		top: 100%;
-	}
-	&.w,
-	&.nw,
-	&.sw {
-		left: 0;
-	}
-	&.e,
-	&.ne,
-	&.se {
-		left: 100%;
-	}
-	&.nw,
-	&.se {
-		cursor: nwse-resize;
-	}
-	&.ne,
-	&.sw {
-		cursor: nesw-resize;
-	}
+  &.n,
+  &.s {
+    left: 50%;
+    cursor: ns-resize;
+  }
+  &.e,
+  &.w {
+    top: 50%;
+    cursor: ew-resize;
+  }
+  &.n,
+  &.nw,
+  &.ne {
+    top: 0;
+  }
+  &.s,
+  &.sw,
+  &.se {
+    top: 100%;
+  }
+  &.w,
+  &.nw,
+  &.sw {
+    left: 0;
+  }
+  &.e,
+  &.ne,
+  &.se {
+    left: 100%;
+  }
+  &.nw,
+  &.se {
+    cursor: nwse-resize;
+  }
+  &.ne,
+  &.sw {
+    cursor: nesw-resize;
+  }
 }
 
 /* ドット化の縮小率。上の段に「縮小率・スライダー・N%」、下の段に右寄せで出来上がりの大きさを出す */
 .pixelation-size-row {
-	display: flex;
-	align-items: center;
-	gap: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 
-	& label {
-		white-space: nowrap;
-	}
+  & label {
+    white-space: nowrap;
+  }
 
-	& .pixel-range {
-		flex: 1;
-		min-width: 0;
-	}
+  & .pixel-range {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 /* 値の桁数でスライダーの幅が変わらないよう、見えない「100%」を重ねて、% の欄をその幅にそろえる */
 .pixelation-size-percent {
-	display: inline-grid;
-	text-align: right;
-	font-variant-numeric: tabular-nums;
+  display: inline-grid;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 
-	& > * {
-		grid-area: 1 / 1;
-	}
+  & > * {
+    grid-area: 1 / 1;
+  }
 
-	& > [aria-hidden='true'] {
-		visibility: hidden;
-	}
+  & > [aria-hidden='true'] {
+    visibility: hidden;
+  }
 }
 
 .pixelation-size-result {
-	text-align: right;
-	font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .canvas-container {
-	overflow: auto;
-	width: min-content;
-	max-width: 100%;
-	max-height: 100vh;
-	margin-right: auto;
-	margin-left: auto;
+  overflow: auto;
+  width: min-content;
+  max-width: 100%;
+  max-height: 100vh;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 #img-error {
-	display: none;
+  display: none;
 }
 
 .pixelation-active {
-	color: var(--color-active);
+  color: var(--color-active);
 }
 
 #js-mouse {
-	pointer-events: none;
-	position: fixed;
-	width: 20px;
-	height: 20px;
-	background-color: rgba(119, 70, 24, 0.2);
-	transform: translate(0, 0);
-	transition: transform 0.05s ease-out;
-	z-index: 9999;
-	opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(119, 70, 24, 0.2);
+  transform: translate(0, 0);
+  transition: transform 0.05s ease-out;
+  z-index: 9999;
+  opacity: 0;
 }
 
 #js-mouse.js-hover {
-	width: 30px;
-	height: 30px;
-	background-color: rgba(137, 185, 189, 0.5);
-	/* 色を変えながら同時に透明にする。opacity は mouse.svelte がプレイヤーの上で隠すのに使っているため filter で消す。
-	   背景色の透明度を 0 にすると、色が変わる前に消えて見える（透明度を掛けた色で補間されるため） */
-	filter: opacity(0);
-	transition:
-		background-color 0.3s linear,
-		filter 0.6s linear,
-		width 0.3s ease-out,
-		height 0.3s ease-out;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(137, 185, 189, 0.5);
+  /* 色を変えながら同時に透明にする。opacity は mouse.svelte がプレイヤーの上で隠すのに使っているため filter で消す。
+     背景色の透明度を 0 にすると、色が変わる前に消えて見える（透明度を掛けた色で補間されるため） */
+  filter: opacity(0);
+  transition:
+    background-color 0.3s linear,
+    filter 0.6s linear,
+    width 0.3s ease-out,
+    height 0.3s ease-out;
 }
 
 /* タブ（ファイル / 設定 / 動画設定）。
    どのタブを開いても幅が変わらないよう、タブの列とすべてのパネルを 1 列のグリッドに重ね、
    いちばん広いパネル（言語や中身で変わる）に列の幅を合わせる。固定の幅にすると、中身が変わるたびに合わせ直す必要がある */
 .tab-view {
-	display: grid;
-	width: fit-content;
-	max-width: 100%;
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .tab-view > .tab-panel {
-	grid-row: 2;
-	grid-column: 1;
+  grid-row: 2;
+  grid-column: 1;
 }
 
 /* 選んでいないパネルは、幅だけを列に効かせて見えなくする（display: none だと幅に効かない）。
    visibility: hidden なのでフォーカスも読み上げもされない。高さと上下の余白・枠は 0 にし、行の高さに効かせない */
 .tab-view > .tab-panel[hidden] {
-	display: block;
-	visibility: hidden;
-	height: 0;
-	padding-top: 0;
-	padding-bottom: 0;
-	border-bottom-width: 0;
-	overflow: hidden;
+  display: block;
+  visibility: hidden;
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-width: 0;
+  overflow: hidden;
 }
 
 /* 後から出たり長さが変わったりするもの（エラー・画像のプレビュー・ドット化の大きさ）は、パネルの幅に効かせず、その幅の中に収める。
    幅に効かせると、出たときにタブの幅が広がってしまう */
 .tab-panel :is(.error, .img-preview-container, .pixelation-size) {
-	width: 0;
-	min-width: 100%;
+  width: 0;
+  min-width: 100%;
 }
 
 .tabs {
-	display: flex;
-	align-items: flex-end;
-	margin-top: 1.5rem;
-	border-bottom: var(--dot) solid var(--color-footer-link);
+  display: flex;
+  align-items: flex-end;
+  margin-top: 1.5rem;
+  border-bottom: var(--dot) solid var(--color-footer-link);
 }
 
 /* ドット絵風のタブ。ボタンと同じ 1 ドットの枠で上の 2 隅を欠く。
    選んでいないタブは浮かせ（左上を明るく、右下を暗く）、選んでいるタブは平らにしてパネルとつなげる */
 .tab {
-	padding: 0.4rem 1rem;
-	white-space: nowrap;
-	color: var(--color-note);
-	border: var(--dot) solid var(--color-footer-link);
-	border-bottom: none;
-	/* 背景はページと同じ色。選択中のタブで、タブの列の下線を隠すのに使う */
-	background-color: var(--color-bg-2);
-	box-shadow:
-		inset var(--dot) var(--dot) 0 0 rgba(255, 255, 255, 0.7),
-		inset calc(var(--dot) * -1) 0 0 0 var(--color-border);
-	clip-path: polygon(
-		var(--dot) 0,
-		calc(100% - var(--dot)) 0,
-		calc(100% - var(--dot)) var(--dot),
-		100% var(--dot),
-		100% 100%,
-		0 100%,
-		0 var(--dot),
-		var(--dot) var(--dot)
-	);
-	cursor: pointer;
+  padding: 0.4rem 1rem;
+  white-space: nowrap;
+  color: var(--color-note);
+  border: var(--dot) solid var(--color-footer-link);
+  border-bottom: none;
+  /* 背景はページと同じ色。選択中のタブで、タブの列の下線を隠すのに使う */
+  background-color: var(--color-bg-2);
+  box-shadow:
+    inset var(--dot) var(--dot) 0 0 rgba(255, 255, 255, 0.7),
+    inset calc(var(--dot) * -1) 0 0 0 var(--color-border);
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% 100%,
+    0 100%,
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
+  cursor: pointer;
 
-	/* 隣のタブと枠線を重ね、隙間も二重線も作らない */
-	& + .tab {
-		margin-left: calc(var(--dot) * -1);
-	}
+  /* 隣のタブと枠線を重ね、隙間も二重線も作らない */
+  & + .tab {
+    margin-left: calc(var(--dot) * -1);
+  }
 
-	&:hover {
-		color: inherit;
-	}
+  &:hover {
+    color: inherit;
+  }
 
-	/* 選択中のタブは一段高くし、下の線を消してパネルとつなげる */
-	&[aria-selected='true'] {
-		/* 重ねた枠線が隣のタブに隠れないよう前に出す */
-		position: relative;
-		/* 下に 1 ドットはみ出させ、タブの列の下線を背景で隠す */
-		margin-bottom: calc(var(--dot) * -1);
-		padding-top: 0.6rem;
-		padding-bottom: calc(0.4rem + var(--dot));
-		color: var(--color-active);
-		box-shadow: none;
-		cursor: default;
-	}
+  /* 選択中のタブは一段高くし、下の線を消してパネルとつなげる */
+  &[aria-selected='true'] {
+    /* 重ねた枠線が隣のタブに隠れないよう前に出す */
+    position: relative;
+    /* 下に 1 ドットはみ出させ、タブの列の下線を背景で隠す */
+    margin-bottom: calc(var(--dot) * -1);
+    padding-top: 0.6rem;
+    padding-bottom: calc(0.4rem + var(--dot));
+    color: var(--color-active);
+    box-shadow: none;
+    cursor: default;
+  }
 
-	/* outline は clip-path で切れるため、キーボード操作のときは枠の色を変えて示す */
-	&:focus-visible {
-		border-color: var(--color-active);
-	}
+  /* outline は clip-path で切れるため、キーボード操作のときは枠の色を変えて示す */
+  &:focus-visible {
+    border-color: var(--color-active);
+  }
 }
 
 /* 狭い画面ではタブを折り返さず、3 つで幅を分け合う */
 @media (max-width: 480px) {
-	.tab {
-		flex: 1;
-		padding-right: 0.25rem;
-		padding-left: 0.25rem;
-	}
+  .tab {
+    flex: 1;
+    padding-right: 0.25rem;
+    padding-left: 0.25rem;
+  }
 }
 
 .tab-panel {
-	position: relative;
-	padding: 0 1rem 1rem;
-	border: var(--dot) solid var(--color-footer-link);
-	border-top: none;
+  position: relative;
+  padding: 0 1rem 1rem;
+  border: var(--dot) solid var(--color-footer-link);
+  border-top: none;
 
-	/* 下の 2 隅を 1 ドット欠く。clip-path を使うと中の選択欄のリスト（popover の無いブラウザで
-	   position: fixed で出すもの）まで切れるため、隅の 1 ドットをページの背景色で塗って欠く */
-	&::before,
-	&::after {
-		content: '';
-		position: absolute;
-		bottom: calc(var(--dot) * -1);
-		width: var(--dot);
-		height: var(--dot);
-		background-color: var(--color-bg-2);
-	}
+  /* 下の 2 隅を 1 ドット欠く。clip-path を使うと中の選択欄のリスト（popover の無いブラウザで
+     position: fixed で出すもの）まで切れるため、隅の 1 ドットをページの背景色で塗って欠く */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: calc(var(--dot) * -1);
+    width: var(--dot);
+    height: var(--dot);
+    background-color: var(--color-bg-2);
+  }
 
-	&::before {
-		left: calc(var(--dot) * -1);
-	}
+  &::before {
+    left: calc(var(--dot) * -1);
+  }
 
-	&::after {
-		right: calc(var(--dot) * -1);
-	}
+  &::after {
+    right: calc(var(--dot) * -1);
+  }
 
-	& > section:first-child {
-		margin-top: 0;
-		padding-top: 1rem;
-	}
+  & > section:first-child {
+    margin-top: 0;
+    padding-top: 1rem;
+  }
 }

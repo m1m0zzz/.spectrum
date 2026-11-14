@@ -1,55 +1,55 @@
 {
-	"name": "dot-spectrum",
-	"version": "0.0.1",
-	"private": true,
-	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "vite preview",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p src/service-worker",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest",
-		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write ."
-	},
-	"devDependencies": {
-		"@eslint/js": "10.0.1",
-		"@sveltejs/adapter-static": "4.0.1",
-		"@sveltejs/kit": "3.2.0",
-		"@sveltejs/vite-plugin-svelte": "7.3.1",
-		"@types/node": "26.6.6",
-		"eslint": "10.14.0",
-		"eslint-config-prettier": "10.1.8",
-		"eslint-plugin-svelte": "3.24.1",
-		"globals": "17.14.0",
-		"prettier": "3.9.10",
-		"prettier-plugin-svelte": "4.1.1",
-		"svelte": "5.57.3",
-		"svelte-check": "4.7.8",
-		"tslib": "2.9.1",
-		"typescript": "6.0.3",
-		"typescript-eslint": "8.72.2",
-		"vite": "8.3.8",
-		"vitest": "5.1.0"
-	},
-	"type": "module",
-	"imports": {
-		"#lib/*": "./src/lib/*"
-	},
-	"dependencies": {
-		"@ffmpeg/core": "^0.12.10",
-		"@ffmpeg/core-mt": "^0.12.10",
-		"@ffmpeg/ffmpeg": "^0.12.15",
-		"@ffmpeg/util": "^0.12.2",
-		"svelte-i18n": "^4.0.0"
-	},
-	"engines": {
-		"node": ">=24.15.0",
-		"npm": ">=12.0.0"
-	},
-	"allowScripts": {
-		"es5-ext": false,
-		"esbuild": false,
-		"fsevents": false
-	}
+  "name": "dot-spectrum",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p src/service-worker",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "test": "vitest",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@sveltejs/adapter-static": "4.0.1",
+    "@sveltejs/kit": "3.2.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-svelte": "3.24.1",
+    "globals": "17.14.0",
+    "prettier": "3.9.10",
+    "prettier-plugin-svelte": "4.1.1",
+    "svelte": "5.57.3",
+    "svelte-check": "4.7.8",
+    "tslib": "2.9.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
+  },
+  "type": "module",
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/core-mt": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "svelte-i18n": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=24.15.0",
+    "npm": ">=12.0.0"
+  },
+  "allowScripts": {
+    "es5-ext": false,
+    "esbuild": false,
+    "fsevents": false
+  }
 }
