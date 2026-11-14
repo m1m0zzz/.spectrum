@@ -19,6 +19,9 @@
 	export let disabled = false;
 
 	let previewRef: HTMLCanvasElement | null;
+	// プレビューの表示の縦横比。ドット化した大きさは幅と高さをそれぞれ切り捨てるため、縦横比がわずかにずれ、
+	// 幅いっぱいに見せると縮小率を動かすたびに高さが変わる。そこで、縮小する前の大きさの比で見せる
+	let previewAspect = '';
 	let img: HTMLImageElement | null;
 	let files: FileList | undefined;
 
@@ -68,6 +71,8 @@
 		const shown = cropping ? pixelate(source) : imageData;
 		previewRef.width = shown.width;
 		previewRef.height = shown.height;
+		const area = cropping ? source : crop;
+		previewAspect = `${area.width} / ${area.height}`;
 		previewRef.getContext('2d')?.putImageData(shown, 0, 0);
 	};
 
@@ -210,7 +215,13 @@
 			{/if}
 		</div>
 		<div class="img-crop">
-			<canvas id="preview" bind:this={previewRef} width="0" height="0"></canvas>
+			<canvas
+				id="preview"
+				bind:this={previewRef}
+				width="0"
+				height="0"
+				style:aspect-ratio={previewAspect || null}
+			></canvas>
 			{#if cropping && source}
 				<CropBox
 					width={source.width}
