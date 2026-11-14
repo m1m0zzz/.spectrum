@@ -557,7 +557,7 @@ input[type='color'] {
 .trim-bar {
 	--handle: calc(var(--dot) * 5);
 	position: relative;
-	height: calc(var(--dot) * 15);
+	height: calc(var(--dot) * 26);
 	cursor: pointer;
 	user-select: none;
 	/* ドラッグでページがスクロールしないようにする */

@@ -36,9 +36,9 @@
 	let trackWidth = 0;
 
 	// 波形を、1 ドットを 1 画素とした canvas に描き、帯いっぱいに拡大して見せる。
-	// 帯の高さ 11 ドットのうち、上下 1 ドットは枠なので、真ん中の 9 ドットに、中央から上下対称の棒を立てる。
-	// 棒の高さは曲の中でいちばん大きい音を 9 ドットとし、1・3・5・7・9 ドットの 5 段にする
-	const WAVE_ROWS = 11;
+	// 帯の高さ 22 ドットのうち、上下 1 ドットは枠なので、真ん中の 20 ドットに、中央から上下対称の棒を立てる。
+	// 棒の高さは曲の中でいちばん大きい音を 20 ドットとし、2・4・…・20 ドットの 10 段にする
+	const WAVE_ROWS = 22;
 	const drawWave = (canvas: HTMLCanvasElement, peaks: Float32Array | null, width: number) => {
 		if (!canvas) return;
 		const dot = parseFloat(getComputedStyle(canvas).getPropertyValue('--dot')) || 3;
@@ -50,14 +50,15 @@
 		const values = resamplePeaks(peaks, columns);
 		const max = values.reduce((a, b) => Math.max(a, b), 0);
 		if (max <= 0) return;
-		const center = (WAVE_ROWS - 1) / 2;
+		const center = WAVE_ROWS / 2;
+		const steps = center - 1;
 		ctx.fillStyle = 'white';
 		values.forEach((value, x) => {
 			const level = value / max;
 			// ほぼ無音のところは描かない
 			if (level < 0.02) return;
-			const half = Math.round(level * (center - 1));
-			ctx.fillRect(x, center - half, 1, half * 2 + 1);
+			const half = Math.max(1, Math.round(level * steps));
+			ctx.fillRect(x, center - half, 1, half * 2);
 		});
 	};
 	$: drawWave(wave, waveform, trackWidth);
