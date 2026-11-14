@@ -111,3 +111,12 @@ export const recordingVideoBitrate = (width: number, height: number, settings: E
   const bps = width * height * settings.fps * BITS_PER_PIXEL[settings.quality];
   return Math.round(Math.min(Math.max(bps, 2_500_000), 16_000_000));
 };
+
+// ffmpeg のログ（進み具合の行の「time=00:01:02.50」）から、書き出し済みの長さ（秒）を読む。
+// -ss を -i の後ろに置いているため、time は出力の先頭からの時間になる。該当しない行は null。
+// 組み込みの progress イベントは入力の長さで割るが、MediaRecorder の WebM は長さを持たないため使わない
+export const parseProgressTime = (message: string): number | null => {
+  const match = /time=(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(message);
+  if (!match) return null;
+  return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+};

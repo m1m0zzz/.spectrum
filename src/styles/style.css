@@ -882,6 +882,11 @@ section {
   }
 }
 
+/* 変換の進み具合。数字の幅をそろえ、% が変わっても文字が揺れないようにする */
+.convert-progress {
+  font-variant-numeric: tabular-nums;
+}
+
 footer {
   display: flex;
   justify-content: center;

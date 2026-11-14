@@ -1,6 +1,12 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
-import { buildOutputArgs, mimeTypeOf, type EncodeSettings, type Trim } from './encode.ts';
+import {
+  buildOutputArgs,
+  mimeTypeOf,
+  parseProgressTime,
+  type EncodeSettings,
+  type Trim
+} from './encode.ts';
 // コアはビルドに同梱して同じオリジンから配る（?url でファイルとして出力される）。
 // $ffmpeg-core / $ffmpeg-core-mt は vite.config.ts の別名で、各パッケージの dist/esm を指す。
 // どちらも約 32MB あるため、service worker の事前キャッシュからは外している
@@ -65,7 +71,13 @@ export const load = () => {
 const VIDEO_KEY = 'video';
 
 // 録画した WebM を設定に従って変換する。return: blob url
-export const convertVideo = async (file: File, settings: EncodeSettings, trim?: Trim) => {
+// onProgress には変換の進み具合（0〜1）を渡す。書き出す長さ（trim.duration）が分かるときだけ呼ぶ
+export const convertVideo = async (
+  file: File,
+  settings: EncodeSettings,
+  trim?: Trim,
+  onProgress?: (ratio: number) => void
+) => {
   const { ffmpeg, multiThread } = await load();
   const outputName = `output.${settings.format}`;
   await ffmpeg.writeFile(VIDEO_KEY, await fetchFile(file));
@@ -73,6 +85,12 @@ export const convertVideo = async (file: File, settings: EncodeSettings, trim?: 
   const args = multiThread
     ? [...MT_ARGS.input, '-i', VIDEO_KEY, ...MT_ARGS.output, ...output]
     : ['-i', VIDEO_KEY, ...output];
+  const total = trim?.duration ?? 0;
+  const onLog = ({ message }: { message: string }) => {
+    const time = parseProgressTime(message);
+    if (time != null) onProgress?.(Math.min(1, time / total));
+  };
+  if (onProgress && total > 0) ffmpeg.on('log', onLog);
   try {
     console.time('exec');
     const code = await ffmpeg.exec(args);
@@ -82,6 +100,7 @@ export const convertVideo = async (file: File, settings: EncodeSettings, trim?: 
     const data = (await ffmpeg.readFile(outputName)) as Uint8Array<ArrayBuffer>;
     return URL.createObjectURL(new Blob([data], { type: mimeTypeOf(settings.format) }));
   } finally {
+    ffmpeg.off('log', onLog);
     // 仮想ファイルシステムはメモリ上にあるため、書き出すたびに消さないと溜まっていく
     await ffmpeg.deleteFile(VIDEO_KEY).catch(() => {});
     await ffmpeg.deleteFile(outputName).catch(() => {});

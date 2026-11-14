@@ -23,6 +23,8 @@
   let error = false;
   let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = 'idle';
   let convertError = false;
+  // 変換（ffmpeg）の進み具合（0〜1）
+  let convertProgress = 0;
 
   $: busy = status == 'generating' || status == 'converting';
 
@@ -106,7 +108,10 @@
       const filename = formatDate(new Date());
       const webmFile = new File([videoBlob], filename + '.webm', { type: videoBlob.type });
       status = 'converting';
-      convertVideo(webmFile, encode, { start: lead, duration })
+      convertProgress = 0;
+      convertVideo(webmFile, encode, { start: lead, duration }, (ratio) => {
+        convertProgress = Math.max(convertProgress, ratio);
+      })
         .then((url) => {
           status = 'completed';
           if (anchor.href.startsWith('blob:')) URL.revokeObjectURL(anchor.href);
@@ -150,6 +155,11 @@
   <p style:display={busy ? 'block' : 'none'}>
     {$_('generate_video_message')}
   </p>
+  {#if status == 'converting'}
+    <p class="convert-progress">
+      {$_('convert_progress', { values: { percent: Math.floor(convertProgress * 100) } })}
+    </p>
+  {/if}
   <p class="error" style:display={ffmpegStatus == 'error' ? 'block' : 'none'}>
     {$_('ffmpeg_error')}
   </p>

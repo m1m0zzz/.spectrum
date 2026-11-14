@@ -48,6 +48,7 @@
   "export_speed_slow": "slow (smaller file)",
   "export_fps": "frame rate: ",
   "export_audio_bitrate": "audio bitrate: ",
+  "convert_progress": "Converting: {percent}%",
   "convert_error": "error: failed to convert the video.",
   "tab_file": "📁 Files",
   "tab_settings": "⚙️ Settings",

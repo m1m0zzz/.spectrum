@@ -48,6 +48,7 @@
   "export_speed_slow": "遅い（ファイルが小さめ）",
   "export_fps": "フレームレート: ",
   "export_audio_bitrate": "音声ビットレート: ",
+  "convert_progress": "変換中: {percent}%",
   "convert_error": "エラー: 動画の変換に失敗しました",
   "tab_file": "📁 ファイル",
   "tab_settings": "⚙️ 設定",

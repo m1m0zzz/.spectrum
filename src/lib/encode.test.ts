@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildOutputArgs, defaultEncodeSettings, recordingVideoBitrate } from './encode.ts';
+import {
+  buildOutputArgs,
+  defaultEncodeSettings,
+  parseProgressTime,
+  recordingVideoBitrate
+} from './encode.ts';
 
 const valueOf = (args: string[], flag: string) => args[args.indexOf(flag) + 1];
 
@@ -43,5 +48,21 @@ describe('recordingVideoBitrate', () => {
     expect(recordingVideoBitrate(320, 320, defaultEncodeSettings)).toBe(2_500_000);
     const high = { ...defaultEncodeSettings, quality: 'high' as const, fps: 60 };
     expect(recordingVideoBitrate(1920, 1080, high)).toBe(16_000_000);
+  });
+});
+
+describe('parseProgressTime', () => {
+  it('reads time= from a progress line', () => {
+    expect(
+      parseProgressTime(
+        'frame=  150 fps= 30 q=28.0 size=     256kB time=00:01:02.50 bitrate= 33.5kbits/s speed=1.2x'
+      )
+    ).toBeCloseTo(62.5);
+    expect(parseProgressTime('size=0kB time=01:00:00.00 bitrate=N/A')).toBe(3600);
+  });
+
+  it('returns null for other lines and unknown time', () => {
+    expect(parseProgressTime("Input #0, matroska,webm, from 'video':")).toBeNull();
+    expect(parseProgressTime('size=0kB time=N/A bitrate=N/A')).toBeNull();
   });
 });
