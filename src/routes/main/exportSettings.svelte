@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
-	import PixelNumber from './pixelNumber.svelte';
 	import PixelSelect from './pixelSelect.svelte';
 	import {
 		audioBitrates,
@@ -11,12 +10,8 @@
 		type EncodeSettings
 	} from '#lib/encode.ts';
 
+	// 書き出す範囲は、ファイルタブの音声の下（audioRange.svelte）で決める
 	export let settings: EncodeSettings;
-	export let rangeStart: number;
-	export let rangeEnd: number;
-	// 曲を読み込んだうえで範囲が正しくないとき true
-	export let rangeError: boolean;
-	export let audioDuration: number;
 	// 書き出し中は設定を変えられないようにする
 	export let busy: boolean;
 
@@ -28,36 +23,6 @@
 </script>
 
 <section>
-	<p>
-		<span>{$_('export_range')}</span>
-		<PixelNumber>
-			<input
-				type="number"
-				min="0"
-				max={audioDuration}
-				step="0.1"
-				bind:value={rangeStart}
-				aria-label={$_('export_range_start')}
-				disabled={busy}
-			/>
-		</PixelNumber>
-		<span>〜</span>
-		<PixelNumber>
-			<input
-				type="number"
-				min="0"
-				max={audioDuration}
-				step="0.1"
-				bind:value={rangeEnd}
-				aria-label={$_('export_range_end')}
-				disabled={busy}
-			/>
-		</PixelNumber>
-		<span>{$_('export_range_seconds')}</span>
-	</p>
-	{#if rangeError}
-		<p class="error">{$_('export_range_error')}</p>
-	{/if}
 	<p>
 		<span id="export-format-label">{$_('export_format')}</span>
 		<PixelSelect

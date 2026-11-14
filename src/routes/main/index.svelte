@@ -6,6 +6,7 @@
 
 	import ImageUploader from './imageUploader.svelte';
 	import AudioUploader from './audioUploader.svelte';
+	import AudioRange from './audioRange.svelte';
 	import PlayerCanvas from './playerCanvas.svelte';
 	import PlayerMenu from './playerMenu.svelte';
 	import ExportSettings from './exportSettings.svelte';
@@ -17,6 +18,11 @@
 	let imageLoaded = false;
 	let imageData: ImageData;
 	let audioDuration = 0;
+	// 再生位置（秒）と、範囲のハンドルをドラッグしているか。再生プレイヤー（AudioPlayer）が持つ
+	let currentTime = 0;
+	let trimming = false;
+	let audioPlayer: AudioPlayer;
+	let waveform: Float32Array | null = null;
 	let audioContext: AudioContext | null;
 	let nodeAnalyser: AnalyserNode | null;
 	let recorderDestination: MediaStreamAudioDestinationNode;
@@ -152,7 +158,23 @@
 						{fftSize}
 						{recorderDestination}
 						disabled={exporting}
+						bind:waveform
 					/>
+					<!-- 書き出す範囲は、音声の下で波形を見ながら決める -->
+					{#if audioDuration > 0}
+						<AudioRange
+							duration={audioDuration}
+							bind:rangeStart
+							bind:rangeEnd
+							current={currentTime}
+							{rangeError}
+							{waveform}
+							disabled={exporting}
+							on:seek={(e) => audioPlayer.seek(e.detail)}
+							on:trimstart={() => (trimming = true)}
+							on:trimend={() => (trimming = false)}
+						/>
+					{/if}
 				</div>
 
 				<div
@@ -255,14 +277,7 @@
 					aria-labelledby="tab-video"
 					hidden={activeTab != 'video'}
 				>
-					<ExportSettings
-						bind:settings={encodeSettings}
-						bind:rangeStart
-						bind:rangeEnd
-						{rangeError}
-						{audioDuration}
-						busy={exporting}
-					/>
+					<ExportSettings bind:settings={encodeSettings} busy={exporting} />
 				</div>
 			</div>
 
@@ -270,10 +285,13 @@
 			     作成中は一時停止・シーク・音量で録画が止まる・ずれる・音が変わるため、操作できなくする -->
 			<section>
 				<AudioPlayer
+					bind:this={audioPlayer}
 					bind:audio={audioRef}
 					bind:duration={audioDuration}
-					bind:rangeStart
-					bind:rangeEnd
+					bind:currentTime
+					{rangeStart}
+					{rangeEnd}
+					{trimming}
 					locked={exporting}
 				/>
 			</section>

@@ -1,14 +1,15 @@
 <script lang="ts">
 	// ドット絵風の再生プレイヤー。ブラウザの audio のコントロールは見た目を変えられないため、
 	// <audio> は見せずに置き、再生・時間・シーク・ミュート・音量を自前で作る。
-	// シークバーは書き出しの範囲の設定を兼ね（TrimBar）、再生と時間の表示も範囲の中で行う。
+	// 再生・シーク・時間の表示は、書き出しの範囲（ファイルタブの TrimBar で決める）の中で行う。
+	// シークバーは範囲の頭から終わりまでの、ふつうのスライダー。
+	// 再生位置（currentTime）とシーク（seek）は、ファイルタブの TrimBar からも使う。
 	// 書き出しの処理も JS から再生・シーク・一時停止するため、bind:paused などの双方向のバインドは使わない
 	// （画面側の値が audio を操作し返して、書き出しの再生を止めたりシークを戻したりしうる）。
 	// audio の状態はイベントで読むだけにし、操作は押したときにだけ audio に直接する
 	import { onDestroy } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import { clamp } from '#lib/util.ts';
-	import TrimBar from './trimBar.svelte';
 
 	// 親（AudioUploader・書き出し）が使う audio 要素と、曲の長さ（秒。読み込む前は 0）
 	export let audio: HTMLAudioElement | null = null;
@@ -18,8 +19,11 @@
 	export let rangeEnd: number;
 	// 動画の作成中など、操作させたくないとき true
 	export let locked = false;
+	// TrimBar のハンドルをドラッグしているか
+	export let trimming = false;
+	// 再生位置（秒）。親へは読み取り用に返す
+	export let currentTime = 0;
 
-	let currentTime = 0;
 	let mediaDuration = NaN;
 	let paused = true;
 	let volume = 1;
@@ -34,8 +38,6 @@
 	// 範囲の終わりまで来たら止める（録画中は書き出しの処理が止める）。
 	// 範囲の頭へ戻して再生した直後、Safari はシークが済むまで元の位置を返すことがあるため、シーク中は見ない。
 	// ハンドルをドラッグしているあいだも見ない（終わりのハンドルが再生位置を横切っても止めない）
-	// ハンドルをドラッグしているか
-	let trimming = false;
 	let frame = 0;
 	const follow = () => {
 		if (!audio) return;
@@ -59,7 +61,7 @@
 	// 再生位置を範囲の中へ移す。
 	// 曲の長さちょうどへシークすると、Firefox は読み込みが止まり、その後の再生（書き出しも）が進まなくなる。
 	// 最後まで送っても、ほんの少し手前で止める
-	const seek = (t: number) => {
+	export const seek = (t: number) => {
 		if (!audio) return;
 		audio.currentTime = Math.min(clamp(t, start, end), Math.max(0, duration - 0.05));
 		currentTime = audio.currentTime;
@@ -67,12 +69,13 @@
 
 	// 範囲が変わって再生位置が外に出たら、範囲の中へ戻す。止まっているときは近い方の端へ、
 	// 再生中は範囲の頭へ戻して再生を続ける（終わりの端へ戻すと、そこですぐ止まってしまう）。
-	// ハンドルをドラッグしているあいだは戻さない（再生位置に吸着させるため、再生位置は動かさない）
+	// ハンドルをドラッグしているあいだは戻さない（再生位置に吸着させるため、再生位置は動かさない）。
+	// ドラッグを終えたときに戻す
 	const keepInRange = (start: number, end: number) => {
 		if (!audio || !ready || trimming || locked) return;
 		if (currentTime < start || currentTime > end) seek(audio.paused ? currentTime : start);
 	};
-	$: keepInRange(start, end);
+	$: if (!trimming) keepInRange(start, end);
 
 	const toggle = () => {
 		if (!audio || !ready) return;
@@ -108,18 +111,20 @@
 			frame = requestAnimationFrame(follow);
 		}}
 	></audio>
-	<TrimBar
-		{duration}
-		bind:start={rangeStart}
-		bind:end={rangeEnd}
-		current={currentTime}
+	<input
+		type="range"
+		class="pixel-range audio-player-seek"
+		min="0"
+		max={end - start}
+		step="any"
+		value={clamp(currentTime, start, end) - start}
+		aria-label={$_('audio_seek')}
+		aria-valuetext="{format(clamp(currentTime, start, end) - start)} / {format(end - start)}"
 		disabled={!ready || locked}
-		on:seek={(e) => seek(e.detail)}
-		on:trimstart={() => (trimming = true)}
-		on:trimend={() => {
-			trimming = false;
-			keepInRange(start, end);
-		}}
+		on:input={(e) => seek(start + Number(e.currentTarget.value))}
+		style:--progress="{end > start
+			? ((clamp(currentTime, start, end) - start) / (end - start)) * 100
+			: 0}%"
 	/>
 	<div class="audio-player-controls">
 		<button
