@@ -500,13 +500,14 @@ input[type='color'] {
   }
 }
 
-/* 再生プレイヤー（audioPlayer.svelte）。上にシークバー、下に再生・時間・ミュート・音量 */
+/* 再生プレイヤー（audioPlayer.svelte）。上にシークバー、下に再生・時間・ミュート・音量。
+   幅はタブ（.tab-view）に合わせる。width: 0 で .controls の幅に効かせず、min-width: 100% で広げる */
 .audio-player {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  width: 460px;
-  max-width: 100%;
+  width: 0;
+  min-width: 100%;
 }
 
 .audio-player-seek {
