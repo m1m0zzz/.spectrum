@@ -3,18 +3,21 @@
   // 画像のプレビューに重ねる、トリミングの枠。枠の内側をつかむと動かし、辺と角のハンドルで大きさを変える。
   // Pointer Events で扱うので、マウスとタッチのどちらでも操作できる。
   // 枠にフォーカスすると、矢印キーで動かし、Shift + 矢印キーで大きさを変えられる
-  import { createEventDispatcher } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
   import { _ } from 'svelte-i18n';
   import { dragRect, sameRect, type Handle, type Rect } from '#lib/crop.ts';
 
-  // 元の画像の大きさ（px）と、トリミングの範囲（元の画像の px）
-  export let width: number;
-  export let height: number;
-  export let rect: Rect;
-  export let disabled = false;
-
-  // 範囲を動かし終えた
-  const dispatch = createEventDispatcher<{ change: Rect }>();
+  type Props = {
+    // 元の画像の大きさ（px）と、トリミングの範囲（元の画像の px）
+    width: number;
+    height: number;
+    rect: Rect;
+    disabled?: boolean;
+    // 範囲を動かし終えたとき（ドラッグを離したとき・キーで動かしたとき）に呼ぶ
+    onchange?: (rect: Rect) => void;
+  } & Omit<HTMLAttributes<HTMLDivElement>, 'onchange'>;
+  // ほかの属性（data-* など）は rest に入れ、いちばん外の要素に付ける
+  let { width, height, rect = $bindable(), disabled = false, onchange, ...rest }: Props = $props();
 
   // 縦横比に吸着させる距離と、範囲の最小の大きさ（画面上の px）
   const SNAP_PX = 8;
@@ -22,11 +25,11 @@
   // 辺のハンドルを先に置き、重なったときは角のハンドルを上にする
   const HANDLES = ['n', 'e', 's', 'w', 'nw', 'ne', 'se', 'sw'] as const;
 
-  let layer: HTMLElement;
-  let frame: HTMLElement;
+  let layer: HTMLElement | undefined = $state();
+  let frame: HTMLElement | undefined = $state();
 
   // 画面上の 1px にあたる、元の画像の px
-  const scale = () => width / layer.getBoundingClientRect().width;
+  const scale = () => width / (layer?.getBoundingClientRect().width ?? width);
   const options = () => ({ minSize: MIN_PX * scale(), snap: SNAP_PX * scale() });
 
   const percent = (value: number, length: number) => `${(value / length) * 100}%`;
@@ -34,7 +37,7 @@
   // ドラッグ。押したときの範囲と位置からの差で動かす（動かすたびに丸めた範囲から足すと、ずれがたまるため）
   let dragging: Handle | null = null;
   let pointerId = -1;
-  let startRect: Rect = rect;
+  let startRect: Rect = { x: 0, y: 0, width: 0, height: 0 };
   let startX = 0;
   let startY = 0;
 
@@ -48,8 +51,8 @@
     startX = event.clientX;
     startY = event.clientY;
     event.preventDefault();
-    frame.focus({ preventScroll: true });
-    frame.setPointerCapture(event.pointerId);
+    frame?.focus({ preventScroll: true });
+    frame?.setPointerCapture(event.pointerId);
   };
   const onPointerMove = (event: PointerEvent) => {
     if (!dragging || event.pointerId != pointerId) return;
@@ -66,7 +69,7 @@
   const onPointerUp = (event: PointerEvent) => {
     if (!dragging || event.pointerId != pointerId) return;
     dragging = null;
-    if (!sameRect(rect, startRect)) dispatch('change', rect);
+    if (!sameRect(rect, startRect)) onchange?.(rect);
   };
 
   // キーボード。画像の幅の 1% ずつ（小さい画像では 1px ずつ）動かす
@@ -90,13 +93,13 @@
     );
     if (sameRect(next, rect)) return;
     rect = next;
-    dispatch('change', rect);
+    onchange?.(rect);
   };
 </script>
 
 <!-- 使う側が渡したほかの属性（data-* など）は、いちばん外の要素に付ける。
      この要素はマウスを受けない（pointer-events: none）ため、カーソルの下の要素から closest() でたどると、枠の上でだけ見つかる -->
-<div {...$$restProps} class={[styles.layer, disabled && styles.disabled]} bind:this={layer}>
+<div {...rest} class={[styles.layer, disabled && styles.disabled]} bind:this={layer}>
   <!-- 範囲の外を暗くする。範囲と同じ位置に置いた要素の影で覆い、はみ出た影は切る -->
   <div class={styles.shade}>
     <div
@@ -120,11 +123,11 @@
     tabindex={disabled ? -1 : 0}
     aria-label={$_('crop_area')}
     aria-disabled={disabled || undefined}
-    on:pointerdown={onPointerDown}
-    on:pointermove={onPointerMove}
-    on:pointerup={onPointerUp}
-    on:pointercancel={onPointerUp}
-    on:keydown={onKeydown}
+    onpointerdown={onPointerDown}
+    onpointermove={onPointerMove}
+    onpointerup={onPointerUp}
+    onpointercancel={onPointerUp}
+    onkeydown={onKeydown}
   >
     {#each HANDLES as handle (handle)}
       <span class={[styles.handle, styles[handle]]} data-handle={handle}></span>

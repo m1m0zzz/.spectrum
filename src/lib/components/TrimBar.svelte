@@ -5,29 +5,42 @@
   // ハンドルと縦棒はそれぞれ role="slider" にし、キーボードでも動かせるようにする。
   // 範囲の中には、曲の波形を白いドットで描く。
   // 範囲のハンドルを長押しすると、バーがハンドルのまわりを横に 10 倍にズームし、細かく調節できる（離すと戻る）
-  import { createEventDispatcher, onDestroy } from 'svelte';
-  import { tweened } from 'svelte/motion';
+  import { onDestroy } from 'svelte';
+  import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
+  import type { HTMLAttributes } from 'svelte/elements';
   import { _ } from 'svelte-i18n';
   import { clamp } from '#lib/util.ts';
   import { resamplePeaks } from '#lib/waveform.ts';
 
-  // 曲の長さ（秒）と、範囲・再生位置（秒）
-  export let duration: number;
-  export let start: number;
-  export let end: number;
-  export let current: number;
-  export let disabled = false;
-  // 波形（区間ごとの振幅の最大。computePeaks の結果）。読み込む前やデコードできなかったときは null
-  export let waveform: Float32Array | null = null;
-
-  const dispatch = createEventDispatcher<{
+  type Props = {
+    // 曲の長さ（秒）と、範囲・再生位置（秒）
+    duration: number;
+    start: number;
+    end: number;
+    current: number;
+    disabled?: boolean;
+    // 波形（区間ごとの振幅の最大。computePeaks の結果）。読み込む前やデコードできなかったときは null
+    waveform?: Float32Array | null;
     // 再生位置を動かした（範囲内に収めた秒）
-    seek: number;
+    onseek?: (time: number) => void;
     // 範囲を動かし始めた・動かし終えた
-    trimstart: void;
-    trimend: void;
-  }>();
+    ontrimstart?: () => void;
+    ontrimend?: () => void;
+  } & HTMLAttributes<HTMLDivElement>;
+  // ほかの属性（data-* など）は rest に入れ、いちばん外の要素に付ける
+  let {
+    duration,
+    start = $bindable(),
+    end = $bindable(),
+    current,
+    disabled = false,
+    waveform = null,
+    onseek,
+    ontrimstart,
+    ontrimend,
+    ...rest
+  }: Props = $props();
 
   // 範囲の最短の長さ（秒）
   const MIN_LENGTH = 0.1;
@@ -41,25 +54,27 @@
   // バーに見せている時間の幅（秒）。ふだんは曲全体で、長押しの間はズームする。
   // ズームはハンドル（anchorTime 秒）の画面上の位置を動かさずに行う。こうすると、ズームしても
   // ハンドルが指の下から逃げず、表示の幅も曲の中に収まる（viewStart = anchorFraction × (曲の長さ − 幅)）
-  const zoom = tweened(0, { duration: 200, easing: cubicOut });
-  let anchorTime = 0;
-  let anchorFraction = 0;
-  $: viewLength = duration + (duration / ZOOM - duration) * $zoom;
-  $: viewStart = clamp(anchorTime - anchorFraction * viewLength, 0, duration - viewLength);
+  const zoom = new Tween(0, { duration: 200, easing: cubicOut });
+  let anchorTime = $state(0);
+  let anchorFraction = $state(0);
+  const viewLength = $derived(duration + (duration / ZOOM - duration) * zoom.current);
+  const viewStart = $derived(
+    clamp(anchorTime - anchorFraction * viewLength, 0, duration - viewLength)
+  );
 
-  let track: HTMLElement;
-  let playhead: HTMLElement;
-  let wave: HTMLCanvasElement;
-  let trackWidth = 0;
+  let track: HTMLElement | undefined = $state();
+  let playhead: HTMLElement | undefined = $state();
+  let wave: HTMLCanvasElement | undefined = $state();
+  let trackWidth = $state(0);
 
   // 波形を、1 ドットを 1 画素とした canvas に描き、帯いっぱいに拡大して見せる。
   // 帯の高さ 22 ドットのうち、上下 1 ドットは枠なので、真ん中の 20 ドットに、中央から上下対称の棒を立てる。
   // 棒の高さは曲の中でいちばん大きい音を 20 ドットとし、2・4・…・20 ドットの 10 段にする
   const WAVE_ROWS = 22;
   // ズームしても棒の高さが変わらないよう、高さは曲全体でいちばん大きい音に合わせる
-  $: waveMax = waveform ? waveform.reduce((a, b) => Math.max(a, b), 0) : 0;
+  const waveMax = $derived(waveform ? waveform.reduce((a, b) => Math.max(a, b), 0) : 0);
   const drawWave = (
-    canvas: HTMLCanvasElement,
+    canvas: HTMLCanvasElement | undefined,
     peaks: Float32Array | null,
     max: number,
     width: number,
@@ -85,27 +100,29 @@
       ctx.fillRect(x, center - half, 1, half * 2);
     });
   };
-  $: drawWave(
-    wave,
-    waveform,
-    waveMax,
-    trackWidth,
-    duration > 0 ? viewStart / duration : 0,
-    duration > 0 ? (viewStart + viewLength) / duration : 1
+  $effect(() =>
+    drawWave(
+      wave,
+      waveform,
+      waveMax,
+      trackWidth,
+      duration > 0 ? viewStart / duration : 0,
+      duration > 0 ? (viewStart + viewLength) / duration : 1
+    )
   );
 
   // 数値の入力欄から範囲外や逆転した値が入っても、表示が崩れないようにする
-  $: s = clamp(start, 0, duration);
-  $: e = clamp(end, s, duration);
+  const s = $derived(clamp(start, 0, duration));
+  const e = $derived(clamp(end, s, duration));
   // バーの左端からの位置（%）。ズームしているときは、見せている幅の外（0 未満・100 超）になりうる
   const position = (t: number, from: number, length: number) =>
     length > 0 ? ((t - from) / length) * 100 : 0;
-  $: startPos = position(s, viewStart, viewLength);
-  $: endPos = position(e, viewStart, viewLength);
-  $: currentPos = position(current, viewStart, viewLength);
+  const startPos = $derived(position(s, viewStart, viewLength));
+  const endPos = $derived(position(e, viewStart, viewLength));
+  const currentPos = $derived(position(current, viewStart, viewLength));
   // 範囲の枠と波形は、見せている幅の中だけに描く。幅の外に出たハンドルと縦棒は隠す
-  $: frameLeft = clamp(startPos, 0, 100);
-  $: frameRight = clamp(endPos, 0, 100);
+  const frameLeft = $derived(clamp(startPos, 0, 100));
+  const frameRight = $derived(clamp(endPos, 0, 100));
   const visible = (pos: number) => (-0.01 <= pos && pos <= 100.01 ? null : 'hidden');
   // 隠しても要素はその位置に残り、バーの外の遠くにあるとページにスクロールバーが出るため、位置もバーの中に止める
   const inside = (pos: number) => `${clamp(pos, 0, 100)}%`;
@@ -114,11 +131,12 @@
   const round = (t: number) => Math.round(t * 100) / 100;
 
   // バーの外も含めた、横位置にあたる秒（つかんだ位置のずれを正しくとるため、ここでは端で止めない）
+  const trackRect = () => track?.getBoundingClientRect() ?? new DOMRect();
   const timeAt = (clientX: number) => {
-    const rect = track.getBoundingClientRect();
+    const rect = trackRect();
     return viewStart + ((clientX - rect.left) / rect.width) * viewLength;
   };
-  const pxPerSecond = () => track.getBoundingClientRect().width / viewLength;
+  const pxPerSecond = () => trackRect().width / viewLength;
   const snap = (t: number, lo: number, hi: number) =>
     lo <= current && current <= hi && Math.abs(t - current) * pxPerSecond() <= SNAP_PX
       ? current
@@ -134,12 +152,12 @@
     const v = clamp(t, lo, duration);
     end = round(snapping ? snap(v, lo, duration) : v);
   };
-  const seek = (t: number) => dispatch('seek', clamp(t, s, e));
+  const seek = (t: number) => onseek?.(clamp(t, s, e));
 
   // ドラッグ。押した位置とハンドル・縦棒の画面上のずれ（px）を保ち、つかんだところから動かす。
   // ずれを秒でなく px で持つのは、ズームで 1px あたりの秒が変わっても、つかんだところがずれないようにするため
   type Target = 'start' | 'end' | 'playhead';
-  let dragging: Target | null = null;
+  let dragging: Target | null = $state(null);
   let offsetPx = 0;
   const valueOf = (target: Target) => ({ start: s, end: e, playhead: current })[target];
 
@@ -168,10 +186,10 @@
     anchorFraction = viewLength > 0 ? (anchorTime - viewStart) / viewLength : 0;
     // ドラッグの途中では、ハンドルが端で止まったり再生位置に吸着したりして、指からずれていることがある。
     // ズームの後に動かしたときハンドルが跳ばないよう、いまの指とハンドルのずれを測り直す
-    const rect = track.getBoundingClientRect();
+    const rect = trackRect();
     offsetPx = pointerX - (rect.left + anchorFraction * rect.width);
     zoomed = true;
-    zoom.set(1);
+    zoom.target = 1;
     // 対応している端末（Android など）では、ズームしたことを振動で知らせる
     navigator.vibrate?.(10);
   };
@@ -181,7 +199,7 @@
     // 戻るときは、離したときのハンドルの位置を動かさずに戻す
     anchorTime = valueOf(dragging ?? 'start');
     anchorFraction = viewLength > 0 ? (anchorTime - viewStart) / viewLength : 0;
-    zoom.set(0);
+    zoom.target = 0;
   };
   onDestroy(cancelPress);
 
@@ -189,7 +207,7 @@
     if (disabled || duration <= 0 || event.button != 0 || dragging) return;
     const el = (event.target as HTMLElement).closest<HTMLElement>('[data-target]');
     const target = (el?.dataset.target ?? 'playhead') as Target;
-    const rect = track.getBoundingClientRect();
+    const rect = trackRect();
     // 縦棒の外（バーの空いたところ）を押したときは、そこへ再生位置を移す
     offsetPx = el
       ? event.clientX -
@@ -197,12 +215,12 @@
       : 0;
     dragging = target;
     event.preventDefault();
-    (el ?? playhead).focus();
+    (el ?? playhead)?.focus();
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     if (target == 'playhead') {
       if (!el) seek(timeAt(event.clientX));
     } else {
-      dispatch('trimstart');
+      ontrimstart?.();
       pointerX = event.clientX;
       waitForRest(event.clientX, event.clientY);
     }
@@ -228,7 +246,7 @@
   const onPointerUp = () => {
     cancelPress();
     zoomOut();
-    if (dragging && dragging != 'playhead') dispatch('trimend');
+    if (dragging && dragging != 'playhead') ontrimend?.();
     dragging = null;
   };
 
@@ -251,7 +269,7 @@
     if (target == 'start') moveStart(t);
     else if (target == 'end') moveEnd(t);
     else seek(t);
-    if (target != 'playhead') dispatch('trimend');
+    if (target != 'playhead') ontrimend?.();
   };
 
   const seconds = (t: number) => $_('export_range_value', { values: { value: t.toFixed(1) } });
@@ -263,13 +281,13 @@
 
 <!-- 使う側が渡したほかの属性（data-* など）は、いちばん外の要素に付ける -->
 <div
-  {...$$restProps}
+  {...rest}
   class={[styles.root, disabled && styles.disabled, dragging != null && styles.dragging]}
-  on:pointerdown={onPointerDown}
-  on:pointermove={onPointerMove}
-  on:pointerup={onPointerUp}
-  on:pointercancel={onPointerUp}
-  on:contextmenu|preventDefault
+  onpointerdown={onPointerDown}
+  onpointermove={onPointerMove}
+  onpointerup={onPointerUp}
+  onpointercancel={onPointerUp}
+  oncontextmenu={(event) => event.preventDefault()}
 >
   <div class={styles.track} bind:this={track} bind:clientWidth={trackWidth}>
     <span class={styles.frame} style:left="{frameLeft}%" style:width="{frameRight - frameLeft}%"
@@ -294,7 +312,7 @@
       aria-valuetext={seconds(s)}
       aria-disabled={disabled || undefined}
       data-target="start"
-      on:keydown={onKeydown('start')}
+      onkeydown={onKeydown('start')}
     ></span>
     <span
       class={[styles.handle, styles.end]}
@@ -309,7 +327,7 @@
       aria-valuetext={seconds(e)}
       aria-disabled={disabled || undefined}
       data-target="end"
-      on:keydown={onKeydown('end')}
+      onkeydown={onKeydown('end')}
     ></span>
     <span
       class={styles.playhead}
@@ -325,7 +343,7 @@
       aria-valuetext="{format(current - s)} / {format(e - s)}"
       aria-disabled={disabled || undefined}
       data-target="playhead"
-      on:keydown={onKeydown('playhead')}
+      onkeydown={onKeydown('playhead')}
     ></span>
   </div>
 </div>

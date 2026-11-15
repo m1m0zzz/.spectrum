@@ -1,57 +1,33 @@
 <script lang="ts">
   import styles from './PlayerCanvas.module.css';
+  // スペクトラムのプレビュー。曲の解析・画像・見た目の設定を状態から読み、毎フレーム描く。
+  // この canvas は書き出し（リアルタイム）でも録画するため、SpectrumState に渡す
+  import { onMount } from 'svelte';
   import { SpectrumRenderer } from '#lib/spectrumRenderer.ts';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { getAudioState } from '#lib/state/audio.svelte.ts';
+  import { getImageState } from '#lib/state/image.svelte.ts';
+  import { getSpectrumState } from '#lib/state/spectrum.svelte.ts';
 
-  const dispatch = createEventDispatcher();
-
-  export let imageLoaded: boolean;
-  export let imageData: ImageData;
-  export let nodeAnalyser: AnalyserNode | null;
-
-  // parameters
-  export let playerWidth: number;
-  export let playerHeight: number;
-  export let background: string;
-  export let spectrumSensitivity: number;
-  export let spectrumGridSize: number;
-  export let spectrumSmoothTime: number;
-
-  // visibility
-  export let playerRef: HTMLCanvasElement | null;
-  let renderer: SpectrumRenderer;
-  let lastTime = performance.now();
-
-  const draw = () => {
-    if (!playerRef) return;
-    requestAnimationFrame(draw);
-
-    const now = performance.now();
-    const elapsed = now - lastTime;
-    lastTime = now;
-
-    // 画像そのものをスペクトラムとして見せる。画像がまだないときは背景だけにする
-    renderer.draw(
-      nodeAnalyser,
-      imageLoaded ? imageData : null,
-      {
-        background,
-        sensitivity: spectrumSensitivity,
-        gridSize: spectrumGridSize,
-        smoothTime: spectrumSmoothTime
-      },
-      elapsed
-    );
-  };
+  const audio = getAudioState();
+  const image = getImageState();
+  const spectrum = getSpectrumState();
 
   onMount(() => {
-    if (!playerRef) return;
-    renderer = new SpectrumRenderer(playerRef.getContext('2d', { alpha: false })!);
+    const canvas = spectrum.canvas;
+    if (!canvas) return;
+    const renderer = new SpectrumRenderer(canvas.getContext('2d', { alpha: false })!);
+    let lastTime = performance.now();
+    let frame = 0;
+    // 画像そのものをスペクトラムとして見せる。画像がまだないときは背景だけにする
+    const draw = () => {
+      frame = requestAnimationFrame(draw);
+      const now = performance.now();
+      const elapsed = now - lastTime;
+      lastTime = now;
+      renderer.draw(audio.analyser, image.data, spectrum.style, elapsed);
+    };
     draw();
-
-    dispatch('mount', {
-      playerRef: playerRef
-    });
+    return () => cancelAnimationFrame(frame);
   });
 </script>
 
@@ -59,10 +35,10 @@
   <div class={styles.container}>
     <canvas
       id="player"
-      bind:this={playerRef}
-      width={playerWidth}
-      height={playerHeight}
-      style:background
+      bind:this={spectrum.canvas}
+      width={spectrum.width}
+      height={spectrum.height}
+      style:background={spectrum.background}
     ></canvas>
   </div>
 </section>

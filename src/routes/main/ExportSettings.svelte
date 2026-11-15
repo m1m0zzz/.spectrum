@@ -10,41 +10,49 @@
     qualities,
     speeds,
     videoFormats,
-    type EncodeSettings,
     type VideoFormat
   } from '#lib/encode.ts';
+  import { getExportState } from '#lib/state/export.svelte.ts';
 
-  // 書き出す範囲は、ファイルタブの音声の下（AudioRange.svelte）で決める
-  export let settings: EncodeSettings;
-  // 書き出し中は設定を変えられないようにする
-  export let busy: boolean;
+  // 書き出しの設定。書き出す範囲は、ファイルタブの音声の下（AudioRange.svelte）で決める。
+  // 書き出し中（exporter.busy）は設定を変えられないようにする
+  const exporter = getExportState();
+  const settings = exporter.settings;
 
   // 高速書き出しを使える形式。画面を開いたときに調べる（調べ終わるまでは null で、選べるままにする）
-  let fastFormats: Set<VideoFormat> | null = null;
+  let fastFormats = $state.raw<Set<VideoFormat> | null>(null);
   onMount(async () => {
     fastFormats = await detectFastFormats(settings);
   });
-  $: fastAvailable = fastFormats == null || fastFormats.has(settings.format);
+  const fastAvailable = $derived(fastFormats == null || fastFormats.has(settings.format));
   // 今の形式で使えないときは、リアルタイムに切り替える
-  $: if (!fastAvailable && settings.method == 'fast') settings.method = 'realtime';
+  $effect.pre(() => {
+    if (!fastAvailable && settings.method == 'fast') settings.method = 'realtime';
+  });
 
-  $: methodOptions = exportMethods.map((v) =>
-    v == 'fast' && !fastAvailable
-      ? {
-          value: v,
-          // どの形式でも使えないときはブラウザ、ほかの形式なら使えるときは形式のせいだと示す
-          label: $_(
-            fastFormats?.size
-              ? 'export_method_fast_unsupported_format'
-              : 'export_method_fast_unsupported'
-          ),
-          disabled: true
-        }
-      : { value: v, label: $_(`export_method_${v}`) }
+  const methodOptions = $derived(
+    exportMethods.map((v) =>
+      v == 'fast' && !fastAvailable
+        ? {
+            value: v,
+            // どの形式でも使えないときはブラウザ、ほかの形式なら使えるときは形式のせいだと示す
+            label: $_(
+              fastFormats?.size
+                ? 'export_method_fast_unsupported_format'
+                : 'export_method_fast_unsupported'
+            ),
+            disabled: true
+          }
+        : { value: v, label: $_(`export_method_${v}`) }
+    )
   );
-  $: formatOptions = videoFormats.map((v) => ({ value: v, label: $_(`export_format_${v}`) }));
-  $: qualityOptions = qualities.map((v) => ({ value: v, label: $_(`export_quality_${v}`) }));
-  $: speedOptions = speeds.map((v) => ({ value: v, label: $_(`export_speed_${v}`) }));
+  const formatOptions = $derived(
+    videoFormats.map((v) => ({ value: v, label: $_(`export_format_${v}`) }))
+  );
+  const qualityOptions = $derived(
+    qualities.map((v) => ({ value: v, label: $_(`export_quality_${v}`) }))
+  );
+  const speedOptions = $derived(speeds.map((v) => ({ value: v, label: $_(`export_speed_${v}`) })));
   const fpsOptions = frameRates.map((v) => ({ value: v as number, label: `${v} fps` }));
   const bitrateOptions = audioBitrates.map((v) => ({ value: v as number, label: `${v} kbps` }));
 </script>
@@ -57,7 +65,7 @@
       labelledby="export-method-label"
       options={methodOptions}
       bind:value={settings.method}
-      disabled={busy}
+      disabled={exporter.busy}
     />
   </p>
   <p>
@@ -67,7 +75,7 @@
       labelledby="export-format-label"
       options={formatOptions}
       bind:value={settings.format}
-      disabled={busy}
+      disabled={exporter.busy}
     />
   </p>
   <p>
@@ -77,7 +85,7 @@
       labelledby="export-quality-label"
       options={qualityOptions}
       bind:value={settings.quality}
-      disabled={busy}
+      disabled={exporter.busy}
     />
   </p>
   <!-- 変換速度は ffmpeg で映像をエンコードするときの設定。高速書き出しは WebCodecs でエンコードするため使わない -->
@@ -88,7 +96,7 @@
       labelledby="export-speed-label"
       options={speedOptions}
       bind:value={settings.speed}
-      disabled={busy}
+      disabled={exporter.busy}
     />
   </p>
   <p>
@@ -98,7 +106,7 @@
       labelledby="export-fps-label"
       options={fpsOptions}
       bind:value={settings.fps}
-      disabled={busy}
+      disabled={exporter.busy}
     />
   </p>
   <p>
@@ -108,7 +116,7 @@
       labelledby="export-audio-bitrate-label"
       options={bitrateOptions}
       bind:value={settings.audioBitrate}
-      disabled={busy}
+      disabled={exporter.busy}
     />
   </p>
 </section>

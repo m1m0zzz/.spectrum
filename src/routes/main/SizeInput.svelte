@@ -3,14 +3,19 @@
   import PixelNumber from '#lib/components/PixelNumber.svelte';
   import { _ } from 'svelte-i18n';
   import PixelSelect from '#lib/components/PixelSelect.svelte';
+  import { getExportState } from '#lib/state/export.svelte.ts';
+  import { getImageState } from '#lib/state/image.svelte.ts';
+  import { getSpectrumState } from '#lib/state/spectrum.svelte.ts';
 
-  export let playerWidth: number;
-  export let playerHeight: number;
-  // スペクトラムに使う画像（トリミング・ドット化の後）の大きさ。読み込む前は 0
-  export let imageWidth = 0;
-  export let imageHeight = 0;
+  // キャンバス（＝動画）の大きさ。スペクトラムに使う画像（トリミング・ドット化の後）の縦横比に合わせる
+  const spectrum = getSpectrumState();
+  const image = getImageState();
+  const exporter = getExportState();
+  // 画像の大きさ。読み込む前は 0
+  const imageWidth = $derived(image.data?.width ?? 0);
+  const imageHeight = $derived(image.data?.height ?? 0);
   // 動画の作成中はキャンバスの大きさを変えられないようにする
-  export let disabled = false;
+  const disabled = $derived(exporter.busy);
 
   // キャンバスの最大の幅・高さ
   const MAX_SIZE = 16384;
@@ -25,30 +30,32 @@
     );
 
   // 選択欄の値。プリセットは高さ、カスタムは 'custom'。既定は 360h
-  let sizeValue = '360';
-  $: customInput = sizeValue == 'custom';
-  $: sizeOptions = [
+  let sizeValue = $state('360');
+  const customInput = $derived(sizeValue == 'custom');
+  const sizeOptions = $derived([
     ...HEIGHTS.map((height) => ({
       value: String(height),
       label: `${height}h (${widthFor(height, imageWidth, imageHeight)}×${height})`
     })),
     { value: 'custom', label: $_('parameters_custom') }
-  ];
+  ]);
 
   // 大きさを選んだときと、画像（の大きさ）が変わったときに、キャンバスの大きさを決め直す。
   // カスタムは、画像の大きさを既定にする（その後に手で変えた値は、次に画像が変わるまで保つ）
   const applySize = (value: string, width: number, height: number) => {
     if (value == 'custom') {
       if (width > 0 && height > 0) {
-        playerWidth = clamp(width, 1, MAX_SIZE);
-        playerHeight = clamp(height, 1, MAX_SIZE);
+        spectrum.width = clamp(width, 1, MAX_SIZE);
+        spectrum.height = clamp(height, 1, MAX_SIZE);
       }
     } else {
-      playerHeight = Number(value);
-      playerWidth = widthFor(playerHeight, width, height);
+      // spectrum.height を読み返すと、この effect がそれにも反応してしまうため、値は手元で持つ
+      const presetHeight = Number(value);
+      spectrum.height = presetHeight;
+      spectrum.width = widthFor(presetHeight, width, height);
     }
   };
-  $: applySize(sizeValue, imageWidth, imageHeight);
+  $effect.pre(() => applySize(sizeValue, imageWidth, imageHeight));
 
   // NOTE: canvas size
   // https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas#キャンバスの最大寸法
@@ -73,8 +80,8 @@
           min="1"
           max={MAX_SIZE}
           {disabled}
-          bind:value={playerWidth}
-          on:change={(e) => (playerWidth = clamp(Number(e.currentTarget.value), 1, MAX_SIZE))}
+          bind:value={spectrum.width}
+          onchange={(e) => (spectrum.width = clamp(Number(e.currentTarget.value), 1, MAX_SIZE))}
         />
       </PixelNumber>
       <span>px</span>
@@ -87,8 +94,8 @@
           min="1"
           max={MAX_SIZE}
           {disabled}
-          bind:value={playerHeight}
-          on:change={(e) => (playerHeight = clamp(Number(e.currentTarget.value), 1, MAX_SIZE))}
+          bind:value={spectrum.height}
+          onchange={(e) => (spectrum.height = clamp(Number(e.currentTarget.value), 1, MAX_SIZE))}
         />
       </PixelNumber>
       <span>px</span>

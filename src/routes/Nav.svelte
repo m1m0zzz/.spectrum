@@ -7,7 +7,9 @@
 
   const options = languagesList.map(({ lang, name }) => ({ value: lang, label: name }));
   // いまの言語。ブラウザの言語（en-US など）から決まるので、先頭の言語コードで選択肢と対応させる
-  $: current = languagesList.find(({ lang }) => $locale?.startsWith(lang))?.lang ?? defaultLocale;
+  const current = $derived(
+    languagesList.find(({ lang }) => $locale?.startsWith(lang))?.lang ?? defaultLocale
+  );
 </script>
 
 <nav class={styles.nav}>
@@ -21,7 +23,7 @@
       ariaLabel="Please select your language."
       {options}
       value={current}
-      on:change={(e) => locale.set(e.detail.value)}
+      onchange={(value) => locale.set(value)}
     />
     <a
       href="https://github.com/m1m0zzz/.spectrum"

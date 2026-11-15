@@ -5,39 +5,26 @@
   import { convertVideo, load, muxVideo } from '#lib/ffmpeg.ts';
   import { recordingVideoBitrate, type EncodeSettings } from '#lib/encode.ts';
   import { findEncoderConfig, renderVideo } from '#lib/offlineExport.ts';
-  import type { SpectrumStyle } from '#lib/spectrumRenderer.ts';
+  import { getAudioState } from '#lib/state/audio.svelte.ts';
+  import { getExportState } from '#lib/state/export.svelte.ts';
+  import { getImageState } from '#lib/state/image.svelte.ts';
+  import { getSpectrumState } from '#lib/state/spectrum.svelte.ts';
 
-  export let audioRef: HTMLAudioElement | null;
-  export let playerRef: HTMLCanvasElement | null;
-  export let audioContext: AudioContext | null;
-  export let recorderDestination: MediaStreamAudioDestinationNode;
-  export let imageLoaded: boolean;
-  // 高速書き出しで、曲を解析しながら描くのに使う
-  export let imageData: ImageData;
-  export let audioFile: File | null;
-  export let fftSize: number;
-  export let style: SpectrumStyle;
-  // 書き出しの設定と範囲（秒）は「動画設定」タブ（ExportSettings.svelte）で決める
-  export let settings: EncodeSettings;
-  export let rangeStart: number;
-  export let rangeEnd: number;
-  // 曲を読み込んだうえで範囲が正しくないとき true
-  export let rangeError: boolean;
-  // 作成中（録画・変換）か。親に渡して、作成に関わる操作をできないようにする
-  export let busy = false;
+  // 曲・再生・解析（<audio>・AudioContext・録画用の出力・FFT のサイズ）、画像、見た目の設定と canvas。
+  // どれも作り始めたときに読む。書き出しの設定と範囲は「動画設定」タブとファイルタブで決め、進み具合はここで入れる
+  const audioState = getAudioState();
+  const image = getImageState();
+  const spectrum = getSpectrumState();
+  const exporter = getExportState();
 
-  let anchorRef: HTMLAnchorElement | null;
-  // rendering は高速書き出しで映像を作っているところ、generating はリアルタイムで録画しているところ
-  let status: 'none' | 'rendering' | 'generating' | 'converting' | 'completed' = 'none';
-  let error = false;
-  let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = 'idle';
-  let convertError = false;
+  let anchorRef: HTMLAnchorElement | null = $state(null);
+  let error = $state(false);
+  let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = $state('idle');
+  let convertError = $state(false);
   // 変換（ffmpeg）の進み具合（0〜1）
-  let convertProgress = 0;
-
-  $: busy = status == 'rendering' || status == 'generating' || status == 'converting';
+  let convertProgress = $state(0);
   // 映像を作る進み具合（0〜1）。高速書き出しのときだけ
-  let renderProgress = 0;
+  let renderProgress = $state(0);
 
   // ffmpeg のコア（約 32MB）はページを開いたときではなく、動画を作り始めたときに読み込む。
   // 録画（曲の長さ）のあいだに読み込みが終わるので、変換を待つ時間はほとんど増えない
@@ -71,7 +58,7 @@
 
   // 出来上がった動画をダウンロードのリンクに付ける
   const complete = (anchor: HTMLAnchorElement, url: string, filename: string) => {
-    status = 'completed';
+    exporter.status = 'completed';
     if (anchor.href.startsWith('blob:')) URL.revokeObjectURL(anchor.href);
     anchor.download = filename;
     anchor.href = url;
@@ -79,46 +66,60 @@
 
   const fail = (error: unknown) => {
     // コアの読み込みに失敗したときは、prepareFFmpeg がエラー表示を出している
-    status = 'none';
+    exporter.status = 'none';
     if (ffmpegStatus != 'error') convertError = true;
     console.error(error);
   };
 
   const makeVideo = async () => {
-    if (busy) return;
-    if (!audioContext || !audioRef || !imageLoaded || !playerRef || !anchorRef) {
+    if (exporter.busy) return;
+    const { context: audioContext, element: audioRef, recorderDestination, file } = audioState;
+    const imageData = image.data;
+    const playerRef = spectrum.canvas;
+    if (
+      !audioContext ||
+      !audioRef ||
+      !recorderDestination ||
+      !imageData ||
+      !playerRef ||
+      !anchorRef
+    ) {
       error = true;
       return;
     }
-    if (rangeError) return;
-    // 設定は作り始めた時点のものを使う（作成中に UI を触られても変わらない）
-    const encode = { ...settings };
+    if (exporter.rangeError) return;
+    // 設定と範囲は作り始めた時点のものを使う（作成中に UI を触られても変わらない）
+    const encode = { ...exporter.settings };
+    const range = { start: exporter.rangeStart, end: exporter.rangeEnd };
 
     error = false;
     convertError = false;
     prepareFFmpeg();
 
-    if (encode.method == 'fast' && audioFile) {
+    if (encode.method == 'fast' && file) {
       const config = await findEncoderConfig(playerRef.width, playerRef.height, encode);
-      if (config) return makeVideoFast(config, encode, audioContext, audioFile, anchorRef);
+      if (config)
+        return makeVideoFast(config, encode, range, audioContext, file, imageData, anchorRef);
       console.warn('fast export is not supported; falling back to realtime recording');
     }
-    return recordVideo(encode, audioRef, anchorRef, playerRef);
+    return recordVideo(encode, range, audioRef, recorderDestination, anchorRef, playerRef);
   };
 
   // 曲を再生せずに描いてエンコードし（offlineExport.ts）、ffmpeg で曲とまとめる
   const makeVideoFast = async (
     config: VideoEncoderConfig,
     encode: EncodeSettings,
+    range: { start: number; end: number },
     context: AudioContext,
     file: File,
+    image: ImageData,
     anchor: HTMLAnchorElement
   ) => {
-    const start = rangeStart;
-    const duration = rangeEnd - rangeStart;
+    const start = range.start;
+    const duration = range.end - range.start;
     const filename = formatDate(new Date());
-    audioRef?.pause();
-    status = 'rendering';
+    audioState.pause();
+    exporter.status = 'rendering';
     renderProgress = 0;
     try {
       console.time('render');
@@ -127,15 +128,15 @@
         settings: encode,
         audioFile: file,
         audioContext: context,
-        fftSize,
-        image: imageData,
-        style: { ...style },
+        fftSize: audioState.fftSize,
+        image,
+        style: spectrum.style,
         start,
         duration,
         onProgress: (ratio) => (renderProgress = ratio)
       });
       console.timeEnd('render');
-      status = 'converting';
+      exporter.status = 'converting';
       convertProgress = 0;
       const url = await muxVideo(video, file, encode, { start, duration }, (ratio) => {
         convertProgress = Math.max(convertProgress, ratio);
@@ -149,16 +150,18 @@
   // Media Recorder で、曲を再生しながら canvas を録画して動画を作る
   const recordVideo = async (
     encode: EncodeSettings,
+    range: { start: number; end: number },
     audio: HTMLAudioElement,
+    recorderDestination: MediaStreamAudioDestinationNode,
     anchor: HTMLAnchorElement,
     playerRef: HTMLCanvasElement
   ) => {
-    const duration = rangeEnd - rangeStart;
-    const end = rangeEnd;
-    status = 'generating';
+    const duration = range.end - range.start;
+    const end = range.end;
+    exporter.status = 'generating';
 
     audio.pause();
-    await seek(audio, rangeStart);
+    await seek(audio, range.start);
 
     const canvasStream = playerRef.captureStream();
     const audioStream = recorderDestination.stream;
@@ -186,7 +189,7 @@
       const videoBlob = new Blob(chunks, { type: chunks[0]?.type ?? 'video/webm' });
       const filename = formatDate(new Date());
       const webmFile = new File([videoBlob], filename + '.webm', { type: videoBlob.type });
-      status = 'converting';
+      exporter.status = 'converting';
       convertProgress = 0;
       convertVideo(webmFile, encode, { start: lead, duration }, (ratio) => {
         convertProgress = Math.max(convertProgress, ratio);
@@ -218,18 +221,18 @@
 </script>
 
 <section class={styles.root}>
-  <button class="pixel-button" disabled={busy || rangeError} on:click={makeVideo}
+  <button class="pixel-button" disabled={exporter.busy || exporter.rangeError} onclick={makeVideo}
     >{$_('generate_video')}</button
   >
-  <p style:display={busy ? 'block' : 'none'}>
+  <p style:display={exporter.busy ? 'block' : 'none'}>
     {$_('generate_video_message')}
   </p>
-  {#if status == 'rendering'}
+  {#if exporter.status == 'rendering'}
     <p class={styles.progress}>
       {$_('render_progress', { values: { percent: Math.floor(renderProgress * 100) } })}
     </p>
   {/if}
-  {#if status == 'converting'}
+  {#if exporter.status == 'converting'}
     <p class={styles.progress}>
       {$_('convert_progress', { values: { percent: Math.floor(convertProgress * 100) } })}
     </p>
@@ -239,11 +242,11 @@
   </p>
   <p class="error" style:display={convertError ? 'block' : 'none'}>{$_('convert_error')}</p>
   <p class="error" style:display={error ? 'block' : 'none'}>{$_('generate_video_error')}</p>
-  <!-- svelte-ignore a11y-invalid-attribute -->
+  <!-- svelte-ignore a11y_invalid_attribute -->
   <a
     href="#"
     download
     bind:this={anchorRef}
-    style:display={status == 'completed' ? 'block' : 'none'}>{$_('download_video')}</a
+    style:display={exporter.status == 'completed' ? 'block' : 'none'}>{$_('download_video')}</a
   >
 </section>

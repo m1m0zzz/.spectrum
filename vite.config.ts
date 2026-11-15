@@ -22,7 +22,11 @@ export default defineConfig(({ command }) => ({
       // GitHub Pages ではリポジトリ名の下に置かれるため、ビルドでは deploy.yml の BASE_PATH を使う
       paths: {
         base: command === 'serve' ? '' : ((process.env.BASE_PATH ?? '') as '' | `/${string}`)
-      }
+      },
+      // このプロジェクトのコンポーネントは runes モード（Svelte 5 の書き方）でコンパイルし、
+      // 古い書き方（export let・$:・on: など）を使うとエラーにする。node_modules のものはそれぞれの書き方のままにする
+      dynamicCompileOptions: ({ filename }) =>
+        filename.includes('/node_modules/') ? undefined : { runes: true }
     })
   ],
   define: {

@@ -1,9 +1,16 @@
 <script lang="ts">
   import styles from './index.module.css';
+  import { onDestroy } from 'svelte';
   import { _ } from 'svelte-i18n';
   import PixelNumber from '#lib/components/PixelNumber.svelte';
+  import PixelSelect from '#lib/components/PixelSelect.svelte';
+  import AudioPlayer from '#lib/components/AudioPlayer.svelte';
 
   import { clamp } from '#lib/util.ts';
+  import { AudioState, setAudioState } from '#lib/state/audio.svelte.ts';
+  import { ExportState, setExportState } from '#lib/state/export.svelte.ts';
+  import { ImageState, setImageState } from '#lib/state/image.svelte.ts';
+  import { SpectrumState, setSpectrumState } from '#lib/state/spectrum.svelte.ts';
 
   import ImageUploader from './ImageUploader.svelte';
   import AudioUploader from './AudioUploader.svelte';
@@ -12,65 +19,42 @@
   import PlayerMenu from './PlayerMenu.svelte';
   import ExportSettings from './ExportSettings.svelte';
   import SizeInput from './SizeInput.svelte';
-  import PixelSelect from '#lib/components/PixelSelect.svelte';
-  import AudioPlayer from './AudioPlayer.svelte';
-  import { defaultEncodeSettings, type EncodeSettings } from '#lib/encode.ts';
 
-  let imageLoaded = false;
-  let imageData: ImageData;
-  let audioDuration = 0;
-  // 再生位置（秒）と、範囲のハンドルをドラッグしているか。再生プレイヤー（AudioPlayer）が持つ
-  let currentTime = 0;
-  let trimming = false;
-  let audioPlayer: AudioPlayer;
-  let waveform: Float32Array | null = null;
-  let audioFile: File | null = null;
-  let audioContext: AudioContext | null;
-  let nodeAnalyser: AnalyserNode | null;
-  let recorderDestination: MediaStreamAudioDestinationNode;
+  // ページの状態。役割ごとに分けて context で配り、使うコンポーネントがそれぞれ読み書きする
+  // - audio: 曲・再生・解析（<audio>・AudioContext・波形・FFT のサイズ）
+  // - image: スペクトラムに使う画像（トリミング・ドット化の後）
+  // - spectrum: 見た目の設定（大きさ・背景・感度など）と、描く canvas
+  // - exporter: 書き出しの設定・範囲・進み具合
+  const audio = new AudioState();
+  const image = new ImageState();
+  const spectrum = new SpectrumState();
+  const exporter = new ExportState(audio);
+  setAudioState(audio);
+  setImageState(image);
+  setSpectrumState(spectrum);
+  setExportState(exporter);
+  onDestroy(() => audio.destroy());
 
-  // parameters
-  let playerWidth = 360;
-  let playerHeight = 360;
-  let background = '#000000';
-  let fftSize = 8192;
-  let spectrumSensitivity = 1;
-  let spectrumGridSize = 0;
-  let spectrumSmoothTime = 0;
+  // 書き出す範囲は、曲が変わったら全体に戻す
+  $effect.pre(() => exporter.resetRange(audio.duration));
 
-  // HTML Ref
-  let playerRef: HTMLCanvasElement | null = null;
-  let audioRef: HTMLAudioElement | null = null;
-
-  let showVersion = false;
+  let showVersion = $state(false);
 
   // 画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする
   const FFT_SIZES = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
-  $: fftOptions = FFT_SIZES.map((size) => ({
-    value: size,
-    label: String(size),
-    disabled: imageLoaded && size / 2 - 1 < imageData.width
-  }));
-
-  // 書き出しの設定と範囲（秒）。範囲は曲が変わったら全体に戻す
-  let encodeSettings: EncodeSettings = { ...defaultEncodeSettings };
-  let rangeStart = 0;
-  let rangeEnd = 0;
-  // 動画の作成中（録画・変換）か。作成中は、作成に関わる操作（ファイル・設定・再生プレイヤー）をすべて止める
-  let exporting = false;
-  const resetRange = (duration: number) => {
-    rangeStart = 0;
-    rangeEnd = Number.isFinite(duration) ? duration : 0;
-  };
-  $: resetRange(audioDuration);
-  $: rangeError =
-    audioDuration > 0 && !(0 <= rangeStart && rangeStart < rangeEnd && rangeEnd <= audioDuration);
+  const fftOptions = $derived(
+    FFT_SIZES.map((size) => ({
+      value: size,
+      label: String(size),
+      disabled: image.data != null && size / 2 - 1 < image.data.width
+    }))
+  );
 
   // タブ。切り替えても中身（読み込んだ画像や、入力中の値）を保つため、パネルは破棄せず hidden で隠す
   const tabs = ['file', 'settings', 'video'] as const;
   type Tab = (typeof tabs)[number];
-  let activeTab: Tab = 'file';
-  let tabRefs: HTMLButtonElement[] = [];
+  let activeTab: Tab = $state('file');
+  const tabRefs: HTMLButtonElement[] = $state([]);
 
   // WAI-ARIA の tabs パターンに合わせ、左右・Home・End キーでタブを移る
   const onTabKeydown = (e: KeyboardEvent, index: number) => {
@@ -102,7 +86,7 @@
         <li>{$_('usage_2')}</li>
         <li>{$_('usage_3')}</li>
       </ol>
-      <button class="no-button action-link" on:click={() => (showVersion = !showVersion)}>
+      <button class="no-button action-link" onclick={() => (showVersion = !showVersion)}>
         {$_('supported_version')}
       </button>
       {#if showVersion}
@@ -127,8 +111,8 @@
               aria-controls="tab-panel-{tab}"
               tabindex={activeTab == tab ? 0 : -1}
               bind:this={tabRefs[i]}
-              on:click={() => (activeTab = tab)}
-              on:keydown={(e) => onTabKeydown(e, i)}>{$_(`tab_${tab}`)}</button
+              onclick={() => (activeTab = tab)}
+              onkeydown={(e) => onTabKeydown(e, i)}>{$_(`tab_${tab}`)}</button
             >
           {/each}
         </div>
@@ -140,43 +124,11 @@
           aria-labelledby="tab-file"
           hidden={activeTab != 'file'}
         >
-          <ImageUploader
-            disabled={exporting}
-            on:message={(event) => {
-              if (event.detail.imageLoaded) imageLoaded = event.detail.imageLoaded;
-              imageData = event.detail.imageData;
-            }}
-          />
-          <AudioUploader
-            on:message={(event) => {
-              audioContext = event.detail.audioContext;
-              nodeAnalyser = event.detail.nodeAnalyser;
-              fftSize = event.detail.fftSize;
-              recorderDestination = event.detail.recorderDestination;
-            }}
-            {audioRef}
-            {audioContext}
-            {nodeAnalyser}
-            {fftSize}
-            {recorderDestination}
-            disabled={exporting}
-            bind:waveform
-            bind:audioFile
-          />
+          <ImageUploader />
+          <AudioUploader />
           <!-- 書き出す範囲は、音声の下で波形を見ながら決める -->
-          {#if audioDuration > 0}
-            <AudioRange
-              duration={audioDuration}
-              bind:rangeStart
-              bind:rangeEnd
-              current={currentTime}
-              {rangeError}
-              {waveform}
-              disabled={exporting}
-              on:seek={(e) => audioPlayer.seek(e.detail)}
-              on:trimstart={() => (trimming = true)}
-              on:trimend={() => (trimming = false)}
-            />
+          {#if audio.duration > 0}
+            <AudioRange />
           {/if}
         </div>
 
@@ -189,18 +141,12 @@
         >
           <section>
             <div style:display="flex" style:flex-wrap="wrap">
-              <SizeInput
-                bind:playerWidth
-                bind:playerHeight
-                imageWidth={imageLoaded ? imageData.width : 0}
-                imageHeight={imageLoaded ? imageData.height : 0}
-                disabled={exporting}
-              />
+              <SizeInput />
             </div>
             <p>
               <label
                 >{$_('parameters_background')}
-                <input type="color" bind:value={background} disabled={exporting} />
+                <input type="color" bind:value={spectrum.background} disabled={exporter.busy} />
                 <!-- TODO: text color input -->
                 <!-- <input bind:value={background}> -->
               </label>
@@ -211,11 +157,8 @@
                 id="fft-size"
                 labelledby="fft-size-label"
                 options={fftOptions}
-                bind:value={fftSize}
-                disabled={exporting}
-                on:change={(e) => {
-                  if (nodeAnalyser) nodeAnalyser.fftSize = e.detail.value;
-                }}
+                bind:value={audio.fftSize}
+                disabled={exporter.busy}
               />
             </p>
             <p>
@@ -227,10 +170,10 @@
                     min="0.1"
                     max="10"
                     step="0.1"
-                    disabled={exporting}
-                    bind:value={spectrumSensitivity}
-                    on:change={(e) =>
-                      (spectrumSensitivity = clamp(Number(e.currentTarget.value), 0.1, 10))}
+                    disabled={exporter.busy}
+                    bind:value={spectrum.sensitivity}
+                    onchange={(e) =>
+                      (spectrum.sensitivity = clamp(Number(e.currentTarget.value), 0.1, 10))}
                   />
                 </PixelNumber>
               </label>
@@ -242,10 +185,10 @@
                   <input
                     type="number"
                     min="0"
-                    disabled={exporting}
-                    bind:value={spectrumGridSize}
-                    on:change={(e) =>
-                      (spectrumGridSize = Math.max(0, Number(e.currentTarget.value)))}
+                    disabled={exporter.busy}
+                    bind:value={spectrum.gridSize}
+                    onchange={(e) =>
+                      (spectrum.gridSize = Math.max(0, Number(e.currentTarget.value)))}
                   />
                 </PixelNumber>
               </label>
@@ -259,10 +202,10 @@
                     type="number"
                     min="0"
                     step="100"
-                    disabled={exporting}
-                    bind:value={spectrumSmoothTime}
-                    on:change={(e) =>
-                      (spectrumSmoothTime = Math.max(0, Number(e.currentTarget.value)))}
+                    disabled={exporter.busy}
+                    bind:value={spectrum.smoothTime}
+                    onchange={(e) =>
+                      (spectrum.smoothTime = Math.max(0, Number(e.currentTarget.value)))}
                   />
                 </PixelNumber>
               </label>
@@ -278,7 +221,7 @@
           aria-labelledby="tab-video"
           hidden={activeTab != 'video'}
         >
-          <ExportSettings bind:settings={encodeSettings} busy={exporting} />
+          <ExportSettings />
         </div>
       </div>
 
@@ -286,52 +229,17 @@
            作成中は一時停止・シーク・音量で録画が止まる・ずれる・音が変わるため、操作できなくする -->
       <section>
         <AudioPlayer
-          bind:this={audioPlayer}
-          bind:audio={audioRef}
-          bind:duration={audioDuration}
-          bind:currentTime
-          {rangeStart}
-          {rangeEnd}
-          {trimming}
-          locked={exporting}
+          player={audio}
+          start={exporter.rangeStart}
+          end={exporter.rangeEnd}
+          ignoreRange={exporter.rangeEditing}
+          disabled={exporter.busy}
         />
       </section>
     </div>
 
-    <PlayerCanvas
-      on:mount={(event) => (playerRef = event.detail.playerRef)}
-      {imageLoaded}
-      {playerRef}
-      {background}
-      {imageData}
-      {nodeAnalyser}
-      {playerHeight}
-      {playerWidth}
-      {spectrumGridSize}
-      {spectrumSensitivity}
-      {spectrumSmoothTime}
-    />
+    <PlayerCanvas />
 
-    <PlayerMenu
-      {playerRef}
-      {audioContext}
-      {audioRef}
-      {imageLoaded}
-      {imageData}
-      {audioFile}
-      {fftSize}
-      style={{
-        background,
-        sensitivity: spectrumSensitivity,
-        gridSize: spectrumGridSize,
-        smoothTime: spectrumSmoothTime
-      }}
-      {recorderDestination}
-      settings={encodeSettings}
-      {rangeStart}
-      {rangeEnd}
-      {rangeError}
-      bind:busy={exporting}
-    />
+    <PlayerMenu />
   </div>
 </main>

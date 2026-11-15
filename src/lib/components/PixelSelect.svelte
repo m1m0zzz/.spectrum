@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   export type SelectOption<T extends string | number = string | number> = {
     value: T;
     label: string;
@@ -16,30 +16,41 @@
   // ドット絵風の選択欄。<select> の代わりに、WAI-ARIA の select-only combobox パターンで作る
   // （https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/）。
   // フォーカスは常にボタン（combobox）に置き、リスト内の位置は aria-activedescendant で示す
-  import { createEventDispatcher, onDestroy, tick } from 'svelte';
+  import { onDestroy, tick, untrack } from 'svelte';
 
-  // リストと選択肢の id のもと。ページ内で一意にする
-  export let id: string;
-  // 名前の付け方。見出しのテキストの要素の id（labelledby）か、名前そのもの（ariaLabel）
-  export let labelledby: string | undefined = undefined;
-  export let ariaLabel: string | undefined = undefined;
-  export let options: SelectOption<T>[];
-  export let value: T;
-  export let disabled = false;
+  type Props = {
+    // リストと選択肢の id のもと。ページ内で一意にする
+    id: string;
+    // 名前の付け方。見出しのテキストの要素の id（labelledby）か、名前そのもの（ariaLabel）
+    labelledby?: string;
+    ariaLabel?: string;
+    options: SelectOption<T>[];
+    value: T;
+    disabled?: boolean;
+    // 選択肢を選んで値が変わったときに呼ぶ
+    onchange?: (value: T) => void;
+  };
+  let {
+    id,
+    labelledby,
+    ariaLabel,
+    options,
+    value = $bindable(),
+    disabled = false,
+    onchange
+  }: Props = $props();
 
-  const dispatch = createEventDispatcher<{ change: { value: T } }>();
-
-  let root: HTMLElement;
-  let button: HTMLButtonElement;
-  let list: HTMLElement;
-  let open = false;
+  let root: HTMLElement | undefined = $state();
+  let button: HTMLButtonElement | undefined = $state();
+  let list: HTMLElement | undefined = $state();
+  let open = $state(false);
   // リスト内でいま指している選択肢（キーボードやマウスで動く）
-  let active = -1;
+  let active = $state(-1);
   // ボタンの下に出すか上に出すか、と位置
-  let position = { top: 0, left: 0, minWidth: 0, maxHeight: 0 };
+  let position = $state({ top: 0, left: 0, minWidth: 0, maxHeight: 0 });
 
-  $: selectedIndex = options.findIndex((o) => o.value === value);
-  $: selectedLabel = options[selectedIndex]?.label ?? '';
+  const selectedIndex = $derived(options.findIndex((o) => o.value === value));
+  const selectedLabel = $derived(options[selectedIndex]?.label ?? '');
   const optionId = (i: number) => `${id}-option-${i}`;
 
   const enabledIndexes = () => options.flatMap((o, i) => (o.disabled ? [] : [i]));
@@ -83,7 +94,7 @@
     open = true;
     active = start >= 0 && !options[start]?.disabled ? start : step(-1, 1);
     await tick();
-    if (supportsPopover) {
+    if (supportsPopover && list) {
       // サーバーで作る HTML（popover に対応しているか分からない）と食い違わないよう、ここで付ける
       list.popover = 'manual';
       list.showPopover();
@@ -111,12 +122,12 @@
     if (!option || option.disabled) return;
     if (option.value !== value) {
       value = option.value;
-      dispatch('change', { value });
+      onchange?.(value);
     }
   };
 
   const onOutsidePointerDown = (e: PointerEvent) => {
-    if (!root.contains(e.target as Node)) hide();
+    if (!root?.contains(e.target as Node)) hide();
   };
 
   // 頭文字で選択肢に飛ぶ。続けて打った文字はつなげて探す
@@ -205,7 +216,9 @@
   };
 
   // 書き出し中などで使えなくなったら閉じる
-  $: if (disabled) hide();
+  $effect(() => {
+    if (disabled) untrack(hide);
+  });
 
   onDestroy(() => {
     hide();
@@ -226,9 +239,9 @@
     aria-activedescendant={open && active >= 0 ? optionId(active) : undefined}
     {disabled}
     bind:this={button}
-    on:click={() => (open ? hide() : show())}
-    on:keydown={onKeydown}
-    on:blur={hide}
+    onclick={() => (open ? hide() : show())}
+    onkeydown={onKeydown}
+    onblur={hide}
   >
     <!-- いちばん長い選択肢に幅を合わせ、値を変えてもボタンの幅が変わらないようにする -->
     <span class={styles.value}>
@@ -254,7 +267,7 @@
     style:left="{position.left}px"
     style:min-width="{position.minWidth}px"
     style:max-height="{position.maxHeight}px"
-    on:pointerdown|preventDefault
+    onpointerdown={(event) => event.preventDefault()}
   >
     {#each options as option, i (option.value)}
       <!-- キーボード操作はフォーカスを持つボタン（combobox）が受け持ち、aria-activedescendant で選択肢を指す
@@ -267,14 +280,14 @@
         tabindex="-1"
         aria-selected={i == selectedIndex}
         aria-disabled={option.disabled ? 'true' : undefined}
-        on:pointermove={() => {
+        onpointermove={() => {
           if (!option.disabled) active = i;
         }}
-        on:click={() => {
+        onclick={() => {
           if (option.disabled) return;
           choose(i);
           hide();
-          button.focus();
+          button?.focus();
         }}
       >
         {option.label}

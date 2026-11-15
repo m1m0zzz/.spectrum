@@ -1,6 +1,5 @@
 <script lang="ts">
   import styles from './ImageUploader.module.css';
-  import { createEventDispatcher, onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
   import {
     loadImage,
@@ -13,63 +12,54 @@
   import { aspectLabel, cropPixels, fullRect, isFullRect, type Rect } from '#lib/crop.ts';
   import FileInput from '#lib/components/FileInput.svelte';
   import CropBox from '#lib/components/CropBox.svelte';
+  import { getExportState } from '#lib/state/export.svelte.ts';
+  import { getImageState } from '#lib/state/image.svelte.ts';
 
-  const dispatch = createEventDispatcher();
+  // トリミング・ドット化した画像は ImageState に入れる。動画の作成中は画像やドット化の設定を変えられないようにする
+  const image = getImageState();
+  const exporter = getExportState();
+  const disabled = $derived(exporter.busy);
 
-  // 動画の作成中は画像やドット化の設定を変えられないようにする
-  export let disabled = false;
-
-  let previewRef: HTMLCanvasElement | null;
+  let previewRef: HTMLCanvasElement | null = $state(null);
   // プレビューの表示の縦横比。ドット化した大きさは幅と高さをそれぞれ切り捨てるため、縦横比がわずかにずれ、
   // 幅いっぱいに見せると縮小率を動かすたびに高さが変わる。そこで、縮小する前の大きさの比で見せる
-  let previewAspect = '';
-  let img: HTMLImageElement | null;
-  let files: FileList | undefined;
+  let previewAspect = $state('');
+  let img: HTMLImageElement | null = $state.raw(null);
 
   // 読み込んだ画像の画素。ドット化の割合を動かすたびに読み直さないよう、読み込んだときに 1 回だけ取る
-  let source: ImageData | null = null;
-  let imageData: ImageData;
+  let source: ImageData | null = $state.raw(null);
 
   // ドット化したときの大きさ（元の画像に対する %、1〜100）
-  let pixelationPercent = 50;
-  let isDoPixelation = false;
+  let pixelationPercent = $state(50);
+  let isDoPixelation = $state(false);
 
   // トリミングの範囲（元の画像の px）と、プレビューで範囲を調整しているところか。
   // トリミングしてからドット化する（縮小率はトリミングした画像に対する割合）
-  let crop: Rect = fullRect({ width: 0, height: 0 });
-  let cropping = false;
+  let crop: Rect = $state(fullRect({ width: 0, height: 0 }));
+  let cropping = $state(false);
 
-  let imgError = false;
-  $: imageLoaded = Boolean(img && img.src != '');
-  $: pixelatedSize = scaledSize(crop.width, crop.height, pixelationPercent);
-  $: cropped = source != null && !isFullRect(crop, source);
-  $: cropAspect = aspectLabel(crop);
-
-  onMount(() => {
-    img = new Image();
-  });
+  let imgError = $state(false);
+  const pixelatedSize = $derived(scaledSize(crop.width, crop.height, pixelationPercent));
+  const cropped = $derived(source != null && !isFullRect(crop, source));
+  const cropAspect = $derived(aspectLabel(crop));
 
   const toImageData = ({ width, height, data }: Pixels<ArrayBuffer>) =>
     new ImageData(data, width, height);
   const pixelate = (pixels: ImageData) =>
     isDoPixelation ? toImageData(resample(pixels, pixelationPercent)) : pixels;
 
-  // トリミングとドット化をして、スペクトラムに使う画像として親に渡す
-  const applyImage = (_imageLoaded = false) => {
+  // トリミングとドット化をして、スペクトラムに使う画像にする
+  const applyImage = () => {
     if (!source) return;
-    imageData = pixelate(isFullRect(crop, source) ? source : toImageData(cropPixels(source, crop)));
-
-    let obj = { imageData: imageData };
-    if (_imageLoaded) {
-      obj = Object.assign(obj, { imageLoaded: true });
-    }
-    dispatch('message', obj);
+    image.data = pixelate(
+      isFullRect(crop, source) ? source : toImageData(cropPixels(source, crop))
+    );
   };
 
   // プレビュー。トリミングの範囲を調整している間は、範囲を選べるように画像全体（ドット化したもの）を見せる
   const drawPreview = () => {
-    if (!previewRef || !source) return;
-    const shown = cropping ? pixelate(source) : imageData;
+    if (!previewRef || !source || !image.data) return;
+    const shown = cropping ? pixelate(source) : image.data;
     previewRef.width = shown.width;
     previewRef.height = shown.height;
     const area = cropping ? source : crop;
@@ -77,8 +67,8 @@
     previewRef.getContext('2d')?.putImageData(shown, 0, 0);
   };
 
-  const pixelationImage = (_imageLoaded = false) => {
-    applyImage(_imageLoaded);
+  const pixelationImage = () => {
+    applyImage();
     drawPreview();
   };
 
@@ -89,7 +79,7 @@
 
   let objectUrl: string | null = null;
 
-  const uploadImage = async () => {
+  const uploadImage = async (files: FileList | undefined) => {
     // data URL（base64）にすると大きい画像でメモリと時間を食うため、object URL で読む
     // ダイアログを取り消すと選択が空になる。そのときは今の画像のままにする
     if (!files?.[0]) return;
@@ -117,7 +107,7 @@
       isDoPixelation = false;
     }
 
-    pixelationImage(true);
+    pixelationImage();
   };
 </script>
 
@@ -128,15 +118,14 @@
     accept="image/*"
     ariaLabel="Upload image"
     {disabled}
-    bind:files
-    on:change={() => uploadImage()}
+    onchange={uploadImage}
   />
   {#if imgError}
     <p class="error">
       {$_('upload_image_error')}
     </p>
   {/if}
-  {#if imageLoaded}
+  {#if image.loaded}
     <p>
       {$_('image_info', { values: { width: img?.width || 0, height: img?.height || 0 } })}
     </p>
@@ -146,7 +135,7 @@
         <button
           class={['no-button', isDoPixelation ? styles.pixelationActive : 'action-link']}
           {disabled}
-          on:click={() => {
+          onclick={() => {
             isDoPixelation = true;
             pixelationImage();
           }}>{isDoPixelation ? '>' : ''}{$_('do_pixelation')}</button
@@ -155,7 +144,7 @@
         <button
           class={['no-button', isDoPixelation ? 'action-link' : styles.pixelationActive]}
           {disabled}
-          on:click={() => {
+          onclick={() => {
             isDoPixelation = false;
             pixelationImage();
           }}>{isDoPixelation ? '' : '>'}{$_('do_not_pixelation')}</button
@@ -175,7 +164,7 @@
               step="1"
               {disabled}
               value={pixelationPercent}
-              on:input={(e) => {
+              oninput={(e) => {
                 pixelationPercent = Number(e.currentTarget.value);
                 pixelationImage();
               }}
@@ -193,17 +182,17 @@
     </div>
   {/if}
 
-  <div class={styles.previewContainer} style:display={imageLoaded ? 'block' : 'none'}>
+  <div class={styles.previewContainer} style:display={image.loaded ? 'block' : 'none'}>
     <!-- トリミング。押すと、プレビューに枠を出して範囲を調整できる。調整している間は大きさと縦横比を出す -->
     <div class={styles.cropToolbar}>
-      <button class="pixel-button" aria-pressed={cropping} {disabled} on:click={toggleCropping}
+      <button class="pixel-button" aria-pressed={cropping} {disabled} onclick={toggleCropping}
         >{cropping ? $_('crop_done') : $_('crop')}</button
       >
       {#if cropping}
         <button
           class="no-button action-link"
           disabled={disabled || !cropped}
-          on:click={() => {
+          onclick={() => {
             if (!source) return;
             crop = fullRect(source);
             applyImage();
@@ -232,7 +221,7 @@
           height={source.height}
           {disabled}
           bind:rect={crop}
-          on:change={() => applyImage()}
+          onchange={() => applyImage()}
         />
       {/if}
     </div>
