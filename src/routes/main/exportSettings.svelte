@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
   import PixelSelect from './pixelSelect.svelte';
+  import { detectFastFormats } from '#lib/offlineExport.ts';
   import {
     audioBitrates,
     exportMethods,
@@ -8,7 +10,8 @@
     qualities,
     speeds,
     videoFormats,
-    type EncodeSettings
+    type EncodeSettings,
+    type VideoFormat
   } from '#lib/encode.ts';
 
   // 書き出す範囲は、ファイルタブの音声の下（audioRange.svelte）で決める
@@ -16,7 +19,29 @@
   // 書き出し中は設定を変えられないようにする
   export let busy: boolean;
 
-  $: methodOptions = exportMethods.map((v) => ({ value: v, label: $_(`export_method_${v}`) }));
+  // 高速書き出しを使える形式。画面を開いたときに調べる（調べ終わるまでは null で、選べるままにする）
+  let fastFormats: Set<VideoFormat> | null = null;
+  onMount(async () => {
+    fastFormats = await detectFastFormats(settings);
+  });
+  $: fastAvailable = fastFormats == null || fastFormats.has(settings.format);
+  // 今の形式で使えないときは、リアルタイムに切り替える
+  $: if (!fastAvailable && settings.method == 'fast') settings.method = 'realtime';
+
+  $: methodOptions = exportMethods.map((v) =>
+    v == 'fast' && !fastAvailable
+      ? {
+          value: v,
+          // どの形式でも使えないときはブラウザ、ほかの形式なら使えるときは形式のせいだと示す
+          label: $_(
+            fastFormats?.size
+              ? 'export_method_fast_unsupported_format'
+              : 'export_method_fast_unsupported'
+          ),
+          disabled: true
+        }
+      : { value: v, label: $_(`export_method_${v}`) }
+  );
   $: formatOptions = videoFormats.map((v) => ({ value: v, label: $_(`export_format_${v}`) }));
   $: qualityOptions = qualities.map((v) => ({ value: v, label: $_(`export_quality_${v}`) }));
   $: speedOptions = speeds.map((v) => ({ value: v, label: $_(`export_speed_${v}`) }));

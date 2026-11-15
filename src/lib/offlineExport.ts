@@ -5,8 +5,10 @@ import {
   avcCodecCandidates,
   evenSize,
   fastVideoBitrate,
+  videoFormats,
   writeIvf,
-  type EncodeSettings
+  type EncodeSettings,
+  type VideoFormat
 } from './encode.ts';
 import { ANALYSER_SMOOTHING, SpectrumRenderer, type SpectrumStyle } from './spectrumRenderer.ts';
 
@@ -21,13 +23,35 @@ const ANALYSIS_RATE = 60;
 // キーフレームの間隔（秒）。シークしやすさとファイルの大きさの兼ね合い
 const KEYFRAME_INTERVAL = 2;
 
+// 高速書き出しに要る API（WebCodecs、OfflineAudioContext、OffscreenCanvas）があるか
+const hasFastExportApis = () =>
+  typeof VideoEncoder != 'undefined' &&
+  typeof VideoFrame != 'undefined' &&
+  typeof OfflineAudioContext != 'undefined' &&
+  typeof OffscreenCanvas != 'undefined';
+
+// 画面を開いたときに、高速書き出しを使える形式を調べる。実際の大きさで使えるかは書き出すときにも確かめ、
+// 使えなければリアルタイムの録画に切り替える（大きすぎてハードウェアのエンコーダーが受け付けないときなど）
+const PROBE_SIZE = { width: 640, height: 360 };
+export const detectFastFormats = async (settings: EncodeSettings) => {
+  const formats = new Set<VideoFormat>();
+  for (const format of videoFormats) {
+    const config = await findEncoderConfig(PROBE_SIZE.width, PROBE_SIZE.height, {
+      ...settings,
+      format
+    });
+    if (config) formats.add(format);
+  }
+  return formats;
+};
+
 // この環境で高速書き出しに使えるエンコーダーの設定。使えないときは null
 export const findEncoderConfig = async (
   width: number,
   height: number,
   settings: EncodeSettings
 ): Promise<VideoEncoderConfig | null> => {
-  if (typeof VideoEncoder == 'undefined' || typeof OfflineAudioContext == 'undefined') return null;
+  if (!hasFastExportApis()) return null;
   const w = evenSize(width);
   const h = evenSize(height);
   const base = {
