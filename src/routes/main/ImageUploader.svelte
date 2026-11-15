@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './ImageUploader.module.css';
   import { createEventDispatcher, onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
   import {
@@ -10,8 +11,8 @@
     type Pixels
   } from '#lib/image.ts';
   import { aspectLabel, cropPixels, fullRect, isFullRect, type Rect } from '#lib/crop.ts';
-  import FileInput from './fileInput.svelte';
-  import CropBox from './cropBox.svelte';
+  import FileInput from '#lib/components/FileInput.svelte';
+  import CropBox from '#lib/components/CropBox.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -143,7 +144,7 @@
       <p>
         <span>{$_('is_pixelation')}</span>
         <button
-          class={'no-button ' + (isDoPixelation ? 'pixelation-active' : 'action-link')}
+          class={['no-button', isDoPixelation ? styles.pixelationActive : 'action-link']}
           {disabled}
           on:click={() => {
             isDoPixelation = true;
@@ -152,7 +153,7 @@
         >
         <span>/</span>
         <button
-          class={'no-button ' + (isDoPixelation ? 'action-link' : 'pixelation-active')}
+          class={['no-button', isDoPixelation ? 'action-link' : styles.pixelationActive]}
           {disabled}
           on:click={() => {
             isDoPixelation = false;
@@ -162,13 +163,13 @@
       </p>
       {#if isDoPixelation}
         <!-- 上の段に縮小率（スライダーと %）、下の段に右寄せで出来上がりの大きさ -->
-        <div class="pixelation-size">
-          <div class="pixelation-size-row">
+        <div class={styles.pixelationSize}>
+          <div class={styles.pixelationRow}>
             <label for="pixelation-percent">{$_('pixelation_size')}</label>
             <input
               id="pixelation-percent"
               type="range"
-              class="pixel-range"
+              class={['pixel-range', styles.pixelationSlider]}
               min="1"
               max="100"
               step="1"
@@ -180,11 +181,11 @@
               }}
               style:--progress="{((pixelationPercent - 1) / 99) * 100}%"
             />
-            <span class="pixelation-size-percent"
+            <span class={styles.pixelationPercent}
               ><span>{pixelationPercent}%</span><span aria-hidden="true">100%</span></span
             >
           </div>
-          <p class="pixelation-size-result">
+          <p class={styles.pixelationResult}>
             {pixelatedSize.width} px × {pixelatedSize.height} px
           </p>
         </div>
@@ -192,9 +193,9 @@
     </div>
   {/if}
 
-  <div class="img-preview-container" style:display={imageLoaded ? 'block' : 'none'}>
+  <div class={styles.previewContainer} style:display={imageLoaded ? 'block' : 'none'}>
     <!-- トリミング。押すと、プレビューに枠を出して範囲を調整できる。調整している間は大きさと縦横比を出す -->
-    <div class="img-crop-toolbar">
+    <div class={styles.cropToolbar}>
       <button class="pixel-button" aria-pressed={cropping} {disabled} on:click={toggleCropping}
         >{cropping ? $_('crop_done') : $_('crop')}</button
       >
@@ -208,22 +209,25 @@
             applyImage();
           }}>{$_('crop_reset')}</button
         >
-        <p class="img-crop-size">
-          {#if cropAspect}<span class="img-crop-aspect">{cropAspect}</span>{/if}
+        <p class={styles.cropSize}>
+          {#if cropAspect}<span class={styles.cropAspect}>{cropAspect}</span>{/if}
           <span>{crop.width} px × {crop.height} px</span>
         </p>
       {/if}
     </div>
-    <div class="img-crop">
+    <div class={styles.crop}>
       <canvas
         id="preview"
+        class={styles.preview}
         bind:this={previewRef}
         width="0"
         height="0"
         style:aspect-ratio={previewAspect || null}
       ></canvas>
       {#if cropping && source}
+        <!-- マウスストーカー（Mouse.svelte）が、トリミングの枠の上で大きくなるようにする -->
         <CropBox
+          data-stalker-target
           width={source.width}
           height={source.height}
           {disabled}

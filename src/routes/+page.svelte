@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Mouse from './mouse.svelte';
-  import Nav from './nav.svelte';
+  import Mouse from './Mouse.svelte';
+  import Nav from './Nav.svelte';
   import Main from './main/index.svelte';
-  import Footer from './footer.svelte';
+  import Footer from './Footer.svelte';
 </script>
 
 <svelte:head>

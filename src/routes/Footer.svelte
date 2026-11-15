@@ -1,4 +1,8 @@
-<footer>
+<script lang="ts">
+  import styles from './Footer.module.css';
+</script>
+
+<footer class={styles.footer}>
   <div>
     <div>
       <a href="https://m1m0zzz.github.io/" target="_blank" rel="noopener noreferrer">Home Page</a>

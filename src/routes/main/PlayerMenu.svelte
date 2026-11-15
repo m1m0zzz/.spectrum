@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './PlayerMenu.module.css';
   import { _ } from 'svelte-i18n';
   import { formatDate } from '#lib/util.ts';
   import { convertVideo, load, muxVideo } from '#lib/ffmpeg.ts';
@@ -16,7 +17,7 @@
   export let audioFile: File | null;
   export let fftSize: number;
   export let style: SpectrumStyle;
-  // 書き出しの設定と範囲（秒）は「動画設定」タブ（exportSettings.svelte）で決める
+  // 書き出しの設定と範囲（秒）は「動画設定」タブ（ExportSettings.svelte）で決める
   export let settings: EncodeSettings;
   export let rangeStart: number;
   export let rangeEnd: number;
@@ -216,7 +217,7 @@
   };
 </script>
 
-<section class="player-menu">
+<section class={styles.root}>
   <button class="pixel-button" disabled={busy || rangeError} on:click={makeVideo}
     >{$_('generate_video')}</button
   >
@@ -224,12 +225,12 @@
     {$_('generate_video_message')}
   </p>
   {#if status == 'rendering'}
-    <p class="convert-progress">
+    <p class={styles.progress}>
       {$_('render_progress', { values: { percent: Math.floor(renderProgress * 100) } })}
     </p>
   {/if}
   {#if status == 'converting'}
-    <p class="convert-progress">
+    <p class={styles.progress}>
       {$_('convert_progress', { values: { percent: Math.floor(convertProgress * 100) } })}
     </p>
   {/if}

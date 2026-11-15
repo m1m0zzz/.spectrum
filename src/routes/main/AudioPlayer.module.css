@@ -1,0 +1,131 @@
+/* 再生プレイヤー（AudioPlayer.svelte）。上にシークバー、下に再生・時間・ミュート・音量。
+   幅はタブ（index.module.css の .tabView）に合わせる。width: 0 で .controls の幅に効かせず、min-width: 100% で広げる */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 0;
+  min-width: 100%;
+}
+
+.seek {
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dot);
+  min-width: calc(var(--dot) * 13);
+  padding: 0.35rem 0.5rem;
+}
+
+/* ミュートと音量は右に寄せる */
+.mute {
+  margin-left: auto;
+}
+
+/* 時間の表示で幅が揺れないよう、数字の幅をそろえる */
+.time {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.volume {
+  width: 70px;
+}
+
+/* アイコンはドットで描く（色は文字色） */
+.iconPlay,
+.iconPause,
+.iconSpeaker,
+.iconWaves,
+.iconMuted {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ▶（4 ドット × 7 ドット） */
+.iconPlay {
+  width: calc(var(--dot) * 4);
+  height: calc(var(--dot) * 7);
+  background-color: currentColor;
+  clip-path: polygon(
+    0 0,
+    calc(var(--dot) * 1) 0,
+    calc(var(--dot) * 1) calc(var(--dot) * 1),
+    calc(var(--dot) * 2) calc(var(--dot) * 1),
+    calc(var(--dot) * 2) calc(var(--dot) * 2),
+    calc(var(--dot) * 3) calc(var(--dot) * 2),
+    calc(var(--dot) * 3) calc(var(--dot) * 3),
+    100% calc(var(--dot) * 3),
+    100% calc(var(--dot) * 4),
+    calc(var(--dot) * 3) calc(var(--dot) * 4),
+    calc(var(--dot) * 3) calc(var(--dot) * 5),
+    calc(var(--dot) * 2) calc(var(--dot) * 5),
+    calc(var(--dot) * 2) calc(var(--dot) * 6),
+    calc(var(--dot) * 1) calc(var(--dot) * 6),
+    calc(var(--dot) * 1) 100%,
+    0 100%
+  );
+}
+
+/* ❚❚（2 ドットの棒を 1 ドットあけて 2 本） */
+.iconPause {
+  width: calc(var(--dot) * 5);
+  height: calc(var(--dot) * 6);
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / calc(var(--dot) * 2) 100% no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / calc(var(--dot) * 2) 100% no-repeat;
+}
+
+/* スピーカー（4 ドット × 7 ドット） */
+.iconSpeaker {
+  width: calc(var(--dot) * 4);
+  height: calc(var(--dot) * 7);
+  background-color: currentColor;
+  clip-path: polygon(
+    0 calc(var(--dot) * 2),
+    calc(var(--dot) * 2) calc(var(--dot) * 2),
+    calc(var(--dot) * 2) calc(var(--dot) * 1),
+    calc(var(--dot) * 3) calc(var(--dot) * 1),
+    calc(var(--dot) * 3) 0,
+    100% 0,
+    100% 100%,
+    calc(var(--dot) * 3) 100%,
+    calc(var(--dot) * 3) calc(var(--dot) * 6),
+    calc(var(--dot) * 2) calc(var(--dot) * 6),
+    calc(var(--dot) * 2) calc(var(--dot) * 5),
+    0 calc(var(--dot) * 5)
+  );
+}
+
+/* 音の波（短い棒と長い棒） */
+.iconWaves {
+  width: calc(var(--dot) * 3);
+  height: calc(var(--dot) * 7);
+  background:
+    linear-gradient(currentColor, currentColor) 0 calc(var(--dot) * 2) / var(--dot)
+      calc(var(--dot) * 3) no-repeat,
+    linear-gradient(currentColor, currentColor) calc(var(--dot) * 2) var(--dot) / var(--dot)
+      calc(var(--dot) * 5) no-repeat;
+}
+
+/* ミュートの ×（3 ドット × 3 ドット） */
+.iconMuted {
+  width: calc(var(--dot) * 3);
+  height: calc(var(--dot) * 3);
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 0 / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 50% 50% / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / var(--dot) var(--dot) no-repeat,
+    linear-gradient(currentColor, currentColor) 100% 100% / var(--dot) var(--dot) no-repeat;
+}

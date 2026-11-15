@@ -1,8 +1,8 @@
 <script lang="ts">
   import { clamp } from '#lib/util.ts';
-  import PixelNumber from './pixelNumber.svelte';
+  import PixelNumber from '#lib/components/PixelNumber.svelte';
   import { _ } from 'svelte-i18n';
-  import PixelSelect from './pixelSelect.svelte';
+  import PixelSelect from '#lib/components/PixelSelect.svelte';
 
   export let playerWidth: number;
   export let playerHeight: number;

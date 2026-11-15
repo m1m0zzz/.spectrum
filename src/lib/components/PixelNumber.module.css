@@ -1,0 +1,76 @@
+/* 数値の入力欄の ▲▼（PixelNumber.svelte）。入力欄そのものの見た目は global.css の input[type='number'] */
+.root {
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--dot);
+  vertical-align: middle;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dot);
+}
+
+.step {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(var(--dot) * 2);
+  color: white;
+  background-color: var(--color-brand);
+  border: var(--dot) solid var(--color-footer-link);
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% calc(100% - var(--dot)),
+    calc(100% - var(--dot)) calc(100% - var(--dot)),
+    calc(100% - var(--dot)) 100%,
+    var(--dot) 100%,
+    var(--dot) calc(100% - var(--dot)),
+    0 calc(100% - var(--dot)),
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
+  cursor: pointer;
+
+  &:hover {
+    background-color: #9ccacd;
+  }
+
+  &:active {
+    background-color: var(--color-active);
+  }
+
+  /* 入力欄が使えないときは押せなくする */
+  .root:has(input:disabled) & {
+    filter: grayscale(1);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* ▲（3 ドット・1 ドットの 2 段）。▼ は上下を返す */
+  &::after {
+    content: '';
+    width: calc(var(--dot) * 3);
+    height: calc(var(--dot) * 2);
+    background-color: currentColor;
+    clip-path: polygon(
+      var(--dot) 0,
+      calc(var(--dot) * 2) 0,
+      calc(var(--dot) * 2) var(--dot),
+      100% var(--dot),
+      100% 100%,
+      0 100%,
+      0 var(--dot),
+      var(--dot) var(--dot)
+    );
+  }
+
+  &.down::after {
+    transform: scaleY(-1);
+  }
+}

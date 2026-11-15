@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './FileInput.module.css';
   import { _ } from 'svelte-i18n';
 
   // input と label を結ぶ id。ページ内で一意にする
@@ -17,7 +18,7 @@
   };
 </script>
 
-<span class="file-input">
+<span class={styles.root}>
   <!-- 見た目からは隠すが、キーボードで選べるようフォーカスは受け取る。change は親にも渡す -->
   <input
     {id}
@@ -30,8 +31,8 @@
     on:change={onChange}
     on:change
   />
-  <label for={id} class="pixel-button">{$_('choose_file')}</label>
-  <span class="file-name" class:note={!fileName} title={fileName || undefined}
+  <label for={id} class={['pixel-button', styles.button]}>{$_('choose_file')}</label>
+  <span class={[styles.name, !fileName && 'note']} title={fileName || undefined}
     >{fileName || $_('no_file_selected')}</span
   >
 </span>

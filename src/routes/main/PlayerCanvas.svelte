@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './PlayerCanvas.module.css';
   import { SpectrumRenderer } from '#lib/spectrumRenderer.ts';
   import { createEventDispatcher, onMount } from 'svelte';
 
@@ -55,7 +56,7 @@
 </script>
 
 <section>
-  <div class="canvas-container">
+  <div class={styles.container}>
     <canvas
       id="player"
       bind:this={playerRef}

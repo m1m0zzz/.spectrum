@@ -1,0 +1,89 @@
+/* 画像の読み込み・ドット化・トリミング（ImageUploader.svelte） */
+
+/* 「する / しない」のうち選んでいる方 */
+.pixelationActive {
+  color: var(--color-active);
+}
+
+/* 後から出たり長さが変わったりするもの（ドット化の大きさ・画像のプレビュー）は、パネル（タブ）の幅に効かせず、
+   その幅の中に収める。幅に効かせると、出たときにタブの幅が広がってしまう */
+.pixelationSize,
+.previewContainer {
+  width: 0;
+  min-width: 100%;
+}
+
+/* ドット化の縮小率。上の段に「縮小率・スライダー・N%」、下の段に右寄せで出来上がりの大きさを出す */
+.pixelationRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  & label {
+    white-space: nowrap;
+  }
+}
+
+.pixelationSlider {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 値の桁数でスライダーの幅が変わらないよう、見えない「100%」を重ねて、% の欄をその幅にそろえる */
+.pixelationPercent {
+  display: inline-grid;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+
+  & > * {
+    grid-area: 1 / 1;
+  }
+
+  & > [aria-hidden='true'] {
+    visibility: hidden;
+  }
+}
+
+.pixelationResult {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ドット化した画像のプレビュー。画像の大きさのままではなく、パネルの幅いっぱいに拡大・縮小して見せる。
+   ドットがぼけないよう、拡大は最近傍で行う */
+.previewContainer {
+  max-width: 100%;
+  margin-top: 1rem;
+}
+
+.preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+/* トリミングのボタンの列。右端に、調整中の範囲の大きさと縦横比を出す */
+.cropToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.cropSize {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.cropAspect {
+  color: var(--color-active);
+}
+
+/* プレビューとトリミングの枠（CropBox.svelte）を重ねる */
+.crop {
+  position: relative;
+}

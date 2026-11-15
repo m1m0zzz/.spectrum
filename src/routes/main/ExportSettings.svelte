@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
-  import PixelSelect from './pixelSelect.svelte';
+  import PixelSelect from '#lib/components/PixelSelect.svelte';
   import { detectFastFormats } from '#lib/offlineExport.ts';
   import {
     audioBitrates,
@@ -14,7 +14,7 @@
     type VideoFormat
   } from '#lib/encode.ts';
 
-  // 書き出す範囲は、ファイルタブの音声の下（audioRange.svelte）で決める
+  // 書き出す範囲は、ファイルタブの音声の下（AudioRange.svelte）で決める
   export let settings: EncodeSettings;
   // 書き出し中は設定を変えられないようにする
   export let busy: boolean;

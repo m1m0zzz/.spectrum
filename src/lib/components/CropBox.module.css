@@ -1,0 +1,97 @@
+/* トリミングの枠（CropBox.svelte）。プレビューの上に重ねる */
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 範囲の外を暗くする。範囲と同じ位置の要素に大きな影を付け、プレビューからはみ出た影を切る */
+.shade {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+
+  & > div {
+    position: absolute;
+    box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.5);
+  }
+}
+
+/* 枠。ドラッグでページがスクロールしないよう、枠とハンドルの上ではタッチの既定の動きを止める */
+.frame {
+  position: absolute;
+  box-sizing: border-box;
+  border: var(--dot) solid var(--color-bg-1);
+  outline: 1px solid rgb(0 0 0 / 0.4);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: move;
+  user-select: none;
+
+  /* :focus の outline を全体で消しているため、枠の色を変えて示す */
+  &:focus-visible {
+    border-color: var(--color-active);
+  }
+
+  .disabled & {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+
+/* ハンドル。つかみやすいよう、見た目（4 ドット四方の点）より広い 32px 四方で受ける。
+   辺の真ん中と角に、中心を合わせて置く */
+.handle {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  translate: -50% -50%;
+  touch-action: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: calc(50% - var(--dot) * 2);
+    background-color: var(--color-footer-link);
+    box-shadow: 0 0 0 var(--dot) var(--color-bg-1);
+  }
+
+  &.n,
+  &.s {
+    left: 50%;
+    cursor: ns-resize;
+  }
+  &.e,
+  &.w {
+    top: 50%;
+    cursor: ew-resize;
+  }
+  &.n,
+  &.nw,
+  &.ne {
+    top: 0;
+  }
+  &.s,
+  &.sw,
+  &.se {
+    top: 100%;
+  }
+  &.w,
+  &.nw,
+  &.sw {
+    left: 0;
+  }
+  &.e,
+  &.ne,
+  &.se {
+    left: 100%;
+  }
+  &.nw,
+  &.se {
+    cursor: nwse-resize;
+  }
+  &.ne,
+  &.sw {
+    cursor: nesw-resize;
+  }
+}

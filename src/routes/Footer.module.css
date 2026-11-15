@@ -1,0 +1,51 @@
+/* ページ下部（Footer.svelte）。リンク・ライセンス・コピーライトの 3 段 */
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  color: white;
+  background: var(--color-brand);
+
+  & a,
+  :visited {
+    color: var(--color-footer-link);
+  }
+
+  & a:hover {
+    color: white;
+  }
+
+  /* 3 段（リンク・ライセンス・コピーライト）の間をあける */
+  & > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* リンクとライセンスの間の水平線。幅はリンクの段にそろえる */
+  & hr {
+    width: 80%;
+    margin: 0 auto;
+    border: none;
+    border-top: 2px solid rgba(255, 255, 255, 0.4);
+  }
+
+  & div {
+    width: 100%;
+
+    & p {
+      margin: 0;
+      text-align: center;
+    }
+
+    & div {
+      display: flex;
+      width: 80%;
+      max-width: 500px;
+      margin: 0 auto;
+      align-items: center;
+      justify-content: space-around;
+    }
+  }
+}

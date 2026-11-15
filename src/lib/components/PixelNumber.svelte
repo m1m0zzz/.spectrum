@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './PixelNumber.module.css';
   import { _ } from 'svelte-i18n';
   // 数値の入力欄に、ドット絵風の ▲▼ を付ける。ブラウザの増減ボタンは見た目を変えられないため CSS で隠している。
   // 中に置いた <input type="number"> をそのまま使い、▲▼ では stepUp / stepDown のあとに input・change を送る。
@@ -15,20 +16,20 @@
   };
 </script>
 
-<span class="pixel-number" bind:this={root}>
+<span class={styles.root} bind:this={root}>
   <slot />
   <!-- キーボードでは入力欄の ↑↓ で増減できるので、▲▼ はマウス・タッチ用にし、フォーカスや読み上げの対象から外す -->
-  <span class="pixel-number-steps" aria-hidden="true">
+  <span class={styles.steps} aria-hidden="true">
     <button
       type="button"
-      class="pixel-number-step up"
+      class={styles.step}
       aria-label={$_('number_increment')}
       tabindex="-1"
       on:click={() => step(1)}
     ></button>
     <button
       type="button"
-      class="pixel-number-step down"
+      class={[styles.step, styles.down]}
       aria-label={$_('number_decrement')}
       tabindex="-1"
       on:click={() => step(-1)}

@@ -1,0 +1,35 @@
+/* ファイルの選択（FileInput.svelte）。ブラウザの input は隠し、label をボタン（global.css の .pixel-button）にする */
+.root {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.button {
+  flex-shrink: 0;
+}
+
+/* フォーカスを受けるのは隠した input なので、その隣のボタンの枠の色を変える */
+.root input:focus-visible + .button {
+  border-color: var(--color-active);
+}
+
+/* ボタンに見えているのは label なので、:disabled の代わりに隠した input を見て、押せないことを示す */
+.root input:disabled + .button {
+  filter: grayscale(1);
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 長いファイル名は末尾を … で省く（title で全体を出す）。パネル（タブ）の幅が広がらないよう、
+   幅には効かせず、ボタンの横の空いた幅に収める */
+.name {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

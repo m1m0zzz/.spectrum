@@ -1,10 +1,11 @@
 <script lang="ts">
+  import styles from './AudioRange.module.css';
   // 書き出す範囲。範囲指定付きのシークバー（TrimBar。中に波形を描く）と、秒の入力欄を並べる。
   // 再生位置とシークは再生プレイヤー（AudioPlayer）が持つため、シークとハンドルの操作はイベントで親に返す
   import { createEventDispatcher } from 'svelte';
   import { _ } from 'svelte-i18n';
-  import PixelNumber from './pixelNumber.svelte';
-  import TrimBar from './trimBar.svelte';
+  import PixelNumber from '#lib/components/PixelNumber.svelte';
+  import TrimBar from '#lib/components/TrimBar.svelte';
 
   // 曲の長さ（秒。読み込む前は 0）と範囲（秒）、再生位置（秒）
   export let duration: number;
@@ -20,8 +21,10 @@
   const dispatch = createEventDispatcher<{ seek: number; trimstart: void; trimend: void }>();
 </script>
 
-<div class="audio-range">
+<div class={styles.root}>
+  <!-- マウスストーカー（Mouse.svelte）が、範囲のバーの上で大きくなるようにする -->
   <TrimBar
+    data-stalker-target
     {duration}
     bind:start={rangeStart}
     bind:end={rangeEnd}

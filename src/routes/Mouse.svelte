@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import styles from './Mouse.module.css';
+
+  let mouse: HTMLDivElement;
 
   onMount(() => {
     // マウスなど、カーソルを重ねられる入力が主のときだけ出す。タッチ主体の端末では、タップのたびに
@@ -11,7 +14,6 @@
     player.addEventListener('mouseenter', () => (ok = false), false);
     player.addEventListener('mouseleave', () => (ok = true), false);
 
-    const mouse = document.querySelector('#js-mouse') as HTMLDivElement;
     const style = window.getComputedStyle(mouse);
     const width = parseInt(style.width);
     const height = parseInt(style.height);
@@ -27,17 +29,18 @@
     });
 
     // ボタンや入力欄などの上では大きくする。音声を読み込んでから出る範囲のバーや、トリミングの枠のように
-    // 後から出る要素もあるため、要素ごとにイベントを付けず、ページ全体でカーソルの下の要素を調べる
-    const hoverTargets = 'a,button,input,select,.pixel-button,[role=option],.trim-bar,.crop-frame';
+    // 後から出る要素もあるため、要素ごとにイベントを付けず、ページ全体でカーソルの下の要素を調べる。
+    // コンポーネントのクラス名は CSS Modules で変わるため、それ以外の要素は data-stalker-target で示す
+    const hoverTargets = 'a,button,input,select,.pixel-button,[role=option],[data-stalker-target]';
     document.addEventListener('mouseover', (e) => {
       const target = e.target instanceof Element ? e.target.closest(hoverTargets) : null;
-      mouse.classList.toggle('js-hover', target != null);
+      mouse.classList.toggle(styles.hover, target != null);
     });
     // ウィンドウの外へ出たら戻す
     document.addEventListener('mouseout', (e) => {
-      if (!e.relatedTarget) mouse.classList.remove('js-hover');
+      if (!e.relatedTarget) mouse.classList.remove(styles.hover);
     });
   });
 </script>
 
-<div id="js-mouse"></div>
+<div class={styles.stalker} bind:this={mouse}></div>

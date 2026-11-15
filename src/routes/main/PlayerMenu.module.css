@@ -1,0 +1,17 @@
+/* 「動画を作成する」ボタンと、その下のメッセージ・ダウンロードのリンク（PlayerMenu.svelte）は中央に並べる */
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+
+  & p {
+    margin: 0;
+  }
+}
+
+/* 変換の進み具合。数字の幅をそろえ、% が変わっても文字が揺れないようにする */
+.progress {
+  font-variant-numeric: tabular-nums;
+}

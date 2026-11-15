@@ -12,6 +12,7 @@
 </script>
 
 <script lang="ts" generics="T extends string | number">
+  import styles from './PixelSelect.module.css';
   // ドット絵風の選択欄。<select> の代わりに、WAI-ARIA の select-only combobox パターンで作る
   // （https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/）。
   // フォーカスは常にボタン（combobox）に置き、リスト内の位置は aria-activedescendant で示す
@@ -212,10 +213,10 @@
   });
 </script>
 
-<span class="pixel-select" bind:this={root}>
+<span class={styles.root} bind:this={root}>
   <button
     type="button"
-    class="pixel-select-button"
+    class={styles.button}
     role="combobox"
     aria-haspopup="listbox"
     aria-expanded={open}
@@ -230,21 +231,20 @@
     on:blur={hide}
   >
     <!-- いちばん長い選択肢に幅を合わせ、値を変えてもボタンの幅が変わらないようにする -->
-    <span class="pixel-select-value">
+    <span class={styles.value}>
       <span>{selectedLabel}</span>
       {#each options as option (option.value)}
-        <span class="pixel-select-sizer" aria-hidden="true">{option.label}</span>
+        <span class={styles.sizer} aria-hidden="true">{option.label}</span>
       {/each}
     </span>
-    <span class="pixel-select-arrow" aria-hidden="true"></span>
+    <span class={styles.arrow} aria-hidden="true"></span>
   </button>
   <!-- リストは <p> の中にも置くため、<ul>/<li> ではなく span に役割を付ける（<p> の中に <ul> は置けず、
        ブラウザが <p> を途中で閉じて、サーバーで作った HTML とブラウザでの描画が食い違う）。
        マウスで押してもボタンからフォーカスが外れないよう、pointerdown の既定の動作を止める -->
   <span
     id="{id}-list"
-    class="pixel-select-list"
-    class:open
+    class={[styles.list, open && styles.open]}
     role="listbox"
     aria-labelledby={labelledby}
     aria-label={ariaLabel}
@@ -262,8 +262,7 @@
       <!-- svelte-ignore a11y_click_events_have_key_events -->
       <span
         id={optionId(i)}
-        class="pixel-select-option"
-        class:active={i == active}
+        class={[styles.option, i == active && styles.active]}
         role="option"
         tabindex="-1"
         aria-selected={i == selectedIndex}

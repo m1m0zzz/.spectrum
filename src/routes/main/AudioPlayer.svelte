@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './AudioPlayer.module.css';
   // ドット絵風の再生プレイヤー。ブラウザの audio のコントロールは見た目を変えられないため、
   // <audio> は見せずに置き、再生・時間・シーク・ミュート・音量を自前で作る。
   // 再生・シーク・時間の表示は、書き出しの範囲（ファイルタブの TrimBar で決める）の中で行う。
@@ -94,7 +95,7 @@
   };
 </script>
 
-<div class="audio-player">
+<div class={styles.root}>
   <audio
     bind:this={audio}
     on:loadedmetadata={readState}
@@ -113,7 +114,7 @@
   ></audio>
   <input
     type="range"
-    class="pixel-range audio-player-seek"
+    class={['pixel-range', styles.seek]}
     min="0"
     max={end - start}
     step="any"
@@ -126,34 +127,34 @@
       ? ((clamp(currentTime, start, end) - start) / (end - start)) * 100
       : 0}%"
   />
-  <div class="audio-player-controls">
+  <div class={styles.controls}>
     <button
       type="button"
-      class="pixel-button audio-player-button"
+      class={['pixel-button', styles.button]}
       aria-label={paused ? $_('audio_play') : $_('audio_pause')}
       disabled={!ready || locked}
       on:click={toggle}
     >
-      <span class={paused ? 'icon-play' : 'icon-pause'} aria-hidden="true"></span>
+      <span class={paused ? styles.iconPlay : styles.iconPause} aria-hidden="true"></span>
     </button>
     <!-- 時間は範囲の頭からの位置と、範囲の長さで示す -->
-    <span class="audio-player-time"
+    <span class={styles.time}
       >{format(clamp(currentTime, start, end) - start)} / {format(end - start)}</span
     >
     <button
       type="button"
-      class="pixel-button audio-player-button audio-player-mute"
+      class={['pixel-button', styles.button, styles.mute]}
       aria-label={$_('audio_mute')}
       aria-pressed={muted}
       disabled={locked}
       on:click={() => audio && (audio.muted = !audio.muted)}
     >
-      <span class="icon-speaker" aria-hidden="true"></span>
-      <span class={muted ? 'icon-muted' : 'icon-waves'} aria-hidden="true"></span>
+      <span class={styles.iconSpeaker} aria-hidden="true"></span>
+      <span class={muted ? styles.iconMuted : styles.iconWaves} aria-hidden="true"></span>
     </button>
     <input
       type="range"
-      class="pixel-range audio-player-volume"
+      class={['pixel-range', styles.volume]}
       min="0"
       max="1"
       step="0.05"

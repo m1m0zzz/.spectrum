@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './CropBox.module.css';
   // 画像のプレビューに重ねる、トリミングの枠。枠の内側をつかむと動かし、辺と角のハンドルで大きさを変える。
   // Pointer Events で扱うので、マウスとタッチのどちらでも操作できる。
   // 枠にフォーカスすると、矢印キーで動かし、Shift + 矢印キーで大きさを変えられる
@@ -93,9 +94,11 @@
   };
 </script>
 
-<div class="crop-layer" class:disabled bind:this={layer}>
+<!-- 使う側が渡したほかの属性（data-* など）は、いちばん外の要素に付ける。
+     この要素はマウスを受けない（pointer-events: none）ため、カーソルの下の要素から closest() でたどると、枠の上でだけ見つかる -->
+<div {...$$restProps} class={[styles.layer, disabled && styles.disabled]} bind:this={layer}>
   <!-- 範囲の外を暗くする。範囲と同じ位置に置いた要素の影で覆い、はみ出た影は切る -->
-  <div class="crop-shade">
+  <div class={styles.shade}>
     <div
       style:left={percent(rect.x, width)}
       style:top={percent(rect.y, height)}
@@ -107,8 +110,7 @@
        Svelte はこの role を操作できない要素とみなして警告するため、その警告だけを止める -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
   <div
-    class="crop-frame"
-    class:dragging={dragging != null}
+    class={styles.frame}
     bind:this={frame}
     style:left={percent(rect.x, width)}
     style:top={percent(rect.y, height)}
@@ -125,7 +127,7 @@
     on:keydown={onKeydown}
   >
     {#each HANDLES as handle (handle)}
-      <span class="crop-handle {handle}" data-handle={handle}></span>
+      <span class={[styles.handle, styles[handle]]} data-handle={handle}></span>
     {/each}
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { computeBandLevels, createBandMap, type BandMap } from './canvas.ts';
 
-// 画像をスペクトラムとして描く。画面のプレビュー（playerCanvas.svelte）と、
+// 画像をスペクトラムとして描く。画面のプレビュー（PlayerCanvas.svelte）と、
 // 動画の高速書き出し（offlineExport.ts）の両方で使う
 export type SpectrumStyle = {
   background: string;

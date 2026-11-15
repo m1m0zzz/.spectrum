@@ -1,0 +1,7 @@
+/* 書き出す範囲（AudioRange.svelte）。音声の下に、範囲指定付きのシークバーと秒の入力欄を置く */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}

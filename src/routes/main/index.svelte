@@ -1,18 +1,19 @@
 <script lang="ts">
+  import styles from './index.module.css';
   import { _ } from 'svelte-i18n';
-  import PixelNumber from './pixelNumber.svelte';
+  import PixelNumber from '#lib/components/PixelNumber.svelte';
 
   import { clamp } from '#lib/util.ts';
 
-  import ImageUploader from './imageUploader.svelte';
-  import AudioUploader from './audioUploader.svelte';
-  import AudioRange from './audioRange.svelte';
-  import PlayerCanvas from './playerCanvas.svelte';
-  import PlayerMenu from './playerMenu.svelte';
-  import ExportSettings from './exportSettings.svelte';
-  import SizeInput from './sizeInput.svelte';
-  import PixelSelect from './pixelSelect.svelte';
-  import AudioPlayer from './audioPlayer.svelte';
+  import ImageUploader from './ImageUploader.svelte';
+  import AudioUploader from './AudioUploader.svelte';
+  import AudioRange from './AudioRange.svelte';
+  import PlayerCanvas from './PlayerCanvas.svelte';
+  import PlayerMenu from './PlayerMenu.svelte';
+  import ExportSettings from './ExportSettings.svelte';
+  import SizeInput from './SizeInput.svelte';
+  import PixelSelect from '#lib/components/PixelSelect.svelte';
+  import AudioPlayer from './AudioPlayer.svelte';
   import { defaultEncodeSettings, type EncodeSettings } from '#lib/encode.ts';
 
   let imageLoaded = false;
@@ -91,10 +92,10 @@
   };
 </script>
 
-<main>
-  <div class="container">
-    <!-- キャンバスより上（使い方・タブ・再生プレイヤー）は、キャンバスとは別に中央に揃える（style.css の .controls） -->
-    <div class="controls">
+<main class={styles.main}>
+  <div class={styles.container}>
+    <!-- キャンバスより上（使い方・タブ・再生プレイヤー）は、キャンバスとは別に中央に揃える（index.module.css の .controls） -->
+    <div class={styles.controls}>
       <h2>{$_('usage')}</h2>
       <ol>
         <li>{$_('usage_1')}</li>
@@ -114,12 +115,12 @@
         </ul>
       {/if}
 
-      <!-- タブとパネルの幅は、いちばん広いパネルに合わせる（style.css の .tab-view） -->
-      <div class="tab-view">
-        <div class="tabs" role="tablist">
+      <!-- タブとパネルの幅は、いちばん広いパネルに合わせる（index.module.css の .tabView） -->
+      <div class={styles.tabView}>
+        <div class={styles.tabs} role="tablist">
           {#each tabs as tab, i (tab)}
             <button
-              class="tab"
+              class={styles.tab}
               role="tab"
               id="tab-{tab}"
               aria-selected={activeTab == tab}
@@ -133,7 +134,7 @@
         </div>
 
         <div
-          class="tab-panel"
+          class={styles.tabPanel}
           role="tabpanel"
           id="tab-panel-file"
           aria-labelledby="tab-file"
@@ -180,7 +181,7 @@
         </div>
 
         <div
-          class="tab-panel"
+          class={styles.tabPanel}
           role="tabpanel"
           id="tab-panel-settings"
           aria-labelledby="tab-settings"
@@ -271,7 +272,7 @@
         </div>
 
         <div
-          class="tab-panel"
+          class={styles.tabPanel}
           role="tabpanel"
           id="tab-panel-video"
           aria-labelledby="tab-video"

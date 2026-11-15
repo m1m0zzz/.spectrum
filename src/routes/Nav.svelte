@@ -1,7 +1,8 @@
 <script lang="ts">
+  import styles from './Nav.module.css';
   import { locale } from 'svelte-i18n';
   import { defaultLocale, languagesList } from '#lib/i18n/index.ts';
-  import PixelSelect from './main/pixelSelect.svelte';
+  import PixelSelect from '#lib/components/PixelSelect.svelte';
   import logo from '../assets/logo_192_trim.png';
 
   const options = languagesList.map(({ lang, name }) => ({ value: lang, label: name }));
@@ -9,12 +10,12 @@
   $: current = languagesList.find(({ lang }) => $locale?.startsWith(lang))?.lang ?? defaultLocale;
 </script>
 
-<nav>
+<nav class={styles.nav}>
   <a href="https://m1m0zzz.github.io/.spectrum/">
     <img src={logo} width="143px" height="40px" alt="logo" />
   </a>
 
-  <div class="utility">
+  <div class={styles.utility}>
     <PixelSelect
       id="language"
       ariaLabel="Please select your language."

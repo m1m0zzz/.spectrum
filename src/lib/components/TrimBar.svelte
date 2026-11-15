@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './TrimBar.module.css';
   // スマホの動画編集アプリのような、範囲（開始・終了）と再生位置をまとめて操作するバー。
   // 範囲の外は点線の枠だけにし、範囲は枠で囲んで、左右のハンドルで伸び縮みさせる。再生位置は白い縦棒で示す。
   // ハンドルと縦棒はそれぞれ role="slider" にし、キーボードでも動かせるようにする。
@@ -260,30 +261,28 @@
   };
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- 使う側が渡したほかの属性（data-* など）は、いちばん外の要素に付ける -->
 <div
-  class="trim-bar"
-  class:disabled
-  class:dragging={dragging != null}
-  class:zoomed
+  {...$$restProps}
+  class={[styles.root, disabled && styles.disabled, dragging != null && styles.dragging]}
   on:pointerdown={onPointerDown}
   on:pointermove={onPointerMove}
   on:pointerup={onPointerUp}
   on:pointercancel={onPointerUp}
   on:contextmenu|preventDefault
 >
-  <div class="trim-bar-track" bind:this={track} bind:clientWidth={trackWidth}>
-    <span class="trim-bar-frame" style:left="{frameLeft}%" style:width="{frameRight - frameLeft}%"
+  <div class={styles.track} bind:this={track} bind:clientWidth={trackWidth}>
+    <span class={styles.frame} style:left="{frameLeft}%" style:width="{frameRight - frameLeft}%"
     ></span>
     <!-- 波形は範囲の中だけを見せる。範囲を動かすたびに描き直さないよう、範囲の外を切り抜いて隠す -->
     <canvas
-      class="trim-bar-wave"
+      class={styles.wave}
       bind:this={wave}
       aria-hidden="true"
       style:clip-path="inset(0 {100 - frameRight}% 0 {frameLeft}%)"
     ></canvas>
     <span
-      class="trim-bar-handle start"
+      class={[styles.handle, styles.start]}
       style:left={inside(startPos)}
       style:visibility={visible(startPos)}
       role="slider"
@@ -298,7 +297,7 @@
       on:keydown={onKeydown('start')}
     ></span>
     <span
-      class="trim-bar-handle end"
+      class={[styles.handle, styles.end]}
       style:left={inside(endPos)}
       style:visibility={visible(endPos)}
       role="slider"
@@ -313,7 +312,7 @@
       on:keydown={onKeydown('end')}
     ></span>
     <span
-      class="trim-bar-playhead"
+      class={styles.playhead}
       bind:this={playhead}
       style:left={inside(currentPos)}
       style:visibility={visible(currentPos)}

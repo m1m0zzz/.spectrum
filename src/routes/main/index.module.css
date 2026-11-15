@@ -1,0 +1,158 @@
+/* メインの中身（index.svelte） */
+.main {
+  padding-bottom: 2rem;
+  background: var(--color-bg-2);
+  line-height: 150%;
+
+  & p {
+    max-width: 720px;
+  }
+}
+
+/* キャンバスより上（.controls）・キャンバス・「動画を作成する」は、それぞれ別に中央に揃える。
+   まとめて 1 つの幅で中央に置くと、広い方（大きいキャンバスなど）に合わせて、狭い方が左に寄る */
+.container {
+  padding: 1rem;
+}
+
+/* キャンバスより上（使い方・タブ・再生プレイヤー）。中は左揃えのまま、かたまりごと中央に置く */
+.controls {
+  width: fit-content;
+  max-width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* タブ（ファイル / 設定 / 動画設定）。
+   どのタブを開いても幅が変わらないよう、タブの列とすべてのパネルを 1 列のグリッドに重ね、
+   いちばん広いパネル（言語や中身で変わる）に列の幅を合わせる。固定の幅にすると、中身が変わるたびに合わせ直す必要がある */
+.tabView {
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tabView > .tabPanel {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+/* 選んでいないパネルは、幅だけを列に効かせて見えなくする（display: none だと幅に効かない）。
+   visibility: hidden なのでフォーカスも読み上げもされない。高さと上下の余白・枠は 0 にし、行の高さに効かせない */
+.tabView > .tabPanel[hidden] {
+  display: block;
+  visibility: hidden;
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom-width: 0;
+  overflow: hidden;
+}
+
+/* 後から出るエラーは、パネルの幅に効かせず、その幅の中に収める。幅に効かせると、出たときにタブの幅が広がってしまう。
+   画像のプレビューとドット化の大きさは ImageUploader.module.css で同じようにしている */
+.tabPanel :global(.error) {
+  width: 0;
+  min-width: 100%;
+}
+
+.tabs {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 1.5rem;
+  border-bottom: var(--dot) solid var(--color-footer-link);
+}
+
+/* ドット絵風のタブ。ボタンと同じ 1 ドットの枠で上の 2 隅を欠く。
+   選んでいないタブは浮かせ（左上を明るく、右下を暗く）、選んでいるタブは平らにしてパネルとつなげる */
+.tab {
+  padding: 0.4rem 1rem;
+  white-space: nowrap;
+  color: var(--color-note);
+  border: var(--dot) solid var(--color-footer-link);
+  border-bottom: none;
+  /* 背景はページと同じ色。選択中のタブで、タブの列の下線を隠すのに使う */
+  background-color: var(--color-bg-2);
+  box-shadow:
+    inset var(--dot) var(--dot) 0 0 rgba(255, 255, 255, 0.7),
+    inset calc(var(--dot) * -1) 0 0 0 var(--color-border);
+  clip-path: polygon(
+    var(--dot) 0,
+    calc(100% - var(--dot)) 0,
+    calc(100% - var(--dot)) var(--dot),
+    100% var(--dot),
+    100% 100%,
+    0 100%,
+    0 var(--dot),
+    var(--dot) var(--dot)
+  );
+  cursor: pointer;
+
+  /* 隣のタブと枠線を重ね、隙間も二重線も作らない */
+  & + .tab {
+    margin-left: calc(var(--dot) * -1);
+  }
+
+  &:hover {
+    color: inherit;
+  }
+
+  /* 選択中のタブは一段高くし、下の線を消してパネルとつなげる */
+  &[aria-selected='true'] {
+    /* 重ねた枠線が隣のタブに隠れないよう前に出す */
+    position: relative;
+    /* 下に 1 ドットはみ出させ、タブの列の下線を背景で隠す */
+    margin-bottom: calc(var(--dot) * -1);
+    padding-top: 0.6rem;
+    padding-bottom: calc(0.4rem + var(--dot));
+    color: var(--color-active);
+    box-shadow: none;
+    cursor: default;
+  }
+
+  /* outline は clip-path で切れるため、キーボード操作のときは枠の色を変えて示す */
+  &:focus-visible {
+    border-color: var(--color-active);
+  }
+}
+
+/* 狭い画面ではタブを折り返さず、3 つで幅を分け合う */
+@media (max-width: 480px) {
+  .tab {
+    flex: 1;
+    padding-right: 0.25rem;
+    padding-left: 0.25rem;
+  }
+}
+
+.tabPanel {
+  position: relative;
+  padding: 0 1rem 1rem;
+  border: var(--dot) solid var(--color-footer-link);
+  border-top: none;
+
+  /* 下の 2 隅を 1 ドット欠く。clip-path を使うと中の選択欄のリスト（popover の無いブラウザで
+     position: fixed で出すもの）まで切れるため、隅の 1 ドットをページの背景色で塗って欠く */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: calc(var(--dot) * -1);
+    width: var(--dot);
+    height: var(--dot);
+    background-color: var(--color-bg-2);
+  }
+
+  &::before {
+    left: calc(var(--dot) * -1);
+  }
+
+  &::after {
+    right: calc(var(--dot) * -1);
+  }
+
+  & > section:first-child {
+    margin-top: 0;
+    padding-top: 1rem;
+  }
+}

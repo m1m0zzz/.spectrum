@@ -1,0 +1,20 @@
+/* ページ上部のバー（Nav.svelte）。左にロゴ、右に言語の選択と GitHub へのリンク */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-1);
+  padding: 4px 8px 4px 8px;
+}
+
+.utility {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-left: 10px;
+  background: var(--color-bg-1);
+
+  & > * {
+    margin-left: 10px;
+  }
+}

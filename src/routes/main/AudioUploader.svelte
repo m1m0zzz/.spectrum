@@ -3,7 +3,7 @@
   import { _ } from 'svelte-i18n';
   import { computePeaks } from '#lib/waveform.ts';
   import { ANALYSER_SMOOTHING } from '#lib/spectrumRenderer.ts';
-  import FileInput from './fileInput.svelte';
+  import FileInput from '#lib/components/FileInput.svelte';
 
   const dispatch = createEventDispatcher();
 
