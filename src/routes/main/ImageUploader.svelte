@@ -9,7 +9,14 @@
     scaledSize,
     type Pixels
   } from '#lib/image.ts';
-  import { aspectLabel, cropPixels, fullRect, isFullRect, type Rect } from '#lib/crop.ts';
+  import {
+    ASPECT_RATIOS,
+    aspectLabel,
+    cropPixels,
+    fullRect,
+    isFullRect,
+    type Rect
+  } from '#lib/crop.ts';
   import FileInput from '#lib/components/FileInput.svelte';
   import CropBox from '#lib/components/CropBox.svelte';
   import { getExportState } from '#lib/state/export.svelte.ts';
@@ -218,7 +225,11 @@
           }}>{$_('crop_reset')}</button
         >
         <p class={styles.cropSize}>
-          {#if cropAspect}<span class={styles.cropAspect}>{cropAspect}</span>{/if}
+          <!-- 縦横比は合うときだけ出る。出たときに列が折り返して高さが変わらないよう、いちばん長い比の幅を常にとる -->
+          <span class={styles.cropAspect}>
+            <span>{cropAspect ?? ''}</span>
+            {#each ASPECT_RATIOS as { label } (label)}<span aria-hidden="true">{label}</span>{/each}
+          </span>
           <span>{crop.width} px × {crop.height} px</span>
         </p>
       {/if}

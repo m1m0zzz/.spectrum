@@ -80,7 +80,18 @@
 }
 
 .cropAspect {
+  display: inline-grid;
+  text-align: right;
   color: var(--color-active);
+
+  /* 見えない比をすべて重ね、いちばん長いものの幅にする */
+  & > * {
+    grid-area: 1 / 1;
+  }
+
+  & > [aria-hidden='true'] {
+    visibility: hidden;
+  }
 }
 
 /* プレビューとトリミングの枠（CropBox.svelte）を重ねる */
