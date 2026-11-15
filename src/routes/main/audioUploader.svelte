@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { _ } from 'svelte-i18n';
   import { computePeaks } from '#lib/waveform.ts';
+  import { ANALYSER_SMOOTHING } from '#lib/spectrumRenderer.ts';
   import FileInput from './fileInput.svelte';
 
   const dispatch = createEventDispatcher();
@@ -16,6 +17,8 @@
   export let disabled = false;
   // 波形のプレビュー（computePeaks の結果）。デコードできなかったときは null
   export let waveform: Float32Array | null = null;
+  // 読み込んだ曲のファイル。高速書き出しで、曲をデコードし直すのに使う
+  export let audioFile: File | null = null;
 
   let files: FileList | undefined;
   let objectUrl: string | null = null;
@@ -45,14 +48,14 @@
     objectUrl = URL.createObjectURL(files[0]);
 
     audioRef.src = objectUrl;
+    audioFile = files[0];
 
     if (!audioContext) {
       // init audio context
       audioContext = new AudioContext();
       nodeAnalyser = audioContext.createAnalyser();
       nodeAnalyser.fftSize = fftSize;
-      // 0～1の範囲でデータの動きの速さ 0だともっとも速く、1に近づくほど遅くなる
-      nodeAnalyser.smoothingTimeConstant = 0.85;
+      nodeAnalyser.smoothingTimeConstant = ANALYSER_SMOOTHING;
 
       const nodeSource = audioContext.createMediaElementSource(audioRef);
       recorderDestination = audioContext.createMediaStreamDestination();

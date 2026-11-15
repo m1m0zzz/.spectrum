@@ -1,6 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import {
+  buildMuxArgs,
   buildOutputArgs,
   mimeTypeOf,
   parseProgressTime,
@@ -70,6 +71,61 @@ export const load = () => {
 
 const VIDEO_KEY = 'video';
 
+// ffmpeg を実行し、出力を blob url にして返す。進み具合は、ログの time=（出力済みの長さ）を duration で割って求める。
+// 仮想ファイルシステムはメモリ上にあるため、終わったら入力（inputs）も出力も消す
+const run = async (
+  ffmpeg: FFmpeg,
+  args: string[],
+  outputName: string,
+  inputs: string[],
+  settings: EncodeSettings,
+  duration: number,
+  onProgress?: (ratio: number) => void
+) => {
+  const onLog = ({ message }: { message: string }) => {
+    const time = parseProgressTime(message);
+    if (time != null) onProgress?.(Math.min(1, time / duration));
+  };
+  if (onProgress && duration > 0) ffmpeg.on('log', onLog);
+  try {
+    console.time('exec');
+    const code = await ffmpeg.exec(args);
+    console.timeEnd('exec');
+    if (code != 0) throw new Error(`ffmpeg exited with code ${code}`);
+    // バイナリで読むので Uint8Array が返る。worker から転送された通常の ArrayBuffer で、SharedArrayBuffer ではない
+    const data = (await ffmpeg.readFile(outputName)) as Uint8Array<ArrayBuffer>;
+    return URL.createObjectURL(new Blob([data], { type: mimeTypeOf(settings.format) }));
+  } finally {
+    ffmpeg.off('log', onLog);
+    for (const name of [...inputs, outputName]) await ffmpeg.deleteFile(name).catch(() => {});
+  }
+};
+
+// 高速書き出し（offlineExport.ts）でエンコードした映像と、元の曲の範囲をまとめる。return: blob url
+export const muxVideo = async (
+  video: { data: Uint8Array; name: string },
+  audioFile: File,
+  settings: EncodeSettings,
+  trim: Trim,
+  onProgress?: (ratio: number) => void
+) => {
+  const { ffmpeg } = await load();
+  const outputName = `output.${settings.format}`;
+  const audioName = 'audio';
+  await ffmpeg.writeFile(video.name, video.data);
+  await ffmpeg.writeFile(audioName, await fetchFile(audioFile));
+  const args = buildMuxArgs(settings, video.name, audioName, trim, outputName);
+  return run(
+    ffmpeg,
+    args,
+    outputName,
+    [video.name, audioName],
+    settings,
+    trim.duration,
+    onProgress
+  );
+};
+
 // 録画した WebM を設定に従って変換する。return: blob url
 // onProgress には変換の進み具合（0〜1）を渡す。書き出す長さ（trim.duration）が分かるときだけ呼ぶ
 export const convertVideo = async (
@@ -85,24 +141,5 @@ export const convertVideo = async (
   const args = multiThread
     ? [...MT_ARGS.input, '-i', VIDEO_KEY, ...MT_ARGS.output, ...output]
     : ['-i', VIDEO_KEY, ...output];
-  const total = trim?.duration ?? 0;
-  const onLog = ({ message }: { message: string }) => {
-    const time = parseProgressTime(message);
-    if (time != null) onProgress?.(Math.min(1, time / total));
-  };
-  if (onProgress && total > 0) ffmpeg.on('log', onLog);
-  try {
-    console.time('exec');
-    const code = await ffmpeg.exec(args);
-    console.timeEnd('exec');
-    if (code != 0) throw new Error(`ffmpeg exited with code ${code}`);
-    // バイナリで読むので Uint8Array が返る。worker から転送された通常の ArrayBuffer で、SharedArrayBuffer ではない
-    const data = (await ffmpeg.readFile(outputName)) as Uint8Array<ArrayBuffer>;
-    return URL.createObjectURL(new Blob([data], { type: mimeTypeOf(settings.format) }));
-  } finally {
-    ffmpeg.off('log', onLog);
-    // 仮想ファイルシステムはメモリ上にあるため、書き出すたびに消さないと溜まっていく
-    await ffmpeg.deleteFile(VIDEO_KEY).catch(() => {});
-    await ffmpeg.deleteFile(outputName).catch(() => {});
-  }
+  return run(ffmpeg, args, outputName, [VIDEO_KEY], settings, trim?.duration ?? 0, onProgress);
 };

@@ -3,6 +3,7 @@
   import PixelSelect from './pixelSelect.svelte';
   import {
     audioBitrates,
+    exportMethods,
     frameRates,
     qualities,
     speeds,
@@ -15,6 +16,7 @@
   // 書き出し中は設定を変えられないようにする
   export let busy: boolean;
 
+  $: methodOptions = exportMethods.map((v) => ({ value: v, label: $_(`export_method_${v}`) }));
   $: formatOptions = videoFormats.map((v) => ({ value: v, label: $_(`export_format_${v}`) }));
   $: qualityOptions = qualities.map((v) => ({ value: v, label: $_(`export_quality_${v}`) }));
   $: speedOptions = speeds.map((v) => ({ value: v, label: $_(`export_speed_${v}`) }));
@@ -23,6 +25,16 @@
 </script>
 
 <section>
+  <p>
+    <span id="export-method-label">{$_('export_method')}</span>
+    <PixelSelect
+      id="export-method"
+      labelledby="export-method-label"
+      options={methodOptions}
+      bind:value={settings.method}
+      disabled={busy}
+    />
+  </p>
   <p>
     <span id="export-format-label">{$_('export_format')}</span>
     <PixelSelect
@@ -43,7 +55,8 @@
       disabled={busy}
     />
   </p>
-  <p>
+  <!-- 変換速度は ffmpeg で映像をエンコードするときの設定。高速書き出しは WebCodecs でエンコードするため使わない -->
+  <p hidden={settings.method == 'fast'}>
     <span id="export-speed-label">{$_('export_speed')}</span>
     <PixelSelect
       id="export-speed"

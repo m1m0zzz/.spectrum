@@ -23,6 +23,7 @@
   let trimming = false;
   let audioPlayer: AudioPlayer;
   let waveform: Float32Array | null = null;
+  let audioFile: File | null = null;
   let audioContext: AudioContext | null;
   let nodeAnalyser: AnalyserNode | null;
   let recorderDestination: MediaStreamAudioDestinationNode;
@@ -159,6 +160,7 @@
             {recorderDestination}
             disabled={exporting}
             bind:waveform
+            bind:audioFile
           />
           <!-- 書き出す範囲は、音声の下で波形を見ながら決める -->
           {#if audioDuration > 0}
@@ -314,6 +316,15 @@
       {audioContext}
       {audioRef}
       {imageLoaded}
+      {imageData}
+      {audioFile}
+      {fftSize}
+      style={{
+        background,
+        sensitivity: spectrumSensitivity,
+        gridSize: spectrumGridSize,
+        smoothTime: spectrumSmoothTime
+      }}
       {recorderDestination}
       settings={encodeSettings}
       {rangeStart}
