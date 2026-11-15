@@ -1,6 +1,0 @@
-# git blame で飛ばす、空白だけを変えたコミット。
-# GitHub の blame 表示はこのファイルを自動で読む。手元では次の設定で効く:
-#   git config blame.ignoreRevsFile .git-blame-ignore-revs
-
-# インデントをタブから 2 スペースにする
-64126b19dcd3f9bdb3068cc037c32e0546704d84
