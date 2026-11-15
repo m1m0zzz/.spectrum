@@ -45,7 +45,8 @@ export class AudioState {
   #frame = 0;
   #decoding = 0;
 
-  // 曲を読み込む。ファイルを選んだ操作の中で呼ぶ（AudioContext はユーザーの操作の中で作らないと音が出ない）
+  // 曲を読み込む。ファイルを選んだ操作の中で呼ぶ。AudioContext はここで作るが、Safari では止まったまま
+  // （suspended）になることがあるため、再生するときに resume で動かす
   load(file: File) {
     const element = this.#ensureElement();
     // data URL（base64）にすると長い曲でメモリと時間を食うため、object URL で読む
@@ -58,7 +59,18 @@ export class AudioState {
     this.#loadWaveform(file, context);
   }
 
+  // AudioContext が止まっていれば動かす。曲は <audio> から解析を通ってスピーカーへ出るため、止まったままだと
+  // 再生しても音が出ず、スペクトラムも動かない。Safari はユーザーの操作の中でしか動かさないので、ボタンを押した処理の中で
+  // （await より前に）呼ぶ
+  resume() {
+    const context = this.context;
+    if (context && context.state != 'running') {
+      context.resume().catch((error) => console.error(error));
+    }
+  }
+
   play() {
+    this.resume();
     return this.element?.play() ?? Promise.resolve();
   }
 

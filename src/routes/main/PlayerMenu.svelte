@@ -58,6 +58,9 @@
 
   const makeVideo = async () => {
     if (exporter.busy) return;
+    // リアルタイムの書き出しはシークを待ってから再生するため、そこでは操作の外になり、Safari は AudioContext を動かさない。
+    // 押した処理の中で先に動かしておく（止まったままだと録画に音が入らない）
+    audioState.resume();
     const { context: audioContext, recorderDestination, file } = audioState;
     const imageData = image.data;
     const playerRef = spectrum.canvas;
