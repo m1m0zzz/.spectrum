@@ -14,8 +14,7 @@
   } from '#lib/encode.ts';
   import { getExportState } from '#lib/state/export.svelte.ts';
 
-  // 書き出しの設定。書き出す範囲は、ファイルタブの音声の下（AudioRange.svelte）で決める。
-  // 書き出し中（exporter.busy）は設定を変えられないようにする
+  // 書き出しの設定。書き出す範囲は、ファイルタブの音声の下（AudioRange.svelte）で決める
   const exporter = getExportState();
   const settings = exporter.settings;
 
@@ -25,7 +24,6 @@
     fastFormats = await detectFastFormats(settings);
   });
   const fastAvailable = $derived(fastFormats == null || fastFormats.has(settings.format));
-  // 今の形式で使えないときは、リアルタイムに切り替える
   $effect.pre(() => {
     if (!fastAvailable && settings.method == 'fast') settings.method = 'realtime';
   });

@@ -126,7 +126,6 @@
         >
           <ImageUploader />
           <AudioUploader />
-          <!-- 書き出す範囲は、音声の下で波形を見ながら決める -->
           {#if audio.duration > 0}
             <AudioRange />
           {/if}

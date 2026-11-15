@@ -16,7 +16,6 @@
     // 範囲を動かし終えたとき（ドラッグを離したとき・キーで動かしたとき）に呼ぶ
     onchange?: (rect: Rect) => void;
   } & Omit<HTMLAttributes<HTMLDivElement>, 'onchange'>;
-  // ほかの属性（data-* など）は rest に入れ、いちばん外の要素に付ける
   let { width, height, rect = $bindable(), disabled = false, onchange, ...rest }: Props = $props();
 
   // 縦横比に吸着させる距離と、範囲の最小の大きさ（画面上の px）

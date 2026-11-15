@@ -1,4 +1,3 @@
-/* マウスストーカー（Mouse.svelte） */
 .stalker {
   pointer-events: none;
   position: fixed;

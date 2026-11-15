@@ -165,7 +165,7 @@
 
     const canvasStream = playerRef.captureStream();
     const audioStream = recorderDestination.stream;
-    const mediaStream = new MediaStream(); // canvasStream + audioStream
+    const mediaStream = new MediaStream();
     [canvasStream, audioStream].forEach((stream) => {
       stream.getTracks().forEach((track) => mediaStream.addTrack(track));
     });
@@ -198,7 +198,6 @@
         .catch(fail);
     };
 
-    // play!
     mediaRecorder.start();
     try {
       await audio.play();

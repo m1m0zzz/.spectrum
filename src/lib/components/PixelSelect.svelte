@@ -27,7 +27,6 @@
     options: SelectOption<T>[];
     value: T;
     disabled?: boolean;
-    // 選択肢を選んで値が変わったときに呼ぶ
     onchange?: (value: T) => void;
   };
   let {
@@ -215,7 +214,6 @@
     scrollActiveIntoView();
   };
 
-  // 書き出し中などで使えなくなったら閉じる
   $effect(() => {
     if (disabled) untrack(hide);
   });

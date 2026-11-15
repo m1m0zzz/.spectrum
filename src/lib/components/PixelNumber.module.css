@@ -45,7 +45,6 @@
     background-color: var(--color-active);
   }
 
-  /* 入力欄が使えないときは押せなくする */
   .root:has(input:disabled) & {
     filter: grayscale(1);
     opacity: 0.5;

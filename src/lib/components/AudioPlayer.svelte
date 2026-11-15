@@ -31,7 +31,6 @@
   // 数値の入力欄から範囲外や逆転した値が入っても、再生と表示が崩れないようにする
   const s = $derived(clamp(start, 0, player.duration));
   const e = $derived(clamp(end, s, player.duration));
-  // 範囲の頭からの位置
   const position = $derived(clamp(player.currentTime, s, e) - s);
 
   const seek = (t: number) => player.seek(clamp(t, s, e));
@@ -96,7 +95,6 @@
     >
       <span class={player.paused ? styles.iconPlay : styles.iconPause} aria-hidden="true"></span>
     </button>
-    <!-- 時間は範囲の頭からの位置と、範囲の長さで示す -->
     <span class={styles.time}>{format(position)} / {format(e - s)}</span>
     <button
       type="button"

@@ -6,7 +6,6 @@
   import { getExportState } from '#lib/state/export.svelte.ts';
 
   const audio = getAudioState();
-  // 動画の作成中は曲を差し替えられないようにする
   const exporter = getExportState();
   // ダイアログを取り消すと選択が空になる。そのときは今の曲のままにする
   const upload = (files: FileList | undefined) => {

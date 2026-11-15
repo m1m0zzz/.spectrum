@@ -23,7 +23,6 @@ const ANALYSIS_RATE = 60;
 // キーフレームの間隔（秒）。シークしやすさとファイルの大きさの兼ね合い
 const KEYFRAME_INTERVAL = 2;
 
-// 高速書き出しに要る API（WebCodecs、OfflineAudioContext、OffscreenCanvas）があるか
 const hasFastExportApis = () =>
   typeof VideoEncoder != 'undefined' &&
   typeof VideoFrame != 'undefined' &&

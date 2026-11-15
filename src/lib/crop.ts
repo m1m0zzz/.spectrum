@@ -110,7 +110,6 @@ export const dragRect = (
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
-// 画像 src から rect の範囲を切り出す
 export const cropPixels = (src: Pixels, rect: Rect): Pixels<ArrayBuffer> => {
   const { x, y, width, height } = rect;
   const data = new Uint8ClampedArray(width * height * 4);

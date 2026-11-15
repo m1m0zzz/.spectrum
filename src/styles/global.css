@@ -210,7 +210,6 @@ section {
     border-color: var(--color-active);
   }
 
-  /* 押せないときは色を抜いて薄くする */
   &:disabled {
     filter: grayscale(1);
     opacity: 0.5;

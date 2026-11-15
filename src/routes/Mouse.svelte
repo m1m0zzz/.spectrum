@@ -7,7 +7,6 @@
   onMount(() => {
     const el = mouse;
     if (!el) return;
-    // 付けたリスナーは、まとめて外せるようにする
     const listening = new AbortController();
     const { signal } = listening;
 

@@ -24,11 +24,9 @@
     waveform?: Float32Array | null;
     // 再生位置を動かした（範囲内に収めた秒）
     onseek?: (time: number) => void;
-    // 範囲を動かし始めた・動かし終えた
     ontrimstart?: () => void;
     ontrimend?: () => void;
   } & HTMLAttributes<HTMLDivElement>;
-  // ほかの属性（data-* など）は rest に入れ、いちばん外の要素に付ける
   let {
     duration,
     start = $bindable(),
@@ -228,7 +226,6 @@
   const onPointerMove = (event: PointerEvent) => {
     if (!dragging) return;
     pointerX = event.clientX;
-    // 動いたら、そこから止まるのを待ち直す
     if (
       (dragging == 'start' || dragging == 'end') &&
       !zoomed &&

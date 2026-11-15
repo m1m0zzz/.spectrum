@@ -74,7 +74,6 @@ export class SpectrumRenderer {
     this.drawPixelSpectrum(levels, image, style, w, h, elapsed);
   }
 
-  // 画像の 1 列ごとに別のビンを割り当てる
   private getBandMap(binCount: number, columns: number) {
     const key = `${binCount}:${columns}`;
     if (!this.bandMap || key != this.bandMapKey) {

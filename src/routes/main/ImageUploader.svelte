@@ -15,7 +15,7 @@
   import { getExportState } from '#lib/state/export.svelte.ts';
   import { getImageState } from '#lib/state/image.svelte.ts';
 
-  // トリミング・ドット化した画像は ImageState に入れる。動画の作成中は画像やドット化の設定を変えられないようにする
+  // トリミング・ドット化した画像は ImageState に入れる
   const image = getImageState();
   const exporter = getExportState();
   const disabled = $derived(exporter.busy);
@@ -100,7 +100,6 @@
     if (img.width * img.height > MAX_IMAGE_PIXELS) {
       imgError = true;
       isDoPixelation = true;
-      // 上限に収まるいちばん大きい割合
       pixelationPercent = maxPercentWithin(img.width, img.height);
     } else {
       imgError = false;

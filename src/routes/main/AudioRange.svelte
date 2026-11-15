@@ -12,7 +12,6 @@
 
   const audio = getAudioState();
   const exporter = getExportState();
-  // 動画の作成中は範囲を変えられないようにする
   const disabled = $derived(exporter.busy);
 </script>
 

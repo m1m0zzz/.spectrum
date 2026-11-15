@@ -11,13 +11,11 @@
   const spectrum = getSpectrumState();
   const image = getImageState();
   const exporter = getExportState();
-  // 画像の大きさ。読み込む前は 0
   const imageWidth = $derived(image.data?.width ?? 0);
   const imageHeight = $derived(image.data?.height ?? 0);
-  // 動画の作成中はキャンバスの大きさを変えられないようにする
   const disabled = $derived(exporter.busy);
 
-  // キャンバスの最大の幅・高さ
+  // https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas#キャンバスの最大寸法
   const MAX_SIZE = 16384;
 
   // プリセットは高さで選び、幅は画像の縦横比に合わせる（画像を読み込む前は 1:1）
@@ -56,9 +54,6 @@
     }
   };
   $effect.pre(() => applySize(sizeValue, imageWidth, imageHeight));
-
-  // NOTE: canvas size
-  // https://developer.mozilla.org/ja/docs/Web/HTML/Element/canvas#キャンバスの最大寸法
 </script>
 
 <div>
