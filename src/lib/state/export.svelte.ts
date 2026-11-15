@@ -26,12 +26,20 @@ export class ExportState {
     return this.status == 'rendering' || this.status == 'generating' || this.status == 'converting';
   }
 
-  // 曲を読み込んだうえで範囲が正しくないとき true
+  // 曲を読み込んだうえで範囲が正しくないとき true。
+  // 数値の入力欄を空にすると null が入り、比べると 0 として扱われてしまうため、数かどうかも確かめる
   get rangeError() {
     const duration = this.#audio.duration;
+    const { rangeStart: start, rangeEnd: end } = this;
     return (
       duration > 0 &&
-      !(0 <= this.rangeStart && this.rangeStart < this.rangeEnd && this.rangeEnd <= duration)
+      !(
+        Number.isFinite(start) &&
+        Number.isFinite(end) &&
+        0 <= start &&
+        start < end &&
+        end <= duration
+      )
     );
   }
 

@@ -6,7 +6,7 @@
   // 書き出しの処理も JS から再生・シーク・一時停止するため、状態は読むだけにし、操作は押したときにだけ AudioState を通して行う
   import { untrack } from 'svelte';
   import { _ } from 'svelte-i18n';
-  import { clamp } from '#lib/util.ts';
+  import { clamp, formatTime } from '#lib/util.ts';
   import type { AudioState } from '#lib/state/audio.svelte.ts';
 
   type Props = {
@@ -64,11 +64,6 @@
       player.play().catch((error) => console.error(error));
     } else player.pause();
   };
-
-  const format = (t: number) => {
-    const sec = Number.isFinite(t) ? Math.max(0, Math.floor(t)) : 0;
-    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-  };
 </script>
 
 <div class={styles.root}>
@@ -80,7 +75,7 @@
     step="any"
     value={position}
     aria-label={$_('audio_seek')}
-    aria-valuetext="{format(position)} / {format(e - s)}"
+    aria-valuetext="{formatTime(position)} / {formatTime(e - s)}"
     disabled={!player.ready || disabled}
     oninput={(event) => seek(s + Number(event.currentTarget.value))}
     style:--progress="{e > s ? (position / (e - s)) * 100 : 0}%"
@@ -95,7 +90,7 @@
     >
       <span class={player.paused ? styles.iconPlay : styles.iconPause} aria-hidden="true"></span>
     </button>
-    <span class={styles.time}>{format(position)} / {format(e - s)}</span>
+    <span class={styles.time}>{formatTime(position)} / {formatTime(e - s)}</span>
     <button
       type="button"
       class={['pixel-button', styles.button, styles.mute]}

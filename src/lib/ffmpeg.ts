@@ -1,5 +1,6 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
+import { dev } from '$app/env';
 import {
   buildMuxArgs,
   buildOutputArgs,
@@ -27,8 +28,8 @@ type Instance = { ffmpeg: FFmpeg; multiThread: boolean };
 const create = async (multiThread: boolean): Promise<Instance> => {
   // Node（プリレンダー時の SSR）では FFmpeg のコンストラクタが例外を投げるため、ブラウザで呼ばれてから作る
   const ffmpeg = new FFmpeg();
-  // TODO: ログは dev環境のみで流す
-  ffmpeg.on('log', ({ message }) => console.log(message));
+  // ログは 1 フレームごとに出て多いため、開発中だけ流す
+  if (dev) ffmpeg.on('log', ({ message }) => console.log(message));
   try {
     await ffmpeg.load(
       multiThread
@@ -88,9 +89,7 @@ const run = async (
   };
   if (onProgress && duration > 0) ffmpeg.on('log', onLog);
   try {
-    console.time('exec');
     const code = await ffmpeg.exec(args);
-    console.timeEnd('exec');
     if (code != 0) throw new Error(`ffmpeg exited with code ${code}`);
     // バイナリで読むので Uint8Array が返る。worker から転送された通常の ArrayBuffer で、SharedArrayBuffer ではない
     const data = (await ffmpeg.readFile(outputName)) as Uint8Array<ArrayBuffer>;

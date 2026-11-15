@@ -78,14 +78,30 @@
   };
 
   let objectUrl: string | null = null;
+  // 読み込みの番号。続けて選んだとき、後から終わった古い方の結果（成功も失敗も）は捨てる
+  let loading = 0;
+  // 画像として読めないファイルを選んだとき true。そのときは今の画像のままにする
+  let loadError = $state(false);
 
   const uploadImage = async (files: FileList | undefined) => {
     // data URL（base64）にすると大きい画像でメモリと時間を食うため、object URL で読む
     // ダイアログを取り消すと選択が空になる。そのときは今の画像のままにする
     if (!files?.[0]) return;
+    const id = ++loading;
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = URL.createObjectURL(files[0]);
-    img = await loadImage(objectUrl);
+    let loaded: HTMLImageElement;
+    try {
+      loaded = await loadImage(objectUrl);
+    } catch (error) {
+      if (id != loading) return;
+      loadError = true;
+      console.error(error);
+      return;
+    }
+    if (id != loading) return;
+    loadError = false;
+    img = loaded;
 
     // 画素を取るための作業用の canvas
     const work = document.createElement('canvas');
@@ -119,6 +135,9 @@
     {disabled}
     onchange={uploadImage}
   />
+  {#if loadError}
+    <p class="error">{$_('upload_image_load_error')}</p>
+  {/if}
   {#if imgError}
     <p class="error">
       {$_('upload_image_error')}

@@ -1,5 +1,6 @@
 import { browser } from '$app/env';
-import '#lib/i18n/index.ts'; // Import to initialize. Important :)
+// 読み込むだけで i18n を初期化する（辞書の登録と init）
+import '#lib/i18n/index.ts';
 import { locale, waitLocale } from 'svelte-i18n';
 import type { LayoutLoad } from './$types';
 
@@ -10,5 +11,5 @@ export const load: LayoutLoad = async () => {
   await waitLocale();
 };
 
-// This can be false if you're using a fallback (i.e. SPA mode)
+// adapter-static で GitHub Pages に置くため、ビルド時に HTML にする
 export const prerender = true;

@@ -37,24 +37,9 @@
       })
       .catch((error) => {
         ffmpegStatus = 'error';
-        console.log('error: ffmpeg load error');
         console.error(error);
       });
   };
-
-  // シークが終わるのを待つ。Firefox では読み込みが止まっているとき（曲の最後まで送ったあとなど）に
-  // seeked が来ないことがあるため、1 秒で先へ進む。再生を始めれば読み込まれ、位置はもう移っている
-  const seek = (audio: HTMLAudioElement, time: number) =>
-    new Promise<void>((resolve) => {
-      const done = () => {
-        clearTimeout(timer);
-        audio.removeEventListener('seeked', done);
-        resolve();
-      };
-      const timer = setTimeout(done, 1000);
-      audio.addEventListener('seeked', done);
-      audio.currentTime = time;
-    });
 
   // 出来上がった動画をダウンロードのリンクに付ける
   const complete = (anchor: HTMLAnchorElement, url: string, filename: string) => {
@@ -73,17 +58,10 @@
 
   const makeVideo = async () => {
     if (exporter.busy) return;
-    const { context: audioContext, element: audioRef, recorderDestination, file } = audioState;
+    const { context: audioContext, recorderDestination, file } = audioState;
     const imageData = image.data;
     const playerRef = spectrum.canvas;
-    if (
-      !audioContext ||
-      !audioRef ||
-      !recorderDestination ||
-      !imageData ||
-      !playerRef ||
-      !anchorRef
-    ) {
+    if (!audioContext || !recorderDestination || !imageData || !playerRef || !anchorRef) {
       error = true;
       return;
     }
@@ -97,12 +75,15 @@
     prepareFFmpeg();
 
     if (encode.method == 'fast' && file) {
+      // エンコーダーを調べて待つあいだに、もう一度押されて 2 本走らないよう、先に作成中にする
+      exporter.status = 'rendering';
+      renderProgress = 0;
       const config = await findEncoderConfig(playerRef.width, playerRef.height, encode);
       if (config)
         return makeVideoFast(config, encode, range, audioContext, file, imageData, anchorRef);
       console.warn('fast export is not supported; falling back to realtime recording');
     }
-    return recordVideo(encode, range, audioRef, recorderDestination, anchorRef, playerRef);
+    return recordVideo(encode, range, recorderDestination, anchorRef, playerRef);
   };
 
   // 曲を再生せずに描いてエンコードし（offlineExport.ts）、ffmpeg で曲とまとめる
@@ -122,7 +103,6 @@
     exporter.status = 'rendering';
     renderProgress = 0;
     try {
-      console.time('render');
       const video = await renderVideo({
         config,
         settings: encode,
@@ -135,7 +115,6 @@
         duration,
         onProgress: (ratio) => (renderProgress = ratio)
       });
-      console.timeEnd('render');
       exporter.status = 'converting';
       convertProgress = 0;
       const url = await muxVideo(video, file, encode, { start, duration }, (ratio) => {
@@ -151,7 +130,6 @@
   const recordVideo = async (
     encode: EncodeSettings,
     range: { start: number; end: number },
-    audio: HTMLAudioElement,
     recorderDestination: MediaStreamAudioDestinationNode,
     anchor: HTMLAnchorElement,
     playerRef: HTMLCanvasElement
@@ -160,8 +138,8 @@
     const end = range.end;
     exporter.status = 'generating';
 
-    audio.pause();
-    await seek(audio, range.start);
+    audioState.pause();
+    await audioState.seekAndWait(range.start);
 
     const canvasStream = playerRef.captureStream();
     const audioStream = recorderDestination.stream;
@@ -179,7 +157,6 @@
     let recorderStartedAt = 0;
     let playingAt = 0;
     mediaRecorder.onstart = () => (recorderStartedAt = performance.now());
-    audio.addEventListener('playing', () => (playingAt = performance.now()), { once: true });
 
     const chunks: Blob[] = [];
     mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
@@ -200,16 +177,18 @@
 
     mediaRecorder.start();
     try {
-      await audio.play();
+      // play() の Promise は、playing イベントと同じタイミング（音が鳴り始めたとき）に解決する
+      await audioState.play();
+      playingAt = performance.now();
     } catch (error) {
       console.error(error);
     }
 
-    // 終了位置を過ぎたら止める。多少過ぎても変換時に -t で切り落とす
+    // 終了位置を過ぎたら止める。多少過ぎても変換時に -t で切り落とす。
+    // 曲の最後まで再生したときは paused が true になるので、それでも止まる
     const watch = () => {
-      if (audio.currentTime >= end || audio.ended || audio.paused) {
-        console.log('stop video');
-        audio.pause();
+      if (audioState.currentTime >= end || audioState.paused) {
+        audioState.pause();
         mediaRecorder.stop();
         return;
       }

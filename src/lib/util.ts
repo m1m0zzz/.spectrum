@@ -6,6 +6,12 @@ export const padding = (size: number, numString: number | string) => {
   return ('0'.repeat(size) + String(numString)).slice(-size);
 };
 
+// 再生時間の表示（分:秒）。秒は切り捨て、負や NaN は 0 にする
+export const formatTime = (t: number) => {
+  const sec = Number.isFinite(t) ? Math.max(0, Math.floor(t)) : 0;
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+};
+
 export const formatDate = (date: Date) => {
   const Y = date.getFullYear();
   const M = padding(2, date.getMonth() + 1);

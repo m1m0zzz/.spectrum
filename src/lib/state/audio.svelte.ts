@@ -76,6 +76,23 @@ export class AudioState {
     this.seeking = element.seeking;
   }
 
+  // 再生位置を移し、シークが終わるのを待つ。Firefox では読み込みが止まっているとき（曲の最後まで送ったあとなど）に
+  // seeked が来ないことがあるため、1 秒で先へ進む。再生を始めれば読み込まれ、位置はもう移っている
+  seekAndWait(time: number) {
+    const element = this.element;
+    if (!element) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const done = () => {
+        clearTimeout(timer);
+        element.removeEventListener('seeked', done);
+        resolve();
+      };
+      const timer = setTimeout(done, 1000);
+      element.addEventListener('seeked', done);
+      this.seek(time);
+    });
+  }
+
   setVolume(volume: number) {
     if (!this.element) return;
     this.element.volume = volume;

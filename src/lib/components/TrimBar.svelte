@@ -10,7 +10,7 @@
   import { cubicOut } from 'svelte/easing';
   import type { HTMLAttributes } from 'svelte/elements';
   import { _ } from 'svelte-i18n';
-  import { clamp } from '#lib/util.ts';
+  import { clamp, formatTime } from '#lib/util.ts';
   import { resamplePeaks } from '#lib/waveform.ts';
 
   type Props = {
@@ -148,7 +148,8 @@
   const moveEnd = (t: number, snapping = false) => {
     const lo = Math.min(duration, s + MIN_LENGTH);
     const v = clamp(t, lo, duration);
-    end = round(snapping ? snap(v, lo, duration) : v);
+    // 丸めると曲の長さを超えることがある（183.4567 秒 → 183.46）。超えると範囲が正しくないとみなされるため、長さで止める
+    end = Math.min(duration, round(snapping ? snap(v, lo, duration) : v));
   };
   const seek = (t: number) => onseek?.(clamp(t, s, e));
 
@@ -270,10 +271,6 @@
   };
 
   const seconds = (t: number) => $_('export_range_value', { values: { value: t.toFixed(1) } });
-  const format = (t: number) => {
-    const sec = Number.isFinite(t) ? Math.max(0, Math.floor(t)) : 0;
-    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-  };
 </script>
 
 <!-- 使う側が渡したほかの属性（data-* など）は、いちばん外の要素に付ける -->
@@ -337,7 +334,7 @@
       aria-valuemin={s}
       aria-valuemax={e}
       aria-valuenow={current}
-      aria-valuetext="{format(current - s)} / {format(e - s)}"
+      aria-valuetext="{formatTime(current - s)} / {formatTime(e - s)}"
       aria-disabled={disabled || undefined}
       data-target="playhead"
       onkeydown={onKeydown('playhead')}

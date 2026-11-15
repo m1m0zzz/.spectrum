@@ -42,13 +42,22 @@
 
   // 画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする
   const FFT_SIZES = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
+  const fftAllowed = (size: number, width: number | undefined) =>
+    width == null || size / 2 - 1 >= width;
   const fftOptions = $derived(
     FFT_SIZES.map((size) => ({
       value: size,
       label: String(size),
-      disabled: image.data != null && size / 2 - 1 < image.data.width
+      disabled: !fftAllowed(size, image.data?.width)
     }))
   );
+  // 画像が変わって今のサイズが選べなくなったら、選べるうちでいちばん小さいサイズに上げる
+  $effect.pre(() => {
+    const width = image.data?.width;
+    if (fftAllowed(audio.fftSize, width)) return;
+    const size = FFT_SIZES.find((s) => fftAllowed(s, width));
+    if (size != null) audio.fftSize = size;
+  });
 
   // タブ。切り替えても中身（読み込んだ画像や、入力中の値）を保つため、パネルは破棄せず hidden で隠す
   const tabs = ['file', 'settings', 'video'] as const;
