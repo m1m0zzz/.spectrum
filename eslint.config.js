@@ -31,6 +31,11 @@ export default defineConfig(
         parser: ts.parser,
         extraFileExtensions: ['.svelte']
       }
+    },
+    // 未定義の名前は svelte-check（TypeScript）が見る。no-undef は型（VideoEncoderConfig など）を知らず誤検出するため、
+    // typescript-eslint が .ts で無効にしているのと同じく .svelte でも無効にする
+    rules: {
+      'no-undef': 'off'
     }
   }
 );
