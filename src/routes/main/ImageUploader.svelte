@@ -97,7 +97,8 @@
       if (id != loading) return;
       loadError = true;
       console.error(error);
-      return;
+      // ファイル欄の名前を、使っている画像のファイルに戻させる
+      return false;
     }
     if (id != loading) return;
     loadError = false;

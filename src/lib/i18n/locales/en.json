@@ -4,6 +4,7 @@
   "usage_2": "Upload music (wav, mp3...)",
   "usage_3": "Play music!",
   "supported_version": "Supported Versions",
+  "supported_realtime_only": "(realtime export only)",
   "upload_image": "Upload image file",
   "upload_image_load_error": "error: failed to load the image.",
   "upload_image_error": "The image is large, so it was pixelated to keep drawing smooth. (Without pixelation, images up to about 1024px x 1024px are recommended.)",

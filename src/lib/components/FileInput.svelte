@@ -10,17 +10,22 @@
     ariaLabel: string;
     files?: FileList;
     disabled?: boolean;
-    // ファイルを選んだとき（files を更新したあと）に呼ぶ
-    onchange?: (files: FileList | undefined) => void;
+    // ファイルを選んだとき（files を更新したあと）に呼ぶ。false（を返す Promise）を返すと、表示する名前を前のファイルに戻す
+    onchange?: (files: FileList | undefined) => void | boolean | Promise<void | boolean>;
   };
   let { id, accept, ariaLabel, files = $bindable(), disabled = false, onchange }: Props = $props();
 
   // ブラウザの input はファイル名を表示しないよう隠し、change イベントから取った名前を横に出す。
   // ダイアログを取り消すと（Chrome では）選択が空になるので、名前も消える
   let fileName = $state('');
-  const onChange = (e: Event & { currentTarget: HTMLInputElement }) => {
+  let changing = 0;
+  const onChange = async (e: Event & { currentTarget: HTMLInputElement }) => {
+    const id = ++changing;
+    const previous = fileName;
     fileName = e.currentTarget.files?.[0]?.name ?? '';
-    onchange?.(e.currentTarget.files ?? undefined);
+    const accepted = await onchange?.(e.currentTarget.files ?? undefined);
+    // 親が読み込めなかったときは、使われているファイルの名前に戻す。その間に選び直していたら戻さない
+    if (accepted === false && id == changing) fileName = previous;
   };
 </script>
 

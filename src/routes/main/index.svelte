@@ -39,6 +39,18 @@
   $effect.pre(() => exporter.resetRange(audio.duration));
 
   let showVersion = $state(false);
+  // 対応するブラウザ。下限は Vite のビルドの対象（既定の baseline-widely-available）で、構文はこの版に合わせて出力される。
+  // 使っている API もこの版までにそろう（プレビューの OffscreenCanvas の 2d は Safari 16.4・Firefox 105、
+  // ffmpeg.wasm の module worker は Firefox 114）。
+  // 標準（高速）の書き出しは WebCodecs と OfflineAudioContext の suspend() を使い、Firefox は suspend() が無いため
+  // リアルタイムだけになる（offlineExport.ts の hasFastExportApis）
+  const SUPPORTED_BROWSERS = [
+    { name: 'Chrome', version: '111' },
+    { name: 'Edge', version: '111' },
+    { name: 'Opera', version: '97' },
+    { name: 'Safari', version: '16.4' },
+    { name: 'Firefox', version: '114', realtimeOnly: true }
+  ];
 
   // 画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする
   const FFT_SIZES = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
@@ -100,11 +112,13 @@
       </button>
       {#if showVersion}
         <ul style="margin-top: 0.25rem;">
-          <li>Chrome 98+</li>
-          <li>Edge 98+</li>
-          <li>Firefox 94+</li>
-          <li>Opera 84+</li>
-          <li>Safari 15.4+</li>
+          {#each SUPPORTED_BROWSERS as { name, version, realtimeOnly } (name)}
+            <li>
+              {name}
+              {version}+{#if realtimeOnly}
+                {$_('supported_realtime_only')}{/if}
+            </li>
+          {/each}
         </ul>
       {/if}
 

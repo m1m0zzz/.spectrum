@@ -161,6 +161,8 @@
     const chunks: Blob[] = [];
     mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
     mediaRecorder.onstop = () => {
+      // canvas のトラックは書き出しのたびに作るので止める。音声のトラックは録画用の出力のもので、次の書き出しでも使うため止めない
+      canvasStream.getTracks().forEach((track) => track.stop());
       const lead =
         recorderStartedAt && playingAt ? Math.max(0, (playingAt - recorderStartedAt) / 1000) : 0;
       const videoBlob = new Blob(chunks, { type: chunks[0]?.type ?? 'video/webm' });

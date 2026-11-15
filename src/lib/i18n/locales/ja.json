@@ -4,6 +4,7 @@
   "usage_2": "音声をアップ (wav, mp3...)",
   "usage_3": "音声を再生！",
   "supported_version": "サポートされているバージョン",
+  "supported_realtime_only": "（書き出しはリアルタイムのみ）",
   "upload_image": "画像をアップロード",
   "upload_image_load_error": "エラー: 画像を読み込めませんでした",
   "upload_image_error": "画像が大きいため、描画が重くならないようドット化しました。（ドット化しない場合は 1024px × 1024px 相当以下の画像を推奨します。）",

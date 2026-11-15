@@ -23,10 +23,13 @@ const ANALYSIS_RATE = 60;
 // キーフレームの間隔（秒）。シークしやすさとファイルの大きさの兼ね合い
 const KEYFRAME_INTERVAL = 2;
 
+// Firefox は WebCodecs を持つが OfflineAudioContext の suspend() が無く（解析のために 1/60 秒ごとに止めるのに使う）、
+// 調べないと使えると判定して書き出しのたびに失敗する
 const hasFastExportApis = () =>
   typeof VideoEncoder != 'undefined' &&
   typeof VideoFrame != 'undefined' &&
   typeof OfflineAudioContext != 'undefined' &&
+  typeof OfflineAudioContext.prototype.suspend == 'function' &&
   typeof OffscreenCanvas != 'undefined';
 
 // 画面を開いたときに、高速書き出しを使える形式を調べる。実際の大きさで使えるかは書き出すときにも確かめ、
