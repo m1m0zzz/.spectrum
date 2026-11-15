@@ -37,7 +37,7 @@
   "export_range_value": "{value} sec",
   "export_method": "Export method: ",
   "export_method_fast": "Fast",
-  "export_method_realtime": "Realtime (play and record)",
+  "export_method_realtime": "Realtime (deprecated)",
   "export_format": "format: ",
   "export_format_mp4": "MP4 (H.264 / AAC)",
   "export_format_webm": "WebM (VP8 / Vorbis)",
