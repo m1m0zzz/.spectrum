@@ -10,6 +10,10 @@ dot spectrum is a pixel-art-like spectrum analyzer. w/ Web Audio API.
 - Web Audio API
 - PWA
 
+## 📝 TODO
+
+- [ ] Migrate video conversion from ffmpeg.wasm to [Mediabunny](https://github.com/Vanilagy/mediabunny)
+
 ## ❤️ Acknowledgments
 
 マルモニカ - 患者長ひっく (https://twitter.com/hicchicc) 様
