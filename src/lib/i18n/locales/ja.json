@@ -27,6 +27,7 @@
   "parameters_sensitivity": "感度: ",
   "parameters_grid_size": "グリッドサイズ: ",
   "parameters_smooth": "スムーズ: ",
+  "parameters_slope": "スロープ: ",
   "generate_video": "動画を作成する",
   "generate_video_message": "動画を作成中です... 画面を開いたままにしてください",
   "generate_video_error": "画像と音声をアップロードしてください",

@@ -12,6 +12,8 @@ export class SpectrumState {
   gridSize = $state(0);
   // 点灯から消えるまでの時間（ms）
   smoothTime = $state(0);
+  // 高音側を持ち上げる傾き（dB/oct）。曲の多くは高い音ほど弱く、0 だと低音側ばかりが高くなるため、最初から傾けておく
+  slope = $state(4.5);
 
   // プレビューの canvas（PlayerCanvas）。リアルタイムの書き出しはこれを録画する
   canvas = $state.raw<HTMLCanvasElement | null>(null);
@@ -21,7 +23,8 @@ export class SpectrumState {
       background: this.background,
       sensitivity: this.sensitivity,
       gridSize: this.gridSize,
-      smoothTime: this.smoothTime
+      smoothTime: this.smoothTime,
+      slope: this.slope
     };
   }
 }

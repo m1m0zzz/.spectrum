@@ -1,4 +1,10 @@
-import { computeBandLevels, createBandMap, type BandMap } from './canvas.ts';
+import {
+  applySlope,
+  computeBandLevels,
+  createBandMap,
+  createSlopeOffsets,
+  type BandMap
+} from './canvas.ts';
 
 // 画像をスペクトラムとして描く。画面のプレビュー（PlayerCanvas.svelte）と、
 // 動画の高速書き出し（offlineExport.ts）の両方で使う
@@ -8,6 +14,8 @@ export type SpectrumStyle = {
   gridSize: number;
   // 点灯から消えるまでの時間（ms）
   smoothTime: number;
+  // 高音側を持ち上げる傾き（dB/oct）。1 kHz を中心に傾ける
+  slope: number;
 };
 
 // AnalyserNode の smoothingTimeConstant。0〜1 で、0 だと動きがもっとも速く、1 に近づくほど遅くなる
@@ -17,10 +25,13 @@ type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 export class SpectrumRenderer {
   // 毎フレーム作り直さないよう、解析結果のバッファと対応表は使い回す
+  private freqFloatData = new Float32Array(0);
   private freqByteData = new Uint8Array(0);
   private levels = new Float32Array(0);
   private bandMap: BandMap | null = null;
   private bandMapKey = '';
+  private slopeOffsets = new Float32Array(0);
+  private slopeKey = '';
 
   // 画像まわりのキャッシュ。image が差し替わったときに作り直す
   private preparedImage: ImageData | null = null;
@@ -42,18 +53,32 @@ export class SpectrumRenderer {
     style: SpectrumStyle,
     elapsed: number
   ) {
-    const levels = analyser && image ? this.readLevels(analyser, image.width) : null;
+    const levels = analyser && image ? this.readLevels(analyser, image.width, style.slope) : null;
     this.drawLevels(levels, image, style, elapsed);
   }
 
   // 解析結果を、画像の列ごとのレベル（0〜255）にして返す。返す配列は次に読むときに上書きする。
   // AnalyserNode の平滑化（smoothingTimeConstant）は読むたびにかかるため、読む頻度で動きの速さが変わる
-  readLevels(analyser: AnalyserNode, columns: number) {
-    const map = this.getBandMap(analyser.frequencyBinCount, columns);
-    if (this.freqByteData.length != analyser.frequencyBinCount) {
-      this.freqByteData = new Uint8Array(analyser.frequencyBinCount);
+  readLevels(analyser: AnalyserNode, columns: number, slope: number) {
+    const binCount = analyser.frequencyBinCount;
+    const map = this.getBandMap(binCount, columns);
+    if (this.freqByteData.length != binCount) {
+      this.freqByteData = new Uint8Array(binCount);
+      this.freqFloatData = new Float32Array(binCount);
     }
-    analyser.getByteFrequencyData(this.freqByteData);
+    if (slope == 0) {
+      analyser.getByteFrequencyData(this.freqByteData);
+    } else {
+      analyser.getFloatFrequencyData(this.freqFloatData);
+      const offsets = this.getSlopeOffsets(binCount, analyser.context.sampleRate, slope);
+      applySlope(
+        this.freqFloatData,
+        offsets,
+        analyser.minDecibels,
+        analyser.maxDecibels,
+        this.freqByteData
+      );
+    }
     if (this.levels.length != map.begin.length) this.levels = new Float32Array(map.begin.length);
     return computeBandLevels(this.freqByteData, map, this.levels);
   }
@@ -81,6 +106,15 @@ export class SpectrumRenderer {
       this.bandMapKey = key;
     }
     return this.bandMap;
+  }
+
+  private getSlopeOffsets(binCount: number, sampleRate: number, slope: number) {
+    const key = `${binCount}:${sampleRate}:${slope}`;
+    if (key != this.slopeKey) {
+      this.slopeOffsets = createSlopeOffsets(binCount, sampleRate, slope);
+      this.slopeKey = key;
+    }
+    return this.slopeOffsets;
   }
 
   private prepareImage(image: ImageData) {

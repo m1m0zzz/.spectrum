@@ -233,6 +233,24 @@
               </label>
               <span>ms</span>
             </p>
+            <p>
+              <label
+                >{$_('parameters_slope')}
+                <PixelNumber>
+                  <input
+                    type="number"
+                    min="-12"
+                    max="12"
+                    step="0.5"
+                    disabled={exporter.busy}
+                    bind:value={spectrum.slope}
+                    onchange={(e) =>
+                      (spectrum.slope = clamp(Number(e.currentTarget.value), -12, 12))}
+                  />
+                </PixelNumber>
+              </label>
+              <span>dB/oct</span>
+            </p>
           </section>
         </div>
 

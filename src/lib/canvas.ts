@@ -68,3 +68,35 @@ export const computeBandLevels = (freq: Uint8Array, map: BandMap, out: Float32Ar
   }
   return out;
 };
+
+// スロープの中心の周波数（Hz）。ここを 0 dB とし、高いほど持ち上げ、低いほど下げる
+export const SLOPE_PIVOT = 1000;
+
+// ビンごとのスロープ（dB）。slope は 1 オクターブあたりの dB。
+// 曲は高い音ほど弱い（ピンクノイズで 3 dB/oct）ため、そのままだと低音側が高くなりがちなのを、傾けて平らに近づける
+export const createSlopeOffsets = (binCount: number, sampleRate: number, slope: number) => {
+  const offsets = new Float32Array(binCount);
+  // ビン i の周波数は i × sampleRate / fftSize（fftSize は binCount の 2 倍）。直流（ビン 0）は使わないので 0 dB のまま
+  const binWidth = sampleRate / (binCount * 2);
+  for (let i = 1; i < binCount; i++) {
+    offsets[i] = slope * Math.log2((i * binWidth) / SLOPE_PIVOT);
+  }
+  return offsets;
+};
+
+// 解析結果（dB）にスロープを足し、getByteFrequencyData と同じ式で 0〜255 にして out に書き込む。
+// 0〜255 にしてから足すと、範囲の外で切り捨てた値まで持ち上がり、無音でも高音側が点くため、dB のうちに足す
+export const applySlope = (
+  decibels: Float32Array,
+  offsets: Float32Array,
+  minDecibels: number,
+  maxDecibels: number,
+  out: Uint8Array
+) => {
+  const scale = 255 / (maxDecibels - minDecibels);
+  for (let i = 0; i < decibels.length; i++) {
+    const v = Math.floor(scale * (decibels[i] + offsets[i] - minDecibels));
+    out[i] = Math.min(Math.max(v, 0), 255);
+  }
+  return out;
+};

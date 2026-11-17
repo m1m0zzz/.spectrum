@@ -167,7 +167,7 @@ export const renderVideo = async (options: RenderOptions): Promise<EncodedVideo>
   const analyse = async (until: number, read = true) => {
     if (failure) return;
     try {
-      if (read) levels = renderer.readLevels(analyser, image.width).slice();
+      if (read) levels = renderer.readLevels(analyser, image.width, style.slope).slice();
       for (; next < total && next / fps < until; next++) await renderFrame(next);
     } catch (error) {
       failure ??= error;
