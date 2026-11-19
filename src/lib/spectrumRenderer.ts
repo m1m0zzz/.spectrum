@@ -21,6 +21,10 @@ export type SpectrumStyle = {
 // AnalyserNode の smoothingTimeConstant。0〜1 で、0 だと動きがもっとも速く、1 に近づくほど遅くなる
 export const ANALYSER_SMOOTHING = 0.85;
 
+// 曲を解析する（AnalyserNode を読む）回数（回/秒）。AnalyserNode の平滑化は読むたびにかかるため、
+// 画面のプレビューと動画の高速書き出しで同じ頻度で読み、動きの速さをそろえる
+export const ANALYSIS_RATE = 60;
+
 type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 export class SpectrumRenderer {
@@ -42,11 +46,14 @@ export class SpectrumRenderer {
   private pixelAlpha = new Float32Array(0); // 各ピクセルの現在の不透明度（0〜1）
   private sourceAlpha = new Float32Array(0); // 元画像の不透明度（0〜1）
   private columnThreshold = new Float32Array(0); // この行より下を点灯する
+  // グリッド。セルの数は数千になり、毎フレーム描くと重いため、大きさや色が変わったときだけ描いて貼る
+  private gridCanvas: OffscreenCanvas | null = null;
+  private gridKey = '';
 
   constructor(private ctx: Context2D) {}
 
   // 1 フレーム描く。elapsed は前のフレームからの経過時間（ms）。
-  // 画像か解析がまだないときは背景だけにする
+  // 画像か解析がまだないときは背景だけにする。点いている（消えかけを含む）点があれば true を返す
   draw(
     analyser: AnalyserNode | null,
     image: ImageData | null,
@@ -54,7 +61,7 @@ export class SpectrumRenderer {
     elapsed: number
   ) {
     const levels = analyser && image ? this.readLevels(analyser, image.width, style.slope) : null;
-    this.drawLevels(levels, image, style, elapsed);
+    return this.drawLevels(levels, image, style, elapsed);
   }
 
   // 解析結果を、画像の列ごとのレベル（0〜255）にして返す。返す配列は次に読むときに上書きする。
@@ -83,7 +90,8 @@ export class SpectrumRenderer {
     return computeBandLevels(this.freqByteData, map, this.levels);
   }
 
-  // 列ごとのレベル（readLevels の結果）で 1 フレーム描く。levels か image が無いときは背景だけにする
+  // 列ごとのレベル（readLevels の結果）で 1 フレーム描く。levels か image が無いときは背景だけにする。
+  // 点いている（消えかけを含む）点があれば true を返す
   drawLevels(
     levels: Float32Array | null,
     image: ImageData | null,
@@ -94,9 +102,9 @@ export class SpectrumRenderer {
     const { width: w, height: h } = ctx.canvas;
     ctx.fillStyle = style.background;
     ctx.fillRect(0, 0, w, h);
-    if (!levels || !image) return;
+    if (!levels || !image) return false;
     if (image !== this.preparedImage) this.prepareImage(image);
-    this.drawPixelSpectrum(levels, image, style, w, h, elapsed);
+    return this.drawPixelSpectrum(levels, image, style, w, h, elapsed);
   }
 
   private getBandMap(binCount: number, columns: number) {
@@ -153,11 +161,13 @@ export class SpectrumRenderer {
     // スムーズは「点灯から消えるまでの時間（ms）」。フレームレートに依らないよう経過時間で減らす
     const decrement = style.smoothTime <= 0 ? 1 : elapsed / style.smoothTime;
     const out = this.pixelOut!.data;
+    let lit = false;
     for (let y = 0, i = 0; y < H; y++) {
       for (let x = 0; x < W; x++, i++) {
         const a = y >= columnThreshold[x] ? sourceAlpha[i] : Math.max(pixelAlpha[i] - decrement, 0);
         pixelAlpha[i] = a;
         out[i * 4 + 3] = a * 255;
+        if (a > 0) lit = true;
       }
     }
     this.pixelCtx!.putImageData(this.pixelOut!, 0, 0);
@@ -165,16 +175,28 @@ export class SpectrumRenderer {
     ctx.imageSmoothingEnabled = W > w || H > h;
     ctx.drawImage(this.pixelCanvas!, 0, 0, w, h);
 
-    // グリッドはセルの境目を背景色で塗って表す（セルを内側に gridSize / 2 ずつ縮めるのと同じ見た目）
-    if (style.gridSize > 0) {
-      const half = style.gridSize / 2;
-      const cellWidth = w / W;
-      const cellHeight = h / H;
-      ctx.beginPath();
-      for (let x = 0; x <= W; x++) ctx.rect(cellWidth * x - half, 0, half * 2, h);
-      for (let y = 0; y <= H; y++) ctx.rect(0, cellHeight * y - half, w, half * 2);
-      ctx.fillStyle = style.background;
-      ctx.fill();
-    }
+    if (style.gridSize > 0) ctx.drawImage(this.getGrid(w, h, W, H, style), 0, 0);
+    return lit;
+  }
+
+  // グリッドはセルの境目を背景色で塗って表す（セルを内側に gridSize / 2 ずつ縮めるのと同じ見た目）
+  private getGrid(w: number, h: number, W: number, H: number, style: SpectrumStyle) {
+    const key = `${w}x${h}:${W}x${H}:${style.gridSize}:${style.background}`;
+    if (this.gridCanvas && key == this.gridKey) return this.gridCanvas;
+    this.gridKey = key;
+    this.gridCanvas ??= new OffscreenCanvas(w, h);
+    // 大きさを設定し直すと中身も消える
+    this.gridCanvas.width = w;
+    this.gridCanvas.height = h;
+    const ctx = this.gridCanvas.getContext('2d')!;
+    const half = style.gridSize / 2;
+    const cellWidth = w / W;
+    const cellHeight = h / H;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x++) ctx.rect(cellWidth * x - half, 0, half * 2, h);
+    for (let y = 0; y <= H; y++) ctx.rect(0, cellHeight * y - half, w, half * 2);
+    ctx.fillStyle = style.background;
+    ctx.fill();
+    return this.gridCanvas;
   }
 }

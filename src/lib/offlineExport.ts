@@ -10,16 +10,18 @@ import {
   type EncodeSettings,
   type VideoFormat
 } from './encode.ts';
-import { ANALYSER_SMOOTHING, SpectrumRenderer, type SpectrumStyle } from './spectrumRenderer.ts';
+import {
+  ANALYSER_SMOOTHING,
+  ANALYSIS_RATE,
+  SpectrumRenderer,
+  type SpectrumStyle
+} from './spectrumRenderer.ts';
 
 export type EncodedVideo = { data: Uint8Array; name: string };
 
 // 一度にエンコーダーへ積んでおくフレームの数。多いとメモリを食い、少ないと待ちが増える
 const MAX_QUEUE = 8;
-// 曲を解析する（AnalyserNode を読む）回数（回/秒）。AnalyserNode の平滑化は読むたびにかかるため、
-// 画面のプレビュー（一般的なディスプレイで 60 回/秒）と同じ頻度で読み、動きの速さをそろえる。
-// 動画の各フレームは、その時点までに読んだ最後の結果で描く
-const ANALYSIS_RATE = 60;
+// 曲は ANALYSIS_RATE 回/秒で解析し、動画の各フレームは、その時点までに読んだ最後の結果で描く
 // キーフレームの間隔（秒）。シークしやすさとファイルの大きさの兼ね合い
 const KEYFRAME_INTERVAL = 2;
 
