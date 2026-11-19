@@ -8,11 +8,8 @@ dot spectrum is a pixel-art-like spectrum analyzer. w/ Web Audio API.
 
 - Canvas API
 - Web Audio API
+- WebCodecs / [Mediabunny](https://github.com/Vanilagy/mediabunny)
 - PWA
-
-## 📝 TODO
-
-- [ ] Migrate video conversion from ffmpeg.wasm to [Mediabunny](https://github.com/Vanilagy/mediabunny)
 
 ## ❤️ Acknowledgments
 
@@ -22,4 +19,6 @@ https://00ff.booth.pm/items/4927023
 
 ## Third-party licenses
 
-Video conversion uses [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm). `@ffmpeg/ffmpeg` and `@ffmpeg/util` are MIT. The FFmpeg core (`@ffmpeg/core` / `@ffmpeg/core-mt`), which is bundled into the build and served with this site, is licensed under [GPL-2.0-or-later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html) because it includes FFmpeg and libraries such as x264. Its source (build scripts pinning the upstream versions) is at the tag of the bundled version in [ffmpegwasm/ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm/tags). The version is in `package-lock.json` and in the link in the page footer.
+Video export uses [Mediabunny](https://github.com/Vanilagy/mediabunny) (`mediabunny`), licensed under [MPL-2.0](https://www.mozilla.org/MPL/2.0/). Its source is at the tag of the bundled version in [Vanilagy/mediabunny](https://github.com/Vanilagy/mediabunny/tags).
+
+When the browser cannot encode AAC, the site loads [`@mediabunny/aac-encoder`](https://github.com/Vanilagy/mediabunny/tree/main/packages/aac-encoder) (MPL-2.0). It contains a WebAssembly build of [FFmpeg](https://ffmpeg.org/)'s AAC encoder, which is licensed under [LGPL-2.1-or-later](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html) (built without `--enable-gpl`). The package's README describes how the WebAssembly build is made, and the FFmpeg license files are in its `licenses/ffmpeg` directory. The bundled versions are in `package-lock.json` and in the links in the page footer.

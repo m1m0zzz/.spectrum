@@ -14,7 +14,7 @@
 - `src/lib/state/*.svelte.ts`：状態（音声・画像・見た目の設定・書き出し）。`routes/main/index.svelte` で作り、context で配る。共有する状態は props で中継せず、ここに置く
 - `src/lib/components/`：props だけで動く汎用の部品
 - `src/routes/main/`：ページの各区画
-- `src/lib/*.ts`：描画・書き出し・ffmpeg などのロジック（テストは同じ場所の `*.test.ts`）
+- `src/lib/*.ts`：描画・書き出し（Mediabunny）などのロジック（テストは同じ場所の `*.test.ts`）
 
 ## 対応ブラウザ
 

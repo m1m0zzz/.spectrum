@@ -2,13 +2,11 @@
   import { onMount } from 'svelte';
   import { _ } from 'svelte-i18n';
   import PixelSelect from '#lib/components/PixelSelect.svelte';
-  import { detectFastFormats } from '#lib/offlineExport.ts';
   import {
     audioBitrates,
     exportMethods,
     frameRates,
     qualities,
-    speeds,
     videoFormats,
     type VideoFormat
   } from '#lib/encode.ts';
@@ -18,10 +16,26 @@
   const exporter = getExportState();
   const settings = exporter.settings;
 
-  // 高速書き出しを使える形式。画面を開いたときに調べる（調べ終わるまでは null で、選べるままにする）
+  // 書き出せる形式（映像と音声をエンコードできる）と、そのうち高速書き出しを使える形式。
+  // 画面を開いたあとに調べる（調べ終わるまでは null で、選べるままにする）。
+  // 書き出しのモジュール（Mediabunny を含む）は、ページの表示を待たせないよう後から読み込む
+  let formats = $state.raw<Set<VideoFormat> | null>(null);
   let fastFormats = $state.raw<Set<VideoFormat> | null>(null);
   onMount(async () => {
-    fastFormats = await detectFastFormats(settings);
+    const [{ detectExportFormats }, { detectFastFormats }] = await Promise.all([
+      import('#lib/mux.ts'),
+      import('#lib/offlineExport.ts')
+    ]);
+    [formats, fastFormats] = await Promise.all([
+      detectExportFormats(settings),
+      detectFastFormats(settings)
+    ]);
+  });
+  // 今の形式を書き出せないときは、書き出せる形式に替える
+  $effect.pre(() => {
+    if (!formats || formats.has(settings.format)) return;
+    const available = videoFormats.find((v) => formats!.has(v));
+    if (available) settings.format = available;
   });
   const fastAvailable = $derived(fastFormats == null || fastFormats.has(settings.format));
   $effect.pre(() => {
@@ -45,12 +59,19 @@
     )
   );
   const formatOptions = $derived(
-    videoFormats.map((v) => ({ value: v, label: $_(`export_format_${v}`) }))
+    videoFormats.map((v) =>
+      formats == null || formats.has(v)
+        ? { value: v, label: $_(`export_format_${v}`) }
+        : {
+            value: v,
+            label: `${$_(`export_format_${v}`)}${$_('export_format_unsupported')}`,
+            disabled: true
+          }
+    )
   );
   const qualityOptions = $derived(
     qualities.map((v) => ({ value: v, label: $_(`export_quality_${v}`) }))
   );
-  const speedOptions = $derived(speeds.map((v) => ({ value: v, label: $_(`export_speed_${v}`) })));
   const fpsOptions = frameRates.map((v) => ({ value: v as number, label: `${v} fps` }));
   const bitrateOptions = audioBitrates.map((v) => ({ value: v as number, label: `${v} kbps` }));
 </script>
@@ -83,17 +104,6 @@
       labelledby="export-quality-label"
       options={qualityOptions}
       bind:value={settings.quality}
-      disabled={exporter.busy}
-    />
-  </p>
-  <!-- 変換速度は ffmpeg で映像をエンコードするときの設定。高速書き出しは WebCodecs でエンコードするため使わない -->
-  <p hidden={settings.method == 'fast'}>
-    <span id="export-speed-label">{$_('export_speed')}</span>
-    <PixelSelect
-      id="export-speed"
-      labelledby="export-speed-label"
-      options={speedOptions}
-      bind:value={settings.speed}
       disabled={exporter.busy}
     />
   </p>

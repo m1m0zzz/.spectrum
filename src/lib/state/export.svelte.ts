@@ -3,7 +3,7 @@ import { defaultEncodeSettings, type EncodeSettings } from '../encode.ts';
 import type { AudioState } from './audio.svelte.ts';
 
 // 書き出しの進み具合。rendering は高速書き出しで映像を作っているところ、
-// generating はリアルタイムで録画しているところ、converting は ffmpeg で変換しているところ
+// generating はリアルタイムで録画しているところ、converting は録画を変換しているところ
 export type ExportStatus = 'none' | 'rendering' | 'generating' | 'converting' | 'completed';
 
 // 動画の書き出し。設定（「動画設定」タブ）・書き出す範囲（ファイルタブの音声の下）・進み具合

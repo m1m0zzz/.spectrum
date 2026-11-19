@@ -41,15 +41,15 @@
   let showVersion = $state(false);
   // 対応するブラウザ。下限は Vite のビルドの対象（既定の baseline-widely-available）で、構文はこの版に合わせて出力される。
   // 使っている API もこの版までにそろう（プレビューの OffscreenCanvas の 2d は Safari 16.4・Firefox 105、
-  // ffmpeg.wasm の module worker は Firefox 114）。
-  // 標準（高速）の書き出しは WebCodecs と OfflineAudioContext の suspend() を使い、Firefox は suspend() が無いため
+  // 書き出しのエンコードに使う WebCodecs の VideoEncoder は Safari 16.4・Firefox 130）。
+  // 標準（高速）の書き出しは OfflineAudioContext の suspend() も使い、Firefox は suspend() が無いため
   // リアルタイムだけになる（offlineExport.ts の hasFastExportApis）
   const SUPPORTED_BROWSERS = [
     { name: 'Chrome', version: '111' },
     { name: 'Edge', version: '111' },
     { name: 'Opera', version: '97' },
     { name: 'Safari', version: '16.4' },
-    { name: 'Firefox', version: '114', realtimeOnly: true }
+    { name: 'Firefox', version: '130', realtimeOnly: true }
   ];
 
   // 画像の 1 列ごとに別の周波数ビンを割り当てられない（ビンが足りない）サイズは選べなくする

@@ -13,19 +13,25 @@
     </div>
     <hr />
     <p>
-      Video conversion uses
-      <a href="https://github.com/ffmpegwasm/ffmpeg.wasm" target="_blank" rel="noopener noreferrer"
-        >ffmpeg.wasm</a
-      >. Its FFmpeg core is licensed under
+      Video export uses
       <a
-        href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+        href="https://github.com/Vanilagy/mediabunny/tree/v{__MEDIABUNNY_VERSION__}"
         target="_blank"
-        rel="noopener noreferrer">GPL-2.0-or-later</a
-      >; source:
+        rel="noopener noreferrer">Mediabunny v{__MEDIABUNNY_VERSION__}</a
+      >
+      (<a href="https://www.mozilla.org/MPL/2.0/" target="_blank" rel="noopener noreferrer"
+        >MPL-2.0</a
+      >). When the browser cannot encode AAC, its AAC encoder extension uses FFmpeg's AAC encoder,
+      licensed under
       <a
-        href="https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v{__FFMPEG_CORE_VERSION__}"
+        href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         target="_blank"
-        rel="noopener noreferrer">ffmpeg.wasm v{__FFMPEG_CORE_VERSION__}</a
+        rel="noopener noreferrer">LGPL-2.1-or-later</a
+      >; source and build instructions:
+      <a
+        href="https://github.com/Vanilagy/mediabunny/tree/v{__MEDIABUNNY_VERSION__}/packages/aac-encoder"
+        target="_blank"
+        rel="noopener noreferrer">@mediabunny/aac-encoder</a
       >.
     </p>
     <p>&copy; 2023 mimoz</p>

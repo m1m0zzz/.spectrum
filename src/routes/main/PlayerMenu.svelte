@@ -2,9 +2,7 @@
   import styles from './PlayerMenu.module.css';
   import { _ } from 'svelte-i18n';
   import { formatDate } from '#lib/util.ts';
-  import { convertVideo, load, muxVideo } from '#lib/ffmpeg.ts';
   import { recordingVideoBitrate, type EncodeSettings } from '#lib/encode.ts';
-  import { findEncoderConfig, renderVideo } from '#lib/offlineExport.ts';
   import { getAudioState } from '#lib/state/audio.svelte.ts';
   import { getExportState } from '#lib/state/export.svelte.ts';
   import { getImageState } from '#lib/state/image.svelte.ts';
@@ -19,27 +17,11 @@
 
   let anchorRef: HTMLAnchorElement | null = $state(null);
   let error = $state(false);
-  let ffmpegStatus: 'idle' | 'loading' | 'error' | 'ok' = $state('idle');
   let convertError = $state(false);
-  // 変換（ffmpeg）の進み具合（0〜1）
+  // 録画を変換する進み具合（0〜1）。リアルタイムの書き出しのときだけ
   let convertProgress = $state(0);
   // 映像を作る進み具合（0〜1）。高速書き出しのときだけ
   let renderProgress = $state(0);
-
-  // ffmpeg のコア（約 32MB）はページを開いたときではなく、動画を作り始めたときに読み込む。
-  // 録画（曲の長さ）のあいだに読み込みが終わるので、変換を待つ時間はほとんど増えない
-  const prepareFFmpeg = () => {
-    if (ffmpegStatus == 'loading' || ffmpegStatus == 'ok') return;
-    ffmpegStatus = 'loading';
-    load()
-      .then(() => {
-        ffmpegStatus = 'ok';
-      })
-      .catch((error) => {
-        ffmpegStatus = 'error';
-        console.error(error);
-      });
-  };
 
   // 出来上がった動画をダウンロードのリンクに付ける
   const complete = (anchor: HTMLAnchorElement, url: string, filename: string) => {
@@ -50,9 +32,8 @@
   };
 
   const fail = (error: unknown) => {
-    // コアの読み込みに失敗したときは、prepareFFmpeg がエラー表示を出している
     exporter.status = 'none';
-    if (ffmpegStatus != 'error') convertError = true;
+    convertError = true;
     console.error(error);
   };
 
@@ -75,13 +56,19 @@
 
     error = false;
     convertError = false;
-    prepareFFmpeg();
 
     if (encode.method == 'fast' && file) {
       // エンコーダーを調べて待つあいだに、もう一度押されて 2 本走らないよう、先に作成中にする
       exporter.status = 'rendering';
       renderProgress = 0;
-      const config = await findEncoderConfig(playerRef.width, playerRef.height, encode);
+      let config: VideoEncoderConfig | null;
+      try {
+        const { findEncoderConfig } = await import('#lib/offlineExport.ts');
+        config = await findEncoderConfig(playerRef.width, playerRef.height, encode);
+      } catch (error) {
+        // モジュールを読み込めない（オフラインで、まだキャッシュに無いなど）
+        return fail(error);
+      }
       if (config)
         return makeVideoFast(config, encode, range, audioContext, file, imageData, anchorRef);
       console.warn('fast export is not supported; falling back to realtime recording');
@@ -89,7 +76,7 @@
     return recordVideo(encode, range, recorderDestination, anchorRef, playerRef);
   };
 
-  // 曲を再生せずに描いてエンコードし（offlineExport.ts）、ffmpeg で曲とまとめる
+  // 曲を再生せずに描いてエンコードし、曲とまとめる（offlineExport.ts）
   const makeVideoFast = async (
     config: VideoEncoderConfig,
     encode: EncodeSettings,
@@ -106,7 +93,8 @@
     exporter.status = 'rendering';
     renderProgress = 0;
     try {
-      const video = await renderVideo({
+      const { renderVideo } = await import('#lib/offlineExport.ts');
+      const url = await renderVideo({
         config,
         settings: encode,
         audioFile: file,
@@ -118,18 +106,13 @@
         duration,
         onProgress: (ratio) => (renderProgress = ratio)
       });
-      exporter.status = 'converting';
-      convertProgress = 0;
-      const url = await muxVideo(video, file, encode, { start, duration }, (ratio) => {
-        convertProgress = Math.max(convertProgress, ratio);
-      });
       complete(anchor, url, `${filename}.${encode.format}`);
     } catch (error) {
       fail(error);
     }
   };
 
-  // Media Recorder で、曲を再生しながら canvas を録画して動画を作る
+  // Media Recorder で、曲を再生しながら canvas を録画し、設定の形式に変換する（mux.ts）
   const recordVideo = async (
     encode: EncodeSettings,
     range: { start: number; end: number },
@@ -140,6 +123,11 @@
     const duration = range.end - range.start;
     const end = range.end;
     exporter.status = 'generating';
+    // 変換のモジュールと AAC のエンコーダー（ブラウザで作れないときの WASM）は、録画しているあいだに読み込んでおく
+    const mux = import('#lib/mux.ts');
+    mux
+      .then(({ ensureAudioEncoder }) => ensureAudioEncoder(encode))
+      .catch((error) => console.error(error));
 
     audioState.pause();
     await audioState.seekAndWait(range.start);
@@ -173,9 +161,13 @@
       const webmFile = new File([videoBlob], filename + '.webm', { type: videoBlob.type });
       exporter.status = 'converting';
       convertProgress = 0;
-      convertVideo(webmFile, encode, { start: lead, duration }, (ratio) => {
-        convertProgress = Math.max(convertProgress, ratio);
-      })
+      const size = { width: playerRef.width, height: playerRef.height };
+      mux
+        .then(({ convertRecording }) =>
+          convertRecording(webmFile, encode, { start: lead, duration }, size, (ratio) => {
+            convertProgress = Math.max(convertProgress, ratio);
+          })
+        )
         .then((url) => complete(anchor, url, `${filename}.${encode.format}`))
         .catch(fail);
     };
@@ -189,7 +181,7 @@
       console.error(error);
     }
 
-    // 終了位置を過ぎたら止める。多少過ぎても変換時に -t で切り落とす。
+    // 終了位置を過ぎたら止める。多少過ぎても変換時に切り落とす。
     // 曲の最後まで再生したときは paused が true になるので、それでも止まる
     const watch = () => {
       if (audioState.currentTime >= end || audioState.paused) {
@@ -220,9 +212,6 @@
       {$_('convert_progress', { values: { percent: Math.floor(convertProgress * 100) } })}
     </p>
   {/if}
-  <p class="error" style:display={ffmpegStatus == 'error' ? 'block' : 'none'}>
-    {$_('ffmpeg_error')}
-  </p>
   <p class="error" style:display={convertError ? 'block' : 'none'}>{$_('convert_error')}</p>
   <p class="error" style:display={error ? 'block' : 'none'}>{$_('generate_video_error')}</p>
   <!-- svelte-ignore a11y_invalid_attribute -->

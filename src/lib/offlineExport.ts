@@ -1,18 +1,25 @@
 // 動画の高速書き出し。曲を再生せずに、OfflineAudioContext で曲を解析しながら 1 フレームずつ描き、
 // WebCodecs（VideoEncoder）でエンコードする。曲の長さを待たずに済み、画面に出していなくても進む。
-// 音声は元の曲を ffmpeg で切り出してまとめる（ffmpeg.ts の muxVideo）
+// 音声は元の曲の範囲を切り出してエンコードし、Mediabunny で映像と 1 つのファイルにまとめる
+import { AudioBufferSource, EncodedPacket, EncodedVideoPacketSource } from 'mediabunny';
 import {
+  AUDIO_SAMPLE_RATE,
   avcCodecCandidates,
+  codecsOf,
   evenSize,
-  fastVideoBitrate,
+  videoBitrate,
   videoFormats,
-  writeIvf,
   type EncodeSettings,
   type VideoFormat
 } from './encode.ts';
+import {
+  AUDIO_CHANNELS,
+  audioQuality,
+  createOutput,
+  ensureAudioEncoder,
+  toBlobUrl
+} from './mux.ts';
 import { analyserSmoothing, SpectrumRenderer, type SpectrumStyle } from './spectrumRenderer.ts';
-
-export type EncodedVideo = { data: Uint8Array; name: string };
 
 // 一度にエンコーダーへ積んでおくフレームの数。多いとメモリを食い、少ないと待ちが増える
 const MAX_QUEUE = 8;
@@ -55,7 +62,7 @@ export const findEncoderConfig = async (
   const base = {
     width: w,
     height: h,
-    bitrate: fastVideoBitrate(w, h, settings),
+    bitrate: videoBitrate(w, h, settings),
     framerate: settings.fps,
     latencyMode: 'quality' as const
   };
@@ -64,7 +71,8 @@ export const findEncoderConfig = async (
       ? avcCodecCandidates(w, h).map((codec) => ({
           ...base,
           codec,
-          avc: { format: 'annexb' as const }
+          // MP4 に入れるため、デコーダーの設定（description）を別に持つ形式にする
+          avc: { format: 'avc' as const }
         }))
       : [{ ...base, codec: 'vp8' }];
   for (const config of configs) {
@@ -101,7 +109,22 @@ const waitForQueue = (encoder: VideoEncoder) =>
     encoder.addEventListener('dequeue', () => resolve(), { once: true });
   });
 
-export const renderVideo = async (options: RenderOptions): Promise<EncodedVideo> => {
+// 書き出す範囲の音声を、48kHz・ステレオにして切り出す（モノラルの曲は左右に同じ音を入れる）
+const renderAudioRange = (buffer: AudioBuffer, start: number, duration: number) => {
+  const context = new OfflineAudioContext(
+    AUDIO_CHANNELS,
+    Math.max(1, Math.ceil(duration * AUDIO_SAMPLE_RATE)),
+    AUDIO_SAMPLE_RATE
+  );
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+  source.connect(context.destination);
+  source.start(0, start, duration);
+  return context.startRendering();
+};
+
+// 映像を描いてエンコードし、曲の範囲と 1 つの動画ファイルにまとめる。return: blob url
+export const renderVideo = async (options: RenderOptions): Promise<string> => {
   const { config, settings, image, style, start, duration, onProgress } = options;
   const { fps } = settings;
   const width = config.width;
@@ -127,13 +150,33 @@ export const renderVideo = async (options: RenderOptions): Promise<EncodedVideo>
   const canvas = new OffscreenCanvas(width, height);
   const renderer = new SpectrumRenderer(canvas.getContext('2d', { alpha: false })!);
 
-  const chunks: Uint8Array[] = [];
+  await ensureAudioEncoder(settings);
+  const audio = await renderAudioRange(buffer, start, duration);
+  const codecs = codecsOf(settings.format);
+  const output = createOutput(settings.format);
+  const videoSource = new EncodedVideoPacketSource(codecs.video);
+  const audioSource = new AudioBufferSource({
+    codec: codecs.audio,
+    quality: audioQuality(settings)
+  });
+  output.addVideoTrack(videoSource, { frameRate: fps });
+  output.addAudioTrack(audioSource);
+  await output.start();
+
   let failure: unknown = null;
+  // 音声は映像と並べてエンコードする（どちらかを待つと、ファイルに書く順をそろえるところで止まる）
+  const audioDone = audioSource
+    .add(audio)
+    .then(() => audioSource.close())
+    .catch((error) => (failure ??= error));
+  // エンコードされた映像は、出た順（デコード順）にファイルへ渡す
+  let videoDone = Promise.resolve();
   const encoder = new VideoEncoder({
-    output: (chunk) => {
-      const data = new Uint8Array(chunk.byteLength);
-      chunk.copyTo(data);
-      chunks.push(data);
+    output: (chunk, meta) => {
+      const packet = EncodedPacket.fromEncodedChunk(chunk);
+      videoDone = videoDone
+        .then(() => videoSource.add(packet, meta))
+        .catch((error) => (failure ??= error));
     },
     error: (error) => (failure ??= error)
   });
@@ -188,16 +231,13 @@ export const renderVideo = async (options: RenderOptions): Promise<EncodedVideo>
   await analyse(Infinity, false);
   if (!failure) await encoder.flush().catch((error) => (failure ??= error));
   if (encoder.state != 'closed') encoder.close();
-  if (failure) throw failure;
-
-  if (settings.format == 'mp4') {
-    const data = new Uint8Array(chunks.reduce((sum, c) => sum + c.byteLength, 0));
-    let offset = 0;
-    for (const c of chunks) {
-      data.set(c, offset);
-      offset += c.byteLength;
-    }
-    return { data, name: 'video.h264' };
+  await videoDone;
+  if (!failure) videoSource.close();
+  await audioDone;
+  if (!failure) await output.finalize().catch((error) => (failure ??= error));
+  if (failure) {
+    await output.cancel().catch(() => {});
+    throw failure;
   }
-  return { data: writeIvf(chunks, width, height, fps), name: 'video.ivf' };
+  return toBlobUrl(output, settings.format);
 };
