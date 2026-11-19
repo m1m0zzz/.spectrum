@@ -10,18 +10,12 @@ import {
   type EncodeSettings,
   type VideoFormat
 } from './encode.ts';
-import {
-  ANALYSER_SMOOTHING,
-  ANALYSIS_RATE,
-  SpectrumRenderer,
-  type SpectrumStyle
-} from './spectrumRenderer.ts';
+import { analyserSmoothing, SpectrumRenderer, type SpectrumStyle } from './spectrumRenderer.ts';
 
 export type EncodedVideo = { data: Uint8Array; name: string };
 
 // 一度にエンコーダーへ積んでおくフレームの数。多いとメモリを食い、少ないと待ちが増える
 const MAX_QUEUE = 8;
-// 曲は ANALYSIS_RATE 回/秒で解析し、動画の各フレームは、その時点までに読んだ最後の結果で描く
 // キーフレームの間隔（秒）。シークしやすさとファイルの大きさの兼ね合い
 const KEYFRAME_INTERVAL = 2;
 
@@ -125,7 +119,7 @@ export const renderVideo = async (options: RenderOptions): Promise<EncodedVideo>
   source.buffer = buffer;
   const analyser = offline.createAnalyser();
   analyser.fftSize = options.fftSize;
-  analyser.smoothingTimeConstant = ANALYSER_SMOOTHING;
+  analyser.smoothingTimeConstant = analyserSmoothing(fps);
   source.connect(analyser);
   analyser.connect(offline.destination);
   source.start(0, start, duration);
@@ -177,17 +171,18 @@ export const renderVideo = async (options: RenderOptions): Promise<EncodedVideo>
   };
 
   // 0 秒の解析は、まだ音が無いので描き始める前に行う
-  const steps = Math.ceil(duration * ANALYSIS_RATE);
+  // 曲はフレームレートと同じ回数で解析し（プレビューと同じ）、各フレームはその時点までに読んだ最後の結果で描く
+  const steps = Math.ceil(duration * fps);
   for (let k = 1; k < steps; k++) {
-    offline.suspend(k / ANALYSIS_RATE).then(
+    offline.suspend(k / fps).then(
       async () => {
-        await analyse((k + 1) / ANALYSIS_RATE);
+        await analyse((k + 1) / fps);
         offline.resume();
       },
       (error) => (failure ??= error)
     );
   }
-  await analyse(steps > 1 ? 1 / ANALYSIS_RATE : Infinity);
+  await analyse(steps > 1 ? 1 / fps : Infinity);
   await offline.startRendering();
   // 残ったフレームがあれば（丸めの誤差で）、最後の解析結果で描く
   await analyse(Infinity, false);

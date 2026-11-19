@@ -1,5 +1,4 @@
 import { getContext, setContext } from 'svelte';
-import { ANALYSER_SMOOTHING } from '../spectrumRenderer.ts';
 import { computePeaks } from '../waveform.ts';
 
 // 曲と、その再生・解析の状態。<audio> 要素と Web Audio のノードはここで作って持つ（要素は DOM に置かない）。
@@ -154,7 +153,6 @@ export class AudioState {
     const context = new AudioContext();
     const analyser = context.createAnalyser();
     analyser.fftSize = this.#fftSize;
-    analyser.smoothingTimeConstant = ANALYSER_SMOOTHING;
     const source = context.createMediaElementSource(element);
     const recorderDestination = context.createMediaStreamDestination();
     source.connect(analyser);

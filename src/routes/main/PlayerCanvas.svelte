@@ -3,7 +3,7 @@
   // スペクトラムのプレビュー。曲の解析・画像・見た目の設定を状態から読み、毎フレーム描く。
   // この canvas は書き出し（リアルタイム）でも録画するため、SpectrumState に渡す
   import { onMount } from 'svelte';
-  import { ANALYSIS_RATE, SpectrumRenderer } from '#lib/spectrumRenderer.ts';
+  import { analyserSmoothing, SpectrumRenderer } from '#lib/spectrumRenderer.ts';
   import { getAudioState } from '#lib/state/audio.svelte.ts';
   import { getExportState } from '#lib/state/export.svelte.ts';
   import { getImageState } from '#lib/state/image.svelte.ts';
@@ -14,8 +14,6 @@
   const spectrum = getSpectrumState();
   const exporter = getExportState();
 
-  // 描く間隔（ms）。120 Hz などの画面でも、高速書き出しと同じ頻度で解析を読み、動きの速さをそろえる
-  const FRAME_INTERVAL = 1000 / ANALYSIS_RATE;
   // requestAnimationFrame の間隔はぶれるため、60 Hz の画面でフレームを飛ばさないよう、この分までは早くても描く
   const FRAME_TOLERANCE = 2;
 
@@ -24,6 +22,12 @@
   $effect(() => {
     void [spectrum.style, spectrum.width, spectrum.height, image.data, audio.analyser];
     dirty = true;
+  });
+
+  // 解析は動画のフレームレートと同じ回数で読む。平滑化の係数もそれに合わせる
+  $effect(() => {
+    if (audio.analyser)
+      audio.analyser.smoothingTimeConstant = analyserSmoothing(exporter.settings.fps);
   });
 
   onMount(() => {
@@ -37,10 +41,12 @@
     // 画像そのものをスペクトラムとして見せる。画像がまだないときは背景だけにする
     const draw = (now: number) => {
       frame = requestAnimationFrame(draw);
+      // 動画と同じフレームレートで描く。画面のリフレッシュレートが高くても、高速書き出しと同じ回数で解析を読む
+      const interval = 1000 / exporter.settings.fps;
       if (now < next - FRAME_TOLERANCE) return;
-      next += FRAME_INTERVAL;
+      next += interval;
       // タブを戻したときなどに遅れを取り戻そうと続けて描かないよう、遅れたら今から数え直す
-      if (next < now) next = now + FRAME_INTERVAL;
+      if (next < now) next = now + interval;
 
       // 止まっていて点がすべて消えたら、変わるものが無いので描かない。止めた直後は解析に音が残っているため、
       // 消え切るまでは描く。録画中は、録画を始めてから再生するまでのあいだもフレームを送り続ける

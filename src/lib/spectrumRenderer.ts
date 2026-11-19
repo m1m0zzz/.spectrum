@@ -18,12 +18,13 @@ export type SpectrumStyle = {
   slope: number;
 };
 
-// AnalyserNode の smoothingTimeConstant。0〜1 で、0 だと動きがもっとも速く、1 に近づくほど遅くなる
-export const ANALYSER_SMOOTHING = 0.85;
+// AnalyserNode の smoothingTimeConstant を、60 回/秒で読むときの値で表したもの。
+// 0〜1 で、0 だと動きがもっとも速く、1 に近づくほど遅くなる
+const ANALYSER_SMOOTHING = 0.85;
 
-// 曲を解析する（AnalyserNode を読む）回数（回/秒）。AnalyserNode の平滑化は読むたびにかかるため、
-// 画面のプレビューと動画の高速書き出しで同じ頻度で読み、動きの速さをそろえる
-export const ANALYSIS_RATE = 60;
+// 曲は動画のフレームレートと同じ回数（回/秒）で解析する（AnalyserNode を読む）。平滑化は読むたびにかかるため、
+// 読む回数に合わせて係数を変え、フレームレートを変えても動きの速さが同じになるようにする
+export const analyserSmoothing = (fps: number) => Math.pow(ANALYSER_SMOOTHING, 60 / fps);
 
 type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
