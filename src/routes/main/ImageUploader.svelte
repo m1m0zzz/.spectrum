@@ -155,7 +155,7 @@
     <p>
       {$_('image_info', { values: { width: img?.width || 0, height: img?.height || 0 } })}
     </p>
-    <div style="margin-top: 0.5rem;">
+    <div class={styles.pixelation}>
       <p>
         <span>{$_('is_pixelation')}</span>
         <button

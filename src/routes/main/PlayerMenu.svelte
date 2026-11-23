@@ -26,7 +26,6 @@
   // 出来上がった動画をダウンロードのリンクに付ける
   const complete = (anchor: HTMLAnchorElement, url: string, filename: string) => {
     exporter.status = 'completed';
-    if (anchor.href.startsWith('blob:')) URL.revokeObjectURL(anchor.href);
     anchor.download = filename;
     anchor.href = url;
   };
@@ -42,10 +41,11 @@
     // リアルタイムの書き出しはシークを待ってから再生するため、そこでは操作の外になり、Safari は AudioContext を動かさない。
     // 押した処理の中で先に動かしておく（止まったままだと録画に音が入らない）
     audioState.resume();
-    const { context: audioContext, recorderDestination, file } = audioState;
+    const { recorderDestination, decoded } = audioState;
     const imageData = image.data;
     const playerRef = spectrum.canvas;
-    if (!audioContext || !recorderDestination || !imageData || !playerRef || !anchorRef) {
+    // 曲の長さがわかるまでは範囲が 0〜0 のままなので、読み込みが終わっていない（または再生できない）曲では作らない
+    if (!audioState.ready || !recorderDestination || !imageData || !playerRef || !anchorRef) {
       error = true;
       return;
     }
@@ -56,8 +56,11 @@
 
     error = false;
     convertError = false;
+    // 前に作った動画は、作り始めるとリンクが隠れて取り出せなくなる。失敗したときにメモリに残らないよう、ここで手放す
+    if (anchorRef.href.startsWith('blob:')) URL.revokeObjectURL(anchorRef.href);
+    anchorRef.removeAttribute('href');
 
-    if (encode.method == 'fast' && file) {
+    if (encode.method == 'fast' && decoded) {
       // エンコーダーを調べて待つあいだに、もう一度押されて 2 本走らないよう、先に作成中にする
       exporter.status = 'rendering';
       renderProgress = 0;
@@ -69,8 +72,7 @@
         // モジュールを読み込めない（オフラインで、まだキャッシュに無いなど）
         return fail(error);
       }
-      if (config)
-        return makeVideoFast(config, encode, range, audioContext, file, imageData, anchorRef);
+      if (config) return makeVideoFast(config, encode, range, decoded, imageData, anchorRef);
       console.warn('fast export is not supported; falling back to realtime recording');
     }
     return recordVideo(encode, range, recorderDestination, anchorRef, playerRef);
@@ -81,8 +83,7 @@
     config: VideoEncoderConfig,
     encode: EncodeSettings,
     range: { start: number; end: number },
-    context: AudioContext,
-    file: File,
+    decoded: Promise<AudioBuffer>,
     image: ImageData,
     anchor: HTMLAnchorElement
   ) => {
@@ -97,8 +98,7 @@
       const url = await renderVideo({
         config,
         settings: encode,
-        audioFile: file,
-        audioContext: context,
+        audio: await decoded,
         fftSize: audioState.fftSize,
         image,
         style: spectrum.style,
@@ -132,28 +132,45 @@
     audioState.pause();
     await audioState.seekAndWait(range.start);
 
-    const canvasStream = playerRef.captureStream();
-    const audioStream = recorderDestination.stream;
-    const mediaStream = new MediaStream();
-    [canvasStream, audioStream].forEach((stream) => {
-      stream.getTracks().forEach((track) => mediaStream.addTrack(track));
-    });
-    const mediaRecorder = new MediaRecorder(mediaStream, {
-      videoBitsPerSecond: recordingVideoBitrate(playerRef.width, playerRef.height, encode),
-      // 変換で再エンコードするので、録画の段階では音質を落とさない
-      audioBitsPerSecond: 320_000
-    });
+    let canvasStream: MediaStream | null = null;
+    // canvas のトラックは書き出しのたびに作るので止める。音声のトラックは録画用の出力のもので、次の書き出しでも使うため止めない
+    const stopCanvas = () => canvasStream?.getTracks().forEach((track) => track.stop());
+    let mediaRecorder: MediaRecorder;
+    try {
+      canvasStream = playerRef.captureStream();
+      const audioStream = recorderDestination.stream;
+      const mediaStream = new MediaStream();
+      [canvasStream, audioStream].forEach((stream) => {
+        stream.getTracks().forEach((track) => mediaStream.addTrack(track));
+      });
+      mediaRecorder = new MediaRecorder(mediaStream, {
+        videoBitsPerSecond: recordingVideoBitrate(playerRef.width, playerRef.height, encode),
+        // 変換で再エンコードするので、録画の段階では音質を落とさない
+        audioBitsPerSecond: 320_000
+      });
+    } catch (error) {
+      // 録画できない（この組み合わせに対応していないなど）ときに、作成中のまま止まらないようにする
+      stopCanvas();
+      return fail(error);
+    }
 
     // 録画の開始から音が鳴り始めるまでの遅れ。変換時にこの分を先頭から削る
     let recorderStartedAt = 0;
     let playingAt = 0;
     mediaRecorder.onstart = () => (recorderStartedAt = performance.now());
 
+    // 録画中のエラー。このあと stop も来るが、途中までの録画は変換せずに失敗にする
+    let recorderError: unknown = null;
+    mediaRecorder.onerror = (event) => {
+      recorderError = (event as ErrorEvent).error ?? event;
+      audioState.pause();
+    };
+
     const chunks: Blob[] = [];
     mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
     mediaRecorder.onstop = () => {
-      // canvas のトラックは書き出しのたびに作るので止める。音声のトラックは録画用の出力のもので、次の書き出しでも使うため止めない
-      canvasStream.getTracks().forEach((track) => track.stop());
+      stopCanvas();
+      if (recorderError) return fail(recorderError);
       const lead =
         recorderStartedAt && playingAt ? Math.max(0, (playingAt - recorderStartedAt) / 1000) : 0;
       const videoBlob = new Blob(chunks, { type: chunks[0]?.type ?? 'video/webm' });
@@ -172,7 +189,12 @@
         .catch(fail);
     };
 
-    mediaRecorder.start();
+    try {
+      mediaRecorder.start();
+    } catch (error) {
+      stopCanvas();
+      return fail(error);
+    }
     try {
       // play() の Promise は、playing イベントと同じタイミング（音が鳴り始めたとき）に解決する
       await audioState.play();
@@ -184,7 +206,8 @@
     // 終了位置を過ぎたら止める。多少過ぎても変換時に切り落とす。
     // 曲の最後まで再生したときは paused が true になるので、それでも止まる
     const watch = () => {
-      if (audioState.currentTime >= end || audioState.paused) {
+      // エラーで録画が止まったときも、ここで再生を止める
+      if (audioState.currentTime >= end || audioState.paused || mediaRecorder.state == 'inactive') {
         audioState.pause();
         mediaRecorder.stop();
         return;

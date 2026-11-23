@@ -111,7 +111,7 @@
         {$_('supported_version')}
       </button>
       {#if showVersion}
-        <ul style="margin-top: 0.25rem;">
+        <ul class={styles.versions}>
           {#each SUPPORTED_BROWSERS as { name, version, realtimeOnly } (name)}
             <li>
               {name}

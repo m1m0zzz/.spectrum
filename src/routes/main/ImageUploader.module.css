@@ -98,3 +98,8 @@
 .crop {
   position: relative;
 }
+
+/* ドット化の設定。画像の大きさの表示との間をあける */
+.pixelation {
+  margin-top: 0.5rem;
+}

@@ -10,11 +10,15 @@ export class AudioState {
   context: AudioContext | null = null;
   // 録画（MediaRecorder）に音を渡す出力
   recorderDestination: MediaStreamAudioDestinationNode | null = null;
+  // 音量とミュート。<audio> の volume / muted を使うと、その後ろにある解析と録画の音まで小さくなるため、
+  // スピーカーへの経路だけに入れる
+  #gain: GainNode | null = null;
   // プレビューが毎フレーム読む。曲を読み込んだときに作られるため、画面が気付けるよう状態にする
   analyser = $state.raw<AnalyserNode | null>(null);
 
-  // 読み込んだ曲のファイル。高速書き出しで、曲をデコードし直すのに使う
-  file = $state.raw<File | null>(null);
+  // デコードした曲。波形と高速書き出しで使い回す（書き出しのたびにデコードし直すと、長い曲では数秒かかる）。
+  // 曲の長さぶんのメモリを持ち続けるが、書き出しはこのアプリの目的なので速さを取る
+  decoded: Promise<AudioBuffer> | null = null;
   // 波形のプレビュー（computePeaks の結果）。デコードできなかったときは null
   waveform = $state.raw<Float32Array | null>(null);
 
@@ -52,10 +56,11 @@ export class AudioState {
     if (this.#objectUrl) URL.revokeObjectURL(this.#objectUrl);
     this.#objectUrl = URL.createObjectURL(file);
     element.src = this.#objectUrl;
-    this.file = file;
 
     const context = this.#ensureGraph(element);
-    this.#loadWaveform(file, context);
+    const decoded = file.arrayBuffer().then((data) => context.decodeAudioData(data));
+    this.decoded = decoded;
+    this.#loadWaveform(decoded);
   }
 
   // AudioContext が止まっていれば動かす。曲は <audio> から解析を通ってスピーカーへ出るため、止まったままだと
@@ -105,13 +110,18 @@ export class AudioState {
   }
 
   setVolume(volume: number) {
-    if (!this.element) return;
-    this.element.volume = volume;
-    this.element.muted = false;
+    this.volume = volume;
+    this.muted = false;
+    this.#applyVolume();
   }
 
   setMuted(muted: boolean) {
-    if (this.element) this.element.muted = muted;
+    this.muted = muted;
+    this.#applyVolume();
+  }
+
+  #applyVolume() {
+    if (this.#gain) this.#gain.gain.value = this.muted ? 0 : this.volume;
   }
 
   // サーバーでの描画（ビルド時の HTML の生成）でも呼ばれ、そこには cancelAnimationFrame が無い
@@ -132,7 +142,6 @@ export class AudioState {
       'timeupdate',
       'seeking',
       'seeked',
-      'volumechange',
       'pause',
       'ended'
     ]) {
@@ -147,7 +156,7 @@ export class AudioState {
     return element;
   }
 
-  // 曲 → 解析 → スピーカー・録画、とつなぐ。一度だけ作り、曲を替えても使い回す
+  // 曲 → 解析 → 録画・音量 → スピーカー、とつなぐ。一度だけ作り、曲を替えても使い回す
   #ensureGraph(element: HTMLAudioElement) {
     if (this.context) return this.context;
     const context = new AudioContext();
@@ -155,21 +164,25 @@ export class AudioState {
     analyser.fftSize = this.#fftSize;
     const source = context.createMediaElementSource(element);
     const recorderDestination = context.createMediaStreamDestination();
+    const gain = context.createGain();
     source.connect(analyser);
     analyser.connect(recorderDestination);
-    analyser.connect(context.destination);
+    analyser.connect(gain);
+    gain.connect(context.destination);
     this.context = context;
     this.recorderDestination = recorderDestination;
+    this.#gain = gain;
+    this.#applyVolume();
     this.analyser = analyser;
     return context;
   }
 
   // 波形を求める。デコード中に別の曲を読み込んだら、古い方の結果は捨てる
-  async #loadWaveform(file: File, context: AudioContext) {
+  async #loadWaveform(decoded: Promise<AudioBuffer>) {
     const id = ++this.#decoding;
     this.waveform = null;
     try {
-      const buffer = await context.decodeAudioData(await file.arrayBuffer());
+      const buffer = await decoded;
       const channels = Array.from({ length: buffer.numberOfChannels }, (_, i) =>
         buffer.getChannelData(i)
       );
@@ -187,8 +200,6 @@ export class AudioState {
     this.currentTime = element.currentTime;
     this.paused = element.paused;
     this.seeking = element.seeking;
-    this.volume = element.volume;
-    this.muted = element.muted;
   }
 
   // 再生中は timeupdate（4 回/秒ほど）だけでは表示がかくつくため、毎フレーム読む

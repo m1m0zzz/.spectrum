@@ -63,11 +63,25 @@ export const videoBitrate = (width: number, height: number, settings: EncodeSett
 // H.264 は 4:2:0 のため、幅・高さを偶数に切り捨てる
 export const evenSize = (n: number) => Math.max(2, Math.floor(n / 2) * 2);
 
-// WebCodecs に渡す H.264 のコーデック文字列の候補。画面の大きさ（マクロブロック数）に足りるレベルを選び、
+// H.264 のレベル（4.0 以上）。[コーデック文字列での値, 1 フレームの最大マクロブロック数, 1 秒の最大マクロブロック数]
+const AVC_LEVELS: [string, number, number][] = [
+  ['28', 8192, 245_760], // 4.0
+  ['2A', 8704, 522_240], // 4.2
+  ['32', 22_080, 589_824], // 5.0
+  ['33', 36_864, 983_040], // 5.1
+  ['34', 36_864, 2_073_600], // 5.2
+  ['3C', 139_264, 4_177_920], // 6.0
+  ['3D', 139_264, 8_355_840], // 6.1
+  ['3E', 139_264, 16_711_680] // 6.2
+];
+
+// WebCodecs に渡す H.264 のコーデック文字列の候補。画面の大きさとフレームレート（1 秒あたりのマクロブロック数）に
+// 足りるレベルを選ぶ。大きさだけで選ぶと 1080p・60fps などで上限を超え、レベルを守るエンコーダーに断られる。
 // プロファイルは High → Main → Constrained Baseline の順に試す
-export const avcCodecCandidates = (width: number, height: number) => {
+export const avcCodecCandidates = (width: number, height: number, fps: number) => {
   const macroblocks = Math.ceil(width / 16) * Math.ceil(height / 16);
-  // 4.0（1920×1080 まで）、5.1（4096×2304 まで）、6.2（8192×4320 まで）
-  const level = macroblocks <= 8192 ? '28' : macroblocks <= 36864 ? '33' : '3E';
+  const level =
+    AVC_LEVELS.find(([, frame, rate]) => macroblocks <= frame && macroblocks * fps <= rate)?.[0] ??
+    '3E';
   return ['6400', '4D40', '42E0'].map((profile) => `avc1.${profile}${level}`);
 };

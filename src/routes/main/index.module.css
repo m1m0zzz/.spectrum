@@ -155,3 +155,8 @@
     padding-top: 1rem;
   }
 }
+
+/* 対応ブラウザの一覧。開くボタンとの間をあける */
+.versions {
+  margin-top: 0.25rem;
+}

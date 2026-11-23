@@ -1,4 +1,5 @@
 <script lang="ts">
+  import styles from './SizeInput.module.css';
   import { clamp } from '#lib/util.ts';
   import PixelNumber from '#lib/components/PixelNumber.svelte';
   import { _ } from 'svelte-i18n';
@@ -67,7 +68,7 @@
   />
   {#if customInput}
     <br />
-    <label style:padding-right="20px"
+    <label class={styles.dimension}
       >{$_('parameters_width')}
       <PixelNumber>
         <input
@@ -81,7 +82,7 @@
       </PixelNumber>
       <span>px</span>
     </label>
-    <label style:padding-right="20px"
+    <label class={styles.dimension}
       >{$_('parameters_height')}
       <PixelNumber>
         <input

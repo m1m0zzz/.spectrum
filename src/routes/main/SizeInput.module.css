@@ -1,0 +1,4 @@
+/* 画面の大きさ（SizeInput.svelte）。「カスタム」のときに出す幅と高さの入力欄 */
+.dimension {
+  padding-right: 20px;
+}

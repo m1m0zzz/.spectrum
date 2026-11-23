@@ -33,9 +33,20 @@ describe('evenSize', () => {
 
 describe('avcCodecCandidates', () => {
   it('大きさに足りるレベルを選び、High → Main → Baseline の順に並べる', () => {
-    expect(avcCodecCandidates(1920, 1080)).toEqual(['avc1.640028', 'avc1.4D4028', 'avc1.42E028']);
-    expect(avcCodecCandidates(2560, 1440)[0]).toBe('avc1.640033');
-    expect(avcCodecCandidates(7680, 4320)[0]).toBe('avc1.64003E');
+    expect(avcCodecCandidates(1920, 1080, 30)).toEqual([
+      'avc1.640028',
+      'avc1.4D4028',
+      'avc1.42E028'
+    ]);
+    expect(avcCodecCandidates(2560, 1440, 30)[0]).toBe('avc1.640032');
+    expect(avcCodecCandidates(7680, 4320, 30)[0]).toBe('avc1.64003C');
+  });
+
+  it('フレームレートも含めて、1 秒あたりのマクロブロック数に足りるレベルを選ぶ', () => {
+    expect(avcCodecCandidates(1920, 1080, 60)[0]).toBe('avc1.64002A');
+    expect(avcCodecCandidates(3840, 2160, 30)[0]).toBe('avc1.640033');
+    expect(avcCodecCandidates(3840, 2160, 60)[0]).toBe('avc1.640034');
+    expect(avcCodecCandidates(4096, 2304, 30)[0]).toBe('avc1.640034');
   });
 });
 

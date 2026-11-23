@@ -68,7 +68,7 @@ export const findEncoderConfig = async (
   };
   const configs: VideoEncoderConfig[] =
     settings.format == 'mp4'
-      ? avcCodecCandidates(w, h).map((codec) => ({
+      ? avcCodecCandidates(w, h, settings.fps).map((codec) => ({
           ...base,
           codec,
           // MP4 に入れるため、デコーダーの設定（description）を別に持つ形式にする
@@ -89,9 +89,8 @@ export const findEncoderConfig = async (
 type RenderOptions = {
   config: VideoEncoderConfig;
   settings: EncodeSettings;
-  // 曲。デコードは画面のプレビューと同じ AudioContext で行い、標本化周波数（＝ビンの周波数）をそろえる
-  audioFile: File;
-  audioContext: BaseAudioContext;
+  // デコードした曲。画面のプレビューと同じ AudioContext でデコードしたもので、標本化周波数（＝ビンの周波数）がそろう
+  audio: AudioBuffer;
   fftSize: number;
   image: ImageData;
   style: SpectrumStyle;
@@ -101,13 +100,15 @@ type RenderOptions = {
 };
 
 // エンコーダーに積んだフレームが MAX_QUEUE を下回るまで待つ
-const waitForQueue = (encoder: VideoEncoder) =>
-  new Promise<void>((resolve) => {
-    if (encoder.encodeQueueSize <= MAX_QUEUE) return resolve();
-    // dequeue イベントの無いブラウザでは少しずつ待つ
-    if (!('ondequeue' in encoder)) return setTimeout(resolve, 1);
-    encoder.addEventListener('dequeue', () => resolve(), { once: true });
-  });
+const waitForQueue = async (encoder: VideoEncoder) => {
+  while (encoder.encodeQueueSize > MAX_QUEUE) {
+    await new Promise<void>((resolve) => {
+      // dequeue イベントの無いブラウザでは少しずつ待つ
+      if (!('ondequeue' in encoder)) return setTimeout(resolve, 1);
+      encoder.addEventListener('dequeue', () => resolve(), { once: true });
+    });
+  }
+};
 
 // 書き出す範囲の音声を、48kHz・ステレオにして切り出す（モノラルの曲は左右に同じ音を入れる）
 const renderAudioRange = (buffer: AudioBuffer, start: number, duration: number) => {
@@ -130,7 +131,7 @@ export const renderVideo = async (options: RenderOptions): Promise<string> => {
   const width = config.width;
   const height = config.height;
 
-  const buffer = await options.audioContext.decodeAudioData(await options.audioFile.arrayBuffer());
+  const buffer = options.audio;
   const sampleRate = buffer.sampleRate;
   // 出力は使わない（解析だけする）ため 1 チャンネルにしてメモリを抑える
   const offline = new OfflineAudioContext(
